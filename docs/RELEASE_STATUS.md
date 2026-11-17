@@ -1,12 +1,12 @@
-# Release status (as of 2026-11-16 audit)
+# Release status (v1.0.0, 2026-11-17)
 
-| Status level | Met? | Evidence |
+| Level | Met? | Evidence |
 |---|---|---|
-| Working demo | **Yes** | Synthetic demo mode; 73 Python tests, 20 frontend unit tests and TypeScript checks pass locally. The 8 Playwright tests were **not** re-run in this audit. |
-| Live-data research prototype | **Yes** | Live HDX/POWER/IMF/WB/FAOSTAT snapshots; four BFA experiments re-run with identical input hashes. |
-| Scientifically qualified research application | **Partially, with explicit qualifications** | No look-ahead found; inference correctly specified; one P0 numerical defect fixed. It is a **lag-assumption-based retrospective** backtest (not point-in-time / real-time). Supported claim: no detectable improvement from market-local weather in BFA, 2021–2026. See `docs/audits/SCIENTIFIC_VALIDITY_AUDIT.md`. |
-| Independently reproducible open-source release | **No** | `data/` (lake snapshots, experiment artefacts) is untracked; live re-ingestion yields new vintages; no Git remote/push; `main` has no commits; Docker untested; CLI does not auto-migrate the DB. |
-| Production-deployable service | **No** | Docker/compose never executed; no deployment performed or verified; the Neon DB still holds pre-audit experiment rows; no auth/rate-limit review in this audit. |
+| Local working prototype | Yes | Demo and live modes run locally |
+| Functional integrated application | **Yes** | Every page uses the live API; 7 live-data and 8 demo browser tests; production build; outage handling tested |
+| Research-qualified application | **Yes, with stated qualifications** | Protocol tag precedes confirmatory runs; leakage guards tested; study tables independently recomputed; superseded results excluded by default. Qualification: lag-assumption-based retrospective backtests, not real-time |
+| Reproducible open-source release | **Not yet** | Clean-clone install, demo and data-bundle install all verified locally, but there is no Git remote, CI has never run on GitHub and the data bundle is not published |
+| Publicly deployed operational product | **No** | No deployment; Docker images never built; the shared Neon database awaits its migration |
 
-Do not describe ShockTrace as production-ready, real-time validated, or as having found a
-weather effect.
+Do not describe ShockTrace as deployed, real-time validated, or as having found a weather effect.
+Details: [FINAL_ENGINEERING_REPORT.md](FINAL_ENGINEERING_REPORT.md).

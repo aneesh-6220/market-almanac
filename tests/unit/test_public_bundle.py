@@ -78,3 +78,12 @@ def test_path_traversal_entry_is_rejected(tmp_path: Path) -> None:
 def test_only_https_urls(tmp_path: Path) -> None:
     with pytest.raises(BundleError, match="https"):
         install_bundle("http://example.org/b.tar.gz", tmp_path / "dst")
+
+
+def test_run_manifest_records_code_provenance() -> None:
+    from shocktrace.experiments.runner import code_provenance
+
+    prov = code_provenance()
+    assert set(prov) == {"git_commit", "dirty"}
+    if prov["git_commit"] is not None:  # running from a git checkout
+        assert len(prov["git_commit"]) == 40 and isinstance(prov["dirty"], bool)

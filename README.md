@@ -116,7 +116,7 @@ More in [Architecture](docs/ARCHITECTURE.md) and the
 ## Testing
 
 ```bash
-make test        # 171 Python tests: unit, API integration, scientific correctness (offline)
+make test        # 172 Python tests: unit, API integration, scientific correctness (offline)
 make lint        # ruff, mypy, ESLint, tsc
 make test-web    # Vitest
 make e2e         # Playwright on the synthetic demo (8 tests, desktop + phone)

@@ -69,6 +69,28 @@ PRODUCTION_PROXY_NOTE = (
 )
 
 
+def code_provenance() -> dict[str, Any]:
+    """Git commit of the code that produced a run, and whether the working tree had local changes.
+
+    Recorded so a result can be tied to exact code (for example to show that a confirmatory run used
+    the frozen protocol tag). ``None`` values mean the code was not run from a git checkout.
+    """
+    import subprocess
+
+    root = Path(__file__).resolve().parent
+
+    def git(*args: str) -> str | None:
+        try:
+            out = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=5, check=True)
+        except (OSError, subprocess.SubprocessError):
+            return None
+        return out.stdout.strip()
+
+    commit = git("rev-parse", "HEAD")
+    status = git("status", "--porcelain", "--untracked-files=no") if commit else None
+    return {"git_commit": commit or None, "dirty": None if status is None else bool(status)}
+
+
 def timing_disclosure(price_lag: int, weather_lag: int = 0) -> str:
     return "Timing classification: lag-assumption-based retrospective backtest. " + timing_statement(
         price_lag, weather_lag
@@ -627,6 +649,7 @@ def _run_experiment(
         "sklearn": __import__("sklearn").__version__,
         "statsmodels": __import__("statsmodels").__version__,
         "random_seed": cfg.seed,
+        "code": code_provenance(),
         "snapshots": snapshots or {},
         "synthetic": synthetic,
         "retrospective_note": (
