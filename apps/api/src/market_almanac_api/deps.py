@@ -9,7 +9,6 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pandas as pd
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, sessionmaker
@@ -169,46 +168,33 @@ class DataCache:
             return empty_frame(SCHEMAS["prices"])
         return coerce(pa.Table.from_batches(parts).to_pandas(), SCHEMAS["prices"])
 
-    def _clean_rows(self) -> tuple[pd.DataFrame, dict[str, Any]]:
-        """Valid price records only (series, period, price) and each series' row positions in that table.
+    def _clean_rows(self, series_ids: list[str]) -> pd.DataFrame:
+        """Valid price records (series_id, period, price) of the given series; invalid ones become NaN.
 
-        Built from just the four columns it needs. Invalid and conflicting records are dropped once
-        per snapshot; slicing this narrow frame is much cheaper than slicing the full observation table.
+        Read from the snapshot with a row filter and only four columns, so memory stays flat: keeping
+        the whole narrowed observation table (500k rows) resident costs ~150 MB on a 512 MB host.
         """
+        import pyarrow as pa
         import pyarrow.parquet as pq
 
-        path, sid = self._prices_file()
-        with self._lock:
-            hit = self._catalog.get("clean")
-            if hit and hit[0] == sid:
-                return hit[1], hit[2]
-        raw = pq.read_table(path, columns=["series_id", "period", "price", "quality_flags"]).to_pandas()
-        flags = raw["quality_flags"].fillna("")
+        path, _ = self._prices_file()
+        raw = pq.read_table(
+            path, columns=["series_id", "period", "price", "quality_flags"], filters=[("series_id", "in", series_ids)]
+        ).to_pandas()
+        pa.default_memory_pool().release_unused()
+        flags = raw["quality_flags"].fillna("").astype("string")
         ok = ~(flags.str.contains("invalid_price") | flags.str.contains("duplicate_conflict")) & (raw["price"] > 0)
-        narrow = pd.DataFrame(
+        return pd.DataFrame(
             {
                 "series_id": raw["series_id"].astype("string"),
-                "period": pd.to_datetime(raw["period"]).dt.normalize().to_numpy(),
-                "price": raw["price"].astype("float64").where(ok).to_numpy(),
+                "period": pd.to_datetime(raw["period"]).dt.normalize(),
+                "price": raw["price"].astype("float64").where(ok),
             }
         )
-        del raw, flags, ok
-        import pyarrow as pa
-
-        pa.default_memory_pool().release_unused()  # hand the Arrow buffers back to the OS
-        idx = narrow.groupby("series_id", sort=False).indices
-        with self._lock:
-            self._catalog["clean"] = (sid, narrow, idx)
-            self._peers.clear()
-        return narrow, idx
 
     def series_monthly(self, series_id: str) -> pd.Series:
         """Cleaned monthly prices of one series: invalid and conflicting records removed, one value per month."""
-        narrow, idx = self._clean_rows()
-        pos = idx.get(series_id)
-        if pos is None:
-            return pd.Series(dtype="float64")
-        rows = narrow.iloc[pos].dropna(subset=["price"])
+        rows = self._clean_rows([series_id]).dropna(subset=["price"])
         if rows.empty:
             return pd.Series(dtype="float64")
         return rows.groupby("period")["price"].first().sort_index().astype("float64")
@@ -230,11 +216,10 @@ class DataCache:
             hit = self._peers.get(key)
         if hit is not None:
             return hit
-        narrow, idx = self._clean_rows()
-        ids = [s for s in same.index[:400] if s in idx]
+        ids = [str(i) for i in same.index[:400]]
         if not ids:
             return pd.DataFrame()
-        rows = narrow.iloc[np.concatenate([idx[s] for s in ids])].dropna(subset=["price"])
+        rows = self._clean_rows(ids).dropna(subset=["price"])
         panel = rows.groupby(["period", "series_id"])["price"].first().unstack("series_id").sort_index()
         panel = panel.reindex(columns=ids).astype("float64")
         with self._lock:
