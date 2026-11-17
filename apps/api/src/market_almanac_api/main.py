@@ -20,6 +20,7 @@ from starlette.responses import Response
 from market_almanac import __version__
 from market_almanac.config import get_settings
 from market_almanac.logging import configure_logging, get_logger, log_event
+from market_almanac_api.deps import DataUnavailableError
 from market_almanac_api.routers import data, markets, research, system
 
 log = get_logger("api")
@@ -41,9 +42,44 @@ def _warm_caches() -> None:
         log_event(log, "cache warm-up skipped", level=30, error=type(exc).__name__)
 
 
+def _bootstrap_data() -> None:
+    """Install the configured research-data bundle when a live deployment has no data (ephemeral disks)."""
+    from market_almanac.data.public_bundle import install_bundle
+    from market_almanac.data.store import DatasetStore
+    from market_almanac.services import init_db, sync_database
+    from market_almanac_api.deps import BootstrapState
+
+    s = get_settings()
+    if s.market_almanac_mode.value != "live" or not s.data_bundle_url:
+        return
+    if DatasetStore(s.lake_dir, "live").latest("prices") is not None:
+        return
+    if not s.data_bundle_sha256:
+        BootstrapState.error = "DATA_BUNDLE_SHA256 is required with DATA_BUNDLE_URL"
+        log_event(log, "bundle install refused", level=40, error=BootstrapState.error)
+        return
+    BootstrapState.installing, BootstrapState.error = True, None
+    try:
+        log_event(log, "installing data bundle")
+        res = install_bundle(s.data_bundle_url, s.data_dir, s.data_bundle_sha256)
+        init_db(s)
+        sync_database(s)
+        log_event(log, "data bundle installed", files=res["files"])
+    except Exception as exc:  # stay up and report 503 rather than crash-loop
+        BootstrapState.error = f"{type(exc).__name__}: {exc}"[:300]
+        log_event(log, "bundle install failed", level=40, error=BootstrapState.error)
+    finally:
+        BootstrapState.installing = False
+
+
+def _startup() -> None:
+    _bootstrap_data()
+    _warm_caches()
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    threading.Thread(target=_warm_caches, name="cache-warm", daemon=True).start()
+    threading.Thread(target=_startup, name="data-startup", daemon=True).start()
     yield
 
 
@@ -130,6 +166,11 @@ def create_app() -> FastAPI:
     async def validation_exc(_: Request, exc: RequestValidationError) -> JSONResponse:
         errs = [{"loc": list(e.get("loc", [])), "msg": e.get("msg")} for e in exc.errors()]
         return JSONResponse({"error": "invalid_request", "detail": errs}, status_code=422)
+
+    @app.exception_handler(DataUnavailableError)
+    async def data_unavailable(request: Request, exc: DataUnavailableError) -> JSONResponse:
+        log_event(log, "data unavailable", level=30, path=request.url.path, message=str(exc))
+        return JSONResponse({"error": "data_unavailable", "detail": str(exc)}, status_code=503)
 
     @app.exception_handler(Exception)
     async def unhandled(request: Request, exc: Exception) -> JSONResponse:

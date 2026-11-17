@@ -44,6 +44,51 @@ META_COLUMNS = [
     "currency",
     "source_ref",
 ]
+DERIVED_COLUMNS = [
+    "first_period",
+    "last_period",
+    "n_observations",
+    "months_spanned",
+    "coverage",
+    "longest_gap_months",
+    "n_conflicting_duplicates",
+    "has_coordinates",
+    "eligible",
+    "ineligible_reasons",
+    "usable",
+    "latest_price",
+    "change_1m",
+    "change_12m",
+    "movement_percentile",
+    "movement_n_reference",
+    "movement_label",
+    "months_behind_dataset",
+    "weather_location_id",
+    "has_weather",
+    "retrieved_at",
+    "min_history_for_label",
+]
+CATALOG_REQUIRED_COLUMNS = [*META_COLUMNS, *DERIVED_COLUMNS]
+_BOOL_COLUMNS = ("has_coordinates", "eligible", "usable", "has_weather")
+
+
+class CatalogSchemaError(ValueError):
+    """The series catalog does not have the columns the API depends on."""
+
+
+def empty_catalog() -> pd.DataFrame:
+    """A catalog with no series but the full schema (a deployment with no usable price data)."""
+    cat = pd.DataFrame({c: pd.Series(dtype=bool if c in _BOOL_COLUMNS else object) for c in CATALOG_REQUIRED_COLUMNS})
+    cat["n_observations"] = cat["n_observations"].astype("int64")
+    return cat
+
+
+def validate_catalog(cat: pd.DataFrame) -> pd.DataFrame:
+    """Raise :class:`CatalogSchemaError` naming every missing column; an empty catalog is valid."""
+    missing = [c for c in CATALOG_REQUIRED_COLUMNS if c not in cat.columns]
+    if missing:
+        raise CatalogSchemaError(f"series catalog is missing required columns: {', '.join(missing)}")
+    return cat
 
 
 @lru_cache(maxsize=1)
@@ -67,7 +112,7 @@ def build_catalog(
     """One row per series: identity, completeness, latest observation and latest-movement label."""
     criteria = criteria or EligibilityCriteria()
     if prices.empty:
-        return pd.DataFrame(columns=[*META_COLUMNS, "n_observations"])
+        return empty_catalog()
     weather_locations = weather_locations or set()
     flags = prices["quality_flags"].fillna("")
     bad = flags.str.contains("invalid_price") | flags.str.contains("duplicate_conflict") | ~(prices["price"] > 0)

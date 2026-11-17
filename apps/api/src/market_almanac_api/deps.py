@@ -19,6 +19,17 @@ from market_almanac.data.store import DatasetStore
 from market_almanac.db.session import get_engine
 
 
+class DataUnavailableError(Exception):
+    """Required analytical data is missing or malformed on this deployment (served as HTTP 503)."""
+
+
+class BootstrapState:
+    """Progress of the start-up data install (shared with the 503 message while it runs)."""
+
+    installing = False
+    error: str | None = None
+
+
 def settings_dep() -> Settings:
     return get_settings()
 
@@ -68,7 +79,7 @@ class DataCache:
 
     def catalog(self) -> tuple[pd.DataFrame, dict[str, Any], str | None]:
         """Series catalog for the current price snapshot (materialised file if it matches, else built)."""
-        from market_almanac.analytics.catalog import build_catalog
+        from market_almanac.analytics.catalog import CatalogSchemaError, build_catalog, validate_catalog
 
         s = get_settings()
         st = self.store()
@@ -76,6 +87,16 @@ class DataCache:
         sid = latest.snapshot_id if latest else None
         wx = st.latest("weather_monthly")
         key = (st.mode, sid, wx.snapshot_id if wx else None)
+        if sid is None and st.mode == "live":
+            if BootstrapState.installing:
+                raise DataUnavailableError(
+                    "The research data bundle is being installed on this deployment; retry in a minute or two."
+                )
+            raise DataUnavailableError(
+                "No live price data is installed on this deployment. Install the research data bundle "
+                "(market-almanac bundle-install, or set DATA_BUNDLE_URL and DATA_BUNDLE_SHA256) and run sync-db."
+                + (f" Last install attempt failed: {BootstrapState.error}" if BootstrapState.error else "")
+            )
         with self._lock:
             hit = self._catalog.get("catalog")
             if hit and hit[0] == key:
@@ -93,7 +114,12 @@ class DataCache:
         if cat is None:
             prices, _ = self.frame("prices")
             weather, _ = self.frame("weather_monthly")
-            cat = build_catalog(prices, set(weather["location_id"].dropna().unique()))
+            wx_locs = set(weather["location_id"].dropna().unique()) if "location_id" in weather.columns else set()
+            cat = build_catalog(prices, wx_locs)
+        try:
+            validate_catalog(cat)
+        except CatalogSchemaError as e:
+            raise DataUnavailableError(f"The installed data is incompatible with this API version: {e}") from e
         cat = cat.set_index("series_id", drop=False)
         with self._lock:
             self._catalog["catalog"] = (key, cat, meta)

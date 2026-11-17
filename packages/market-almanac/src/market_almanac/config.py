@@ -34,6 +34,11 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:3000"
 
+    # Optional: install the public research-data bundle on API start when no live data is present
+    # (for hosts with an ephemeral filesystem). The SHA-256 is mandatory when a URL is given.
+    data_bundle_url: str | None = None
+    data_bundle_sha256: str | None = None
+
     # Provider credentials. Never logged; never sent to the browser.
     hdx_hapi_app_identifier: SecretStr | None = None
     faostat_access_token: SecretStr | None = None

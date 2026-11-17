@@ -70,6 +70,28 @@ the public catalog and experiment artefacts. A deployment therefore needs a pers
 Provider credentials are needed only for ingestion, never for serving. If a provider is down,
 already-installed data keep being served.
 
+## Render Free (ephemeral filesystem) with a Neon database
+
+Render Free wipes the disk on every restart and spin-down, so the research data cannot live on it.
+Instead the API installs the public data bundle itself at start-up, in a background thread (the port
+opens immediately; data endpoints answer `503 data_unavailable` until the install finishes, then the
+caches warm). Set on the service:
+
+| Variable | Value |
+|---|---|
+| `MARKET_ALMANAC_MODE` | `live` |
+| `DATABASE_URL` | the Neon connection string (secret) |
+| `DATA_DIR` / `CACHE_DIR` | a writable path, e.g. `/tmp/market-almanac/data` and `/tmp/market-almanac/cache` |
+| `DATA_BUNDLE_URL` | HTTPS URL of the bundle (a GitHub release asset) |
+| `DATA_BUNDLE_SHA256` | the archive's SHA-256 (**required**; the install is refused without it) |
+| `CORS_ORIGINS` | the web origin, e.g. `https://market-almanac-app.vercel.app` |
+
+The install is skipped when a live price snapshot already exists, verifies the archive hash and every
+file against the manifest, then migrates and re-indexes the database (`sync-db`, idempotent, so Neon
+keeps its rows across restarts). If the download or verification fails the API stays up, reports the
+reason in the 503 body and in the logs, and does not crash-loop. To publish a new dataset, release a
+new bundle and change `DATA_BUNDLE_URL` / `DATA_BUNDLE_SHA256`.
+
 ## Managed PostgreSQL
 
 Any PostgreSQL 14+ works (the project was developed against a hosted Neon database).
