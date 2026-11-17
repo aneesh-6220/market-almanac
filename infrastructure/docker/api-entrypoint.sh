@@ -1,9 +1,34 @@
 #!/bin/sh
-# Prepare the database, seed the synthetic demo on first start in demo mode, then run the API.
+# Prepare the database and data, then run the API.
+#
+# - Always: apply database migrations (additive, idempotent).
+# - Demo mode, first start: seed the synthetic Demoland data.
+# - Live mode with DATA_BUNDLE_URL set and no bundle installed yet: download the public data bundle,
+#   verify it (DATA_BUNDLE_SHA256 strongly recommended) and index it in the database.
+# - SYNC_DB_ON_START=1: re-index stored artefacts on every start (idempotent; use after restoring a
+#   data volume into a fresh database).
 set -e
+DATA="${DATA_DIR:-/app/data}"
+MODE="${SHOCKTRACE_MODE:-demo}"
+
 shocktrace db-init
-if [ "${SHOCKTRACE_MODE:-demo}" = "demo" ] && [ ! -d "${DATA_DIR:-/app/data}/lake/demo/prices" ]; then
+
+if [ "$MODE" = "demo" ] && [ ! -d "$DATA/lake/demo/prices" ]; then
   echo "seeding synthetic demo data (first start)"
   shocktrace demo-seed
 fi
+
+if [ "$MODE" = "live" ] && [ -n "${DATA_BUNDLE_URL:-}" ] && [ ! -f "$DATA/bundles/live-installed.json" ]; then
+  echo "installing public data bundle"
+  if [ -n "${DATA_BUNDLE_SHA256:-}" ]; then
+    shocktrace bundle-install "$DATA_BUNDLE_URL" --sha256 "$DATA_BUNDLE_SHA256"
+  else
+    echo "warning: DATA_BUNDLE_SHA256 not set; the archive is checked only against its own manifest"
+    shocktrace bundle-install "$DATA_BUNDLE_URL"
+  fi
+  shocktrace sync-db
+elif [ "${SYNC_DB_ON_START:-0}" = "1" ]; then
+  shocktrace sync-db
+fi
+
 exec "$@"
