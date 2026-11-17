@@ -189,3 +189,20 @@ def test_price_rows_filter_matches_full_frame(seeded_env):
         assert len(got) == len(exp) > 0 and got.equals(exp)
     assert cache.price_rows(series_id="ps_0000000000000000").empty
     assert cache.series_rows(sid).equals(cache.price_rows(series_id=sid))
+
+
+@pytest.mark.parametrize("empty_deployment", ["live"], indirect=True)
+def test_pending_install_is_reported_before_the_thread_starts(empty_deployment, monkeypatch):
+    from market_almanac.config import reset_settings_cache
+    from market_almanac_api.deps import BootstrapState
+    from market_almanac_api.main import _mark_install_pending
+
+    monkeypatch.setenv("DATA_BUNDLE_URL", "https://example.invalid/x.tar.gz")
+    monkeypatch.setenv("DATA_BUNDLE_SHA256", "0" * 64)
+    reset_settings_cache()
+    try:
+        _mark_install_pending()
+        r = empty_deployment.get("/api/v1/catalog/series")
+        assert r.status_code == 503 and "being installed" in r.json()["detail"]
+    finally:
+        BootstrapState.installing = False

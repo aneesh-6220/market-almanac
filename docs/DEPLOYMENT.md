@@ -94,6 +94,14 @@ does not have, so for a new database run `market-almanac sync-db` once from a wo
 reason in the 503 body and in the logs, and does not crash-loop. To publish a new dataset, release a
 new bundle and change `DATA_BUNDLE_URL` / `DATA_BUNDLE_SHA256`.
 
+**Free-tier behaviour to expect.** Render Free spins the service down after ~15 minutes without traffic
+and its disk is wiped, so the first request after an idle period (and every deploy) starts a fresh
+process that re-downloads and verifies the bundle: data endpoints return `503 data_unavailable` ("being
+installed") for roughly one to two minutes, then work normally. `/health` answers immediately. The
+instance has 512 MB of RAM; resident memory settles around 300 MB, so heavy ad-hoc queries (for example
+the `/lagged-relationships` endpoint, which loads the whole price table) can still exceed it. Set
+`MALLOC_ARENA_MAX=2` and `ARROW_DEFAULT_MEMORY_POOL=system` on the service to limit allocator overhead.
+
 ## Managed PostgreSQL
 
 Any PostgreSQL 14+ works (the project was developed against a hosted Neon database).

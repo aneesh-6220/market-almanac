@@ -59,6 +59,21 @@ def _db_indexed(s: Settings) -> bool:
     return bool(installed) and installed <= known
 
 
+def _mark_install_pending() -> None:
+    """Flag a pending install before the first request, so it is answered 'installing', not 'missing'."""
+    from market_almanac.data.store import DatasetStore
+    from market_almanac_api.deps import BootstrapState
+
+    s = get_settings()
+    if (
+        s.market_almanac_mode.value == "live"
+        and s.data_bundle_url
+        and s.data_bundle_sha256
+        and DatasetStore(s.lake_dir, "live").latest("prices") is None
+    ):
+        BootstrapState.installing = True
+
+
 def _bootstrap_data() -> None:
     """Install the configured research-data bundle when a live deployment has no data (ephemeral disks)."""
     from market_almanac.data.public_bundle import install_bundle
@@ -100,6 +115,7 @@ def _startup() -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    _mark_install_pending()
     threading.Thread(target=_startup, name="data-startup", daemon=True).start()
     yield
 
