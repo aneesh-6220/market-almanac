@@ -28,7 +28,7 @@ log = get_logger("api")
 
 
 def _warm_caches() -> None:
-    """Load the latest quality report and price snapshot so the first user request is fast."""
+    """Load the latest quality report and series catalog so the first user request is fast."""
     from market_almanac.db.session import session_scope
     from market_almanac_api.deps import cache
 
@@ -36,8 +36,7 @@ def _warm_caches() -> None:
     try:
         with session_scope(s.database_url) as db:
             cache.quality(db, s.market_almanac_mode.value)
-        cache.frame("prices")
-        cache.catalog()
+        cache.catalog()  # the full price frame loads on first use (it is ~300 MB at peak)
         log_event(log, "caches warmed")
     except Exception as exc:  # warming is best-effort; requests load lazily anyway
         log_event(log, "cache warm-up skipped", level=30, error=type(exc).__name__)

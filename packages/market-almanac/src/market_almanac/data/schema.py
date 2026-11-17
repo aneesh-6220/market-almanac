@@ -179,7 +179,7 @@ def empty_frame(schema: FrameSchema) -> pd.DataFrame:
 
 def coerce(df: pd.DataFrame, schema: FrameSchema) -> pd.DataFrame:
     """Coerce columns to their logical dtypes; add missing optional columns as null."""
-    out = df.copy()
+    out = df.copy(deep=False)  # copy-on-write: columns are replaced, never mutated in place
     for col, typ in schema.columns.items():
         if col not in out.columns:
             out[col] = pd.NA
