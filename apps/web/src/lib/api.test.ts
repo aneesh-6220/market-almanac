@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-import { ApiError, apiGet, apiUrl } from "./api";
+import { ApiError, apiGet, apiUrl, normalizeApiUrl } from "./api";
 
 const ok = (body: unknown, status = 200) =>
   Promise.resolve(new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }));
@@ -38,5 +38,17 @@ describe("apiGet", () => {
   it("reports an unreachable API as status 0", async () => {
     vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new TypeError("fetch failed"))));
     await expect(apiGet("/t", z.object({}))).rejects.toMatchObject({ status: 0 });
+  });
+});
+
+describe("normalizeApiUrl", () => {
+  it("upgrades remote http to https and trims slashes", () => {
+    expect(normalizeApiUrl("http://market-almanac.onrender.com/")).toBe("https://market-almanac.onrender.com");
+    expect(normalizeApiUrl(" https://api.example.org// ")).toBe("https://api.example.org");
+  });
+  it("keeps local development URLs and defaults", () => {
+    expect(normalizeApiUrl("http://localhost:8000")).toBe("http://localhost:8000");
+    expect(normalizeApiUrl("http://127.0.0.1:8000/")).toBe("http://127.0.0.1:8000");
+    expect(normalizeApiUrl(undefined)).toBe("http://localhost:8000");
   });
 });

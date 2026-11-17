@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+/** Trim, drop a trailing slash and force HTTPS for remote hosts (an http:// API is blocked as mixed content). */
+export function normalizeApiUrl(raw: string | undefined): string {
+  const url = (raw ?? "http://localhost:8000").trim().replace(/\/+$/, "");
+  return /^http:\/\/(?!localhost|127\.0\.0\.1|\[::1\])/.test(url) ? "https://" + url.slice("http://".length) : url;
+}
+
+export const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
 /** A local API means a developer is running the stack, so errors may carry setup hints. */
 export const LOCAL_API = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(API_URL);
 
