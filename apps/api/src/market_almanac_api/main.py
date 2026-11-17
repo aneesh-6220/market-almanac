@@ -14,11 +14,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import select
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 
 from market_almanac import __version__
-from market_almanac.config import get_settings
+from market_almanac.config import Settings, get_settings
 from market_almanac.logging import configure_logging, get_logger, log_event
 from market_almanac_api.deps import DataUnavailableError
 from market_almanac_api.routers import data, markets, research, system
@@ -42,6 +43,24 @@ def _warm_caches() -> None:
         log_event(log, "cache warm-up skipped", level=30, error=type(exc).__name__)
 
 
+def _db_indexed(s: Settings) -> bool:
+    """True when the database already registers every installed snapshot of this mode."""
+    from market_almanac.data.store import DatasetStore
+    from market_almanac.db import models as m
+    from market_almanac.db.session import session_scope
+    from market_almanac.services import DATASETS
+
+    store = DatasetStore(s.lake_dir, s.market_almanac_mode.value)
+    installed = {man.snapshot_id for ds in DATASETS for man in store.list_snapshots(ds)}
+    with session_scope(s.database_url) as db:
+        known = set(
+            db.scalars(
+                select(m.DatasetSnapshot.snapshot_id).where(m.DatasetSnapshot.mode == s.market_almanac_mode.value)
+            )
+        )
+    return bool(installed) and installed <= known
+
+
 def _bootstrap_data() -> None:
     """Install the configured research-data bundle when a live deployment has no data (ephemeral disks)."""
     from market_almanac.data.public_bundle import install_bundle
@@ -63,7 +82,11 @@ def _bootstrap_data() -> None:
         log_event(log, "installing data bundle")
         res = install_bundle(s.data_bundle_url, s.data_dir, s.data_bundle_sha256)
         init_db(s)
-        sync_database(s)
+        if _db_indexed(s):
+            # the database persists across restarts; re-indexing needs ~600 MB, more than a small host has
+            log_event(log, "database already indexed; sync skipped")
+        else:
+            sync_database(s)
         log_event(log, "data bundle installed", files=res["files"])
     except Exception as exc:  # stay up and report 503 rather than crash-loop
         BootstrapState.error = f"{type(exc).__name__}: {exc}"[:300]

@@ -159,3 +159,17 @@ def test_bootstrap_is_noop_outside_live_mode(empty_deployment, monkeypatch):
     monkeypatch.setenv("DATA_BUNDLE_URL", "https://example.invalid/x.tar.gz")
     reset_settings_cache()
     _bootstrap_data()
+
+
+def test_db_indexed_detects_registered_snapshots(seeded_env):
+    from market_almanac_api.main import _db_indexed
+
+    assert _db_indexed(seeded_env["settings"]) is True  # seed_demo registers its snapshots
+
+
+@pytest.mark.parametrize("empty_deployment", ["demo"], indirect=True)
+def test_db_indexed_false_for_empty_database(empty_deployment):
+    from market_almanac.config import get_settings
+    from market_almanac_api.main import _db_indexed
+
+    assert _db_indexed(get_settings()) is False

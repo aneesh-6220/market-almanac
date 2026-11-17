@@ -230,9 +230,40 @@ async def ingest_prices(
     return outcomes
 
 
+REGISTRY_PRICE_COLUMNS = [
+    "provider",
+    "country_iso3",
+    "market_code",
+    "market_name",
+    "admin1_name",
+    "admin2_name",
+    "lat",
+    "lon",
+    "series_id",
+    "period",
+    "retrieved_at",
+    "commodity_code",
+    "commodity_name",
+    "commodity_category",
+]
+
+
+def _read_registry_prices(path: Path) -> pd.DataFrame:
+    """Registry columns only, strings dictionary-encoded (a few MB instead of ~100 MB for 500k rows)."""
+    import pyarrow.parquet as pq
+
+    names = pq.read_schema(path).names
+    cols = [c for c in REGISTRY_PRICE_COLUMNS if c in names]
+    text = [c for c in cols if c not in ("lat", "lon", "period", "retrieved_at")]
+    df = pq.read_table(path, columns=cols, read_dictionary=text).to_pandas()
+    return df
+
+
 def _refresh_registry(settings: Settings) -> None:
     store = store_for(settings)
-    prices = store.read("prices")
+    latest = store.latest("prices")
+    # only the registry's columns: the full frame needs ~600 MB, more than a small host has
+    prices = _read_registry_prices(store.path("prices", latest.snapshot_id)) if latest else store.read("prices")
     countries = store.read("countries")
     with session_scope(settings.database_url) as s:
         repo.refresh_reference_entities(s, settings.market_almanac_mode.value, prices, countries)

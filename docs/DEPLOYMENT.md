@@ -87,8 +87,10 @@ caches warm). Set on the service:
 | `CORS_ORIGINS` | the web origin, e.g. `https://market-almanac-app.vercel.app` |
 
 The install is skipped when a live price snapshot already exists, verifies the archive hash and every
-file against the manifest, then migrates and re-indexes the database (`sync-db`, idempotent, so Neon
-keeps its rows across restarts). If the download or verification fails the API stays up, reports the
+file against the manifest, then migrates the database. `sync-db` runs only if the database does not
+already register the installed snapshots: it needs ~600 MB of RAM, which Render Free (512 MB)
+does not have, so for a new database run `market-almanac sync-db` once from a workstation with that
+`DATABASE_URL`. Neon keeps the index across restarts. If the download or verification fails the API stays up, reports the
 reason in the 503 body and in the logs, and does not crash-loop. To publish a new dataset, release a
 new bundle and change `DATA_BUNDLE_URL` / `DATA_BUNDLE_SHA256`.
 
