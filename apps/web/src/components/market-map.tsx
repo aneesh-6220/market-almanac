@@ -2,14 +2,21 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import maplibregl, { type GeoJSONSource, type StyleSpecification } from "maplibre-gl";
+import { type GeoJSONSource, LngLatBounds, Map as MapLibreMap, type MapOptions, NavigationControl, setWorkerUrl } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
+
+// maplibre-gl 6 ships its web worker as a separate module and finds it relative to its own URL at
+// runtime, which a bundler cannot see. Reference it statically so the bundler emits it.
+setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href);
 
 import type { Market } from "@/lib/api";
 
 const STYLE_URL = process.env.NEXT_PUBLIC_MAP_STYLE_URL || "https://tiles.openfreemap.org/styles/positron";
 
 // Used when the tile provider is unreachable (e.g. offline demo): markets still plot, without a basemap.
+// maplibre-gl 6 no longer re-exports the style-spec types; derive the object form from MapOptions.
+type StyleSpecification = Exclude<MapOptions["style"], string | undefined>;
+
 const FALLBACK_STYLE: StyleSpecification = {
   version: 8,
   sources: {},
@@ -31,7 +38,7 @@ function toGeoJSON(markets: Market[], selected?: string) {
 
 export function MarketMap({ markets, selected, onSelect }: { markets: Market[]; selected?: string; onSelect: (id: string) => void }) {
   const box = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
+  const map = useRef<MapLibreMap | null>(null);
   const [ready, setReady] = useState(false);
   const [basemapFailed, setBasemapFailed] = useState(false);
   const onSelectRef = useRef(onSelect);
@@ -41,7 +48,7 @@ export function MarketMap({ markets, selected, onSelect }: { markets: Market[]; 
 
   useEffect(() => {
     if (!box.current) return;
-    const m = new maplibregl.Map({ container: box.current, style: STYLE_URL, center: [20, 5], zoom: 2, attributionControl: { compact: true } });
+    const m = new MapLibreMap({ container: box.current, style: STYLE_URL, center: [20, 5], zoom: 2, attributionControl: { compact: true } });
     map.current = m;
     let fellBack = false;
     m.on("error", (e) => {
@@ -51,7 +58,7 @@ export function MarketMap({ markets, selected, onSelect }: { markets: Market[]; 
         m.setStyle(FALLBACK_STYLE);
       }
     });
-    m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    m.addControl(new NavigationControl({ showCompass: false }), "top-right");
     const setup = () => {
       if (m.getSource("markets")) return;
       const css = getComputedStyle(document.documentElement);
@@ -94,7 +101,7 @@ export function MarketMap({ markets, selected, onSelect }: { markets: Market[]; 
     const m = map.current;
     const pts = markets.filter((x) => x.lat !== null && x.lon !== null);
     if (!m || !ready || !pts.length) return;
-    const b = new maplibregl.LngLatBounds();
+    const b = new LngLatBounds();
     pts.forEach((p) => b.extend([p.lon as number, p.lat as number]));
     m.fitBounds(b, { padding: 60, maxZoom: 7, duration: 0 });
     // eslint-disable-next-line react-hooks/exhaustive-deps

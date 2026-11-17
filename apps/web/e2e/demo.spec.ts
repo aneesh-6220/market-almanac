@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { API, noHorizontalScroll, trackPageErrors } from "./helpers";
+import { API, noHorizontalScroll, trackPageErrors, waitForContent } from "./helpers";
 
 test.describe("ShockTrace (synthetic demo)", () => {
   test("home explains the product and labels synthetic data", async ({ page }) => {
@@ -79,7 +79,7 @@ test.describe("ShockTrace (synthetic demo)", () => {
   test("navigation and layout work on a phone-sized screen @mobile", async ({ page }) => {
     for (const path of ["/", "/explorer", "/compare", "/lab", "/forecasts", "/data", "/methodology"]) {
       await page.goto(path);
-      await page.waitForLoadState("networkidle");
+      await waitForContent(page);
       await noHorizontalScroll(page);
     }
     await page.goto("/");

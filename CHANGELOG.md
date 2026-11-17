@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Security
+
+- Web dependencies upgraded to clear all `npm audit --omit=dev` advisories: `maplibre-gl` 6.18
+  (GHSA-jrc7-96c5-q579, critical), `zod` 4.6.7 (GHSA-mrhx-c7xc-m3w5, high) and `echarts` 6.1
+  (GHSA-fgmj-fm8m-jvvx, moderate). The map points MapLibre at its bundled worker module with
+  `setWorkerUrl`; schemas use Zod 4's `.loose()`; the calibration tooltip HTML-encodes series names.
+- The phone-layout e2e tests wait for data panels to finish loading instead of `networkidle`, which
+  never fires on the map page because Playwright does not report web-worker script requests as
+  finished.
+
 ## [1.0.0] - 2026-11-17
 
 ### Added

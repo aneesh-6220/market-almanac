@@ -7,6 +7,16 @@ export async function noHorizontalScroll(page: Page) {
   expect(sw).toBeLessThanOrEqual(w + 1);
 }
 
+/**
+ * Wait until the page has loaded and every data panel has finished loading. Used instead of
+ * `networkidle`, which never fires on pages with a map: maplibre-gl 6 loads its web worker from a
+ * module file, and Playwright never reports a worker's script request as finished.
+ */
+export async function waitForContent(page: Page) {
+  await page.waitForLoadState("load");
+  await expect(page.locator('[role="status"]:has(.animate-spin)')).toHaveCount(0);
+}
+
 /** Collect uncaught page errors (expected API 404s are not page errors). */
 export function trackPageErrors(page: Page): string[] {
   const errors: string[] = [];

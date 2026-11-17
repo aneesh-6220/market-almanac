@@ -122,7 +122,7 @@ export const SummarySchema = z
     changes: z.object({ m1: ChangeSchema, m3: ChangeSchema, m12: ChangeSchema }).optional(),
     range_12m: z.object({ min: z.number(), max: z.number(), min_period: z.string(), max_period: z.string(), n: z.number() }).optional(),
   })
-  .passthrough();
+  .loose();
 
 export const SeriesDetailSchema = z.object({
   series: CatalogSeriesSchema,
@@ -156,7 +156,7 @@ export type History = z.infer<typeof HistorySchema>;
 
 const Against = z
   .object({ n_reference: z.number(), percentile_of_size: num, robust_z: num, reference_median: num, reference_p10: num, reference_p90: num })
-  .passthrough();
+  .loose();
 export const AssessmentSchema = z
   .object({
     status: z.string(),
@@ -173,10 +173,10 @@ export const AssessmentSchema = z
     warnings: z.array(z.string()).optional(),
     overall: Against.optional(),
     seasonal: Against.extend({ calendar_month: z.number() }).nullable().optional(),
-    year_on_year: z.object({ pct_change: z.number(), percentile_of_size: num, n_reference: z.number(), label: z.string() }).passthrough().nullable().optional(),
+    year_on_year: z.object({ pct_change: z.number(), percentile_of_size: num, n_reference: z.number(), label: z.string() }).loose().nullable().optional(),
     volatility: z.object({ window_months: z.number(), sd_log_change: z.number(), percentile: num, label: z.string(), n_reference: z.number() }).nullable().optional(),
   })
-  .passthrough();
+  .loose();
 export type Assessment = z.infer<typeof AssessmentSchema>;
 
 export const PeersSchema = z
@@ -194,7 +194,7 @@ export const MovementSchema = z.object({
   series_id: z.string(),
   assessment: AssessmentSchema,
   peers: PeersSchema,
-  history: z.array(z.object({ period: z.string(), pct_change: z.number(), percentile_of_size: z.number(), label: z.string(), n_reference: z.number() }).passthrough()),
+  history: z.array(z.object({ period: z.string(), pct_change: z.number(), percentile_of_size: z.number(), label: z.string(), n_reference: z.number() }).loose()),
   disclaimer: z.string(),
   snapshot_id: str,
 });
@@ -211,7 +211,7 @@ export const SeasonalitySchema = z
     method: z.string().optional(),
     note: z.string().optional(),
   })
-  .passthrough();
+  .loose();
 export type Seasonality = z.infer<typeof SeasonalitySchema>;
 
 export const EnvironmentSchema = z.object({
@@ -232,7 +232,7 @@ export const EnvironmentSchema = z.object({
     })
     .nullable(),
   market_cell_series: z.array(
-    z.object({ period: z.string(), precip_total_mm: num, precip_total_mm_raw: num.optional(), rain_anomaly_z: num, temp_anomaly_z: num, qc_flagged_days: num.optional() }).passthrough(),
+    z.object({ period: z.string(), precip_total_mm: num, precip_total_mm_raw: num.optional(), rain_anomaly_z: num, temp_anomaly_z: num, qc_flagged_days: num.optional() }).loose(),
   ),
   production_region: z
     .object({
@@ -267,11 +267,11 @@ export const BriefSchema = z.object({
     .object({
       forecast: z
         .object({ experiment_id: z.string(), status: z.string(), validation_status: z.string(), reason: str, horizon: z.number(), target_period: z.string(), origin_period: z.string() })
-        .passthrough()
+        .loose()
         .nullable()
         .optional(),
     })
-    .passthrough(),
+    .loose(),
   method: z.string(),
   snapshot_id: str,
   synthetic: z.boolean(),
@@ -280,11 +280,11 @@ export type Brief = z.infer<typeof BriefSchema>;
 
 export const CompareSchema = z.object({
   status: z.string(),
-  comparability: z.object({ level: z.string(), absolute: z.boolean(), indexed: z.boolean(), reasons: z.array(z.string()) }).passthrough(),
+  comparability: z.object({ level: z.string(), absolute: z.boolean(), indexed: z.boolean(), reasons: z.array(z.string()) }).loose(),
   series_meta: z.array(CatalogSeriesSchema),
   window: z.object({ start: z.string(), end: z.string(), months: z.number() }).nullable().optional(),
   months_all_observed: num.optional(),
-  index_base: z.object({ mode: z.string(), base_period: str, warning: z.string().optional() }).passthrough().nullable().optional(),
+  index_base: z.object({ mode: z.string(), base_period: str, warning: z.string().optional() }).loose().nullable().optional(),
   series: z.array(
     z
       .object({
@@ -299,7 +299,7 @@ export const CompareSchema = z.object({
         window_months: z.number(),
         last_index: num,
       })
-      .passthrough(),
+      .loose(),
   ),
   latest_common_spread: z
     .object({ period: z.string(), min: z.number(), max: z.number(), max_over_min: z.number(), lowest_series: z.string(), highest_series: z.string() })
@@ -333,16 +333,16 @@ const StudyRow = z
     fragility_reasons: z.array(z.string()).nullable().optional(),
     commodity_code: z.string().optional(),
   })
-  .passthrough();
+  .loose();
 export type StudyRow = z.infer<typeof StudyRow>;
 export const StudySchema = z
   .object({
     study_id: z.string(),
     phase: z.string(),
     generated_at: z.string().optional(),
-    spec: z.object({ horizons: z.array(z.number()), primary_lag: z.number(), alpha: z.number() }).passthrough(),
+    spec: z.object({ horizons: z.array(z.number()), primary_lag: z.number(), alpha: z.number() }).loose(),
     experiments: z.array(
-      z.object({ experiment_id: z.string(), country: z.string(), commodity_code: z.string(), commodity_name: z.string(), variant: z.string(), evidence_class: z.string(), n_series: z.number() }).passthrough(),
+      z.object({ experiment_id: z.string(), country: z.string(), commodity_code: z.string(), commodity_name: z.string(), variant: z.string(), evidence_class: z.string(), n_series: z.number() }).loose(),
     ),
     pooled: z.array(StudyRow),
     per_crop: z.array(StudyRow),
@@ -364,12 +364,12 @@ export const StudySchema = z
             not_fragile: z.boolean(),
             outcome: z.string(),
           })
-          .passthrough(),
+          .loose(),
       ),
-      outcome: z.object({ label: z.string(), statement: z.string() }).passthrough(),
+      outcome: z.object({ label: z.string(), statement: z.string() }).loose(),
     }),
   })
-  .passthrough();
+  .loose();
 export type Study = z.infer<typeof StudySchema>;
 
 /* ---- hooks ---- */
