@@ -3,11 +3,16 @@
 ShockTrace runs as three services: PostgreSQL, the API (which also hosts the research CLI and
 the Parquet data lake on a volume) and the Next.js web app.
 
-> **Verification status.** The Dockerfiles and `docker-compose.yml` are written to the layouts
-> verified locally (uv-managed Python 3.12, Next.js standalone output), and CI builds both
-> images, but Docker was not available in the development environment, so the container build
-> and Compose start-up have **not** been executed end to end yet. Run `docker compose up --build`
-> and the CI `docker` job before relying on them.
+> **Verification status (2026-11-17).** Docker is not installed on the development machine, so
+> the images and `docker compose up` have **not** been built or run. Verified instead, without
+> containers: a fresh clone with `uv sync --frozen` and `npm ci`; `next build` and the standalone
+> server laid out as the web image copies it (page, static assets and favicon served); migrations
+> on SQLite and on an isolated PostgreSQL copy of the production database; data-bundle install,
+> `sync-db` and the API serving every page from it; restart with the same data directory; 280
+> mixed requests at 32 concurrent clients (one worker: 78 req/s, p95 0.68 s, no errors). Run the
+> CI `docker` job or `docker compose up --build` before relying on the images.
+>
+> **No public deployment exists yet.** Nothing has been deployed and no URL is live.
 
 ## Docker Compose (single host)
 
@@ -46,12 +51,33 @@ Schedule ingestion (e.g. a monthly cron running the same commands) rather than r
 the request path. Ingestion is idempotent: unchanged upstream data produces identical snapshot
 hashes.
 
+## Data for a live deployment
+
+The API reads analytical data from files under `DATA_DIR`, not from the database: lake snapshots,
+the public catalog and experiment artefacts. A deployment therefore needs a persistent volume for
+`/app/data` and a way to fill it. The simplest reliable option is the versioned public data bundle
+(see [Reproducibility](REPRODUCIBILITY.md)):
+
+1. Build it where the data were ingested: `make bundle` (writes `dist/*.tar.gz` and `.sha256`).
+2. Publish the archive somewhere the server can download over HTTPS (for example a GitHub release
+   asset), after checking the redistribution terms in [DATA_SOURCES.md](DATA_SOURCES.md).
+3. Set `SHOCKTRACE_MODE=live`, `DATA_BUNDLE_URL` and `DATA_BUNDLE_SHA256` on the API service. On
+   first start the entrypoint migrates the database, installs and verifies the bundle, and runs
+   `sync-db`. Later starts reuse the volume (the bundle is not downloaded again).
+4. To update the data, publish a new bundle and install it into a new volume (snapshots are
+   immutable, so installing over an older bundle only adds files).
+
+Provider credentials are needed only for ingestion, never for serving. If a provider is down,
+already-installed data keep being served.
+
 ## Managed PostgreSQL
 
 Any PostgreSQL 14+ works (the project was developed against a hosted Neon database).
 `DATABASE_URL` accepts `postgres://`, `postgresql://` or `postgresql+psycopg://`; use TLS
 parameters required by your provider (e.g. `?sslmode=require`). Run `shocktrace db-init` once
-per release to apply migrations.
+per release to apply migrations (the container entrypoint does this on every start; migrations
+are additive). Before upgrading a database that already holds results, rehearse the upgrade with
+`scripts/ops/rehearse_db_upgrade.py` (read-only on the source).
 
 ## Production checklist
 

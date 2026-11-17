@@ -71,6 +71,28 @@ raise `DatasetNotAvailable`. Annual values are context only and never interpolat
   (`providers/faostat_areas.csv`, 244 areas).
 - Annual values are usable from December of the following year.
 
+## Redistribution (public data bundle)
+
+The public data bundle (`shocktrace bundle-export`) redistributes derived snapshots of these
+sources. Checked 2026-11-17; confirm before each publication:
+
+| Source | What the terms allow | Status |
+|---|---|---|
+| WFP food prices via HDX | HDX's licence guidance: CC BY-IGO permits copying, redistribution and adaptation, including commercially, if the licence is stated and notices kept | **Confirm the licence field on the HDX "Global WFP food prices" dataset page** before publishing (not verified from the page itself) |
+| NASA POWER | Public; cite NASA POWER | Allowed with citation |
+| World Bank WDI | CC BY 4.0 | Allowed with attribution |
+| IMF data | IMF copyright and usage terms (effective 11 Oct 2024): data may be copied, distributed and used to create derivative works; **commercial reuse needs written permission** (copyright@imf.org) | Allowed for this non-commercial project with attribution |
+| FAOSTAT | CC BY 4.0 | Allowed with attribution |
+| IFPRI MapSPAM 2010 | CC BY 4.0 | Only derived crop weights are inside experiment results; raw rasters are not bundled |
+
+The bundle manifest carries an attribution block naming every source. Raw provider downloads
+(MapSPAM rasters, CHIRPS files, the FAOSTAT bulk archive) and the HTTP cache are never bundled;
+the ingestion commands retrieve them from the providers.
+
+Sources consulted: [IMF copyright and usage](https://www.imf.org/en/about/copyright-and-terms),
+[HDX data licences](https://docs.humdata.org/about/data-licenses),
+[HDX Global WFP food prices](https://data.humdata.org/dataset/global-wfp-food-prices).
+
 ## Reliability features shared by all adapters
 
 Retries on 408/425/429/5xx with full-jitter exponential backoff and `Retry-After`, per-request

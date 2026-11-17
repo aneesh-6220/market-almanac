@@ -48,7 +48,7 @@ export function HomeCoverage() {
         {[
           ["Countries", n("countries")],
           ["Markets", n("markets")],
-          ["Price series", n("usable_series")],
+          ["Series with 12+ months", n("usable_series")],
           ["Monthly prices", n("observations")],
         ].map(([k, v]) => (
           <div key={k}>

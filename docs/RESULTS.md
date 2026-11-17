@@ -3,7 +3,69 @@
 This file records results produced by ShockTrace on **live** data. Demo-mode results describe
 synthetic data and are not reported here.
 
-## Burkina Faso, cereal and pulse prices (run 2026-11-16)
+## Current results (v1.0)
+
+| Evidence | Where | Status |
+|---|---|---|
+| Pre-registered study `sahel-production-weather-v1`, **confirmatory** phase: Mali (millet, sorghum, maize, cowpeas) and Niger (millet, sorghum) | [generated tables](research/generated/sahel_study_confirmatory.md) | **Current.** No established improvement |
+| Same study, **exploratory** phase: Burkina Faso (the development country) and Niger maize | [generated tables](research/generated/sahel_study_exploratory.md) | Current, exploratory only |
+| Burkina Faso v0.1 runs and their audit-corrected re-runs (sections below) | this file | **Superseded** by the v1.0 Burkina Faso runs; kept as history |
+
+### Confirmatory outcome
+
+Protocol frozen at tag `protocol-sahel-v1` (commit `4dd600f`, 2026-11-16 23:35 −04:00) before any
+Mali or Niger model was estimated; the confirmatory run is stamped 23:41 −04:00, and no forecasting,
+feature, evaluation or study-runner code changed between the tag and the results commit `57b1a3b`.
+Primary timing: prices assumed available one month after the month they describe.
+
+| Country | Contrast | h | Test months | Forecasts | Loss ratio | 95% CI | p (one-sided) | p (Holm) |
+|---|---|---|---|---|---|---|---|---|
+| Mali | production-region weather vs price history (P vs A) | 1 | 66 | 9,946 | 1.169 | 0.953–1.417 | 0.877 | 1.000 |
+| Mali | production-region vs market-local weather (P vs B) | 1 | 66 | 9,946 | 1.146 | 0.917–1.392 | 0.810 | 1.000 |
+| Mali | P vs A | 3 | 64 | 9,411 | 1.273 | 0.932–1.715 | 0.875 | 1.000 |
+| Mali | P vs B | 3 | 64 | 9,411 | 1.257 | 0.873–1.707 | 0.816 | 1.000 |
+| Niger | P vs A | 1 | 68 | 6,062 | 1.109 | 0.879–1.326 | 0.810 | 1.000 |
+| Niger | P vs B | 1 | 68 | 6,062 | 1.079 | 0.875–1.262 | 0.763 | 1.000 |
+| Niger | P vs A | 3 | 66 | 5,881 | 1.280 | 0.908–1.736 | 0.910 | 1.000 |
+| Niger | P vs B | 3 | 66 | 5,881 | 1.278 | 0.950–1.672 | 0.940 | 1.000 |
+
+Loss ratio = MSE of the second model / MSE of the first (above 1: production-region weather made
+errors larger). CI: moving-block bootstrap over origin months of the ratio of monthly mean losses.
+p: one-sided Diebold–Mariano (Newey–West, Harvey–Leybourne–Newbold), Holm over the 8 tests.
+
+- **None of the 8 tests is significant; all 8 point estimates are above 1.** The time-shift
+  placebo did no worse than the real features in 3 of 4 cases, and the wrong-crop placebo was
+  indistinguishable from the right crop in Mali. Market-local weather (B vs A) was also no
+  improvement (ratios 1.001–1.028).
+- **What this does not show:** that weather does not affect food prices. With 64–68 test months the
+  study can detect only large improvements; a gain of a few percent would be invisible. The
+  production-region index is a national crop-area proxy, and timing rests on assumptions.
+- **Independent check:** `uv run python scripts/audit/recompute_study.py` re-derives every pooled
+  row count, loss ratio and p-value from the stored predictions (maximum discrepancy 4 × 10⁻¹⁶).
+
+### Burkina Faso under the v1.0 method (exploratory)
+
+| Contrast | h | Test months | Forecasts | Loss ratio | 95% CI | p (one-sided) |
+|---|---|---|---|---|---|---|
+| P vs A | 1 | 67 | 15,402 | 1.129 | 0.869–1.457 | 0.812 |
+| P vs B | 1 | 67 | 15,402 | 1.115 | 0.916–1.332 | 0.850 |
+| B vs A | 1 | 67 | 15,402 | 1.013 | 0.941–1.099 | 0.632 |
+| P vs A | 3 | 65 | 14,916 | 1.195 | 0.817–1.621 | 0.828 |
+| P vs B | 3 | 65 | 14,916 | 1.159 | 0.859–1.426 | 0.855 |
+| B vs A | 3 | 65 | 14,916 | 1.031 | 0.903–1.183 | 0.674 |
+
+These replace the v0.1 and audit-corrected Burkina Faso runs below (supersession reasons in
+`packages/shocktrace/src/shocktrace/research/supersessions.yaml`). Burkina Faso was used to develop
+the method, so its results cannot confirm anything.
+
+---
+
+# History: Burkina Faso v0.1 runs (superseded)
+
+The rest of this file is the record of the first live runs and their audit. The experiments are
+kept, retrievable by ID and marked superseded; public listings exclude them by default.
+
+## Burkina Faso, cereal and pulse prices (run 2026-11-16, superseded)
 
 ### How the case was chosen
 

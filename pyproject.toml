@@ -1,6 +1,6 @@
 [project]
 name = "shocktrace"
-version = "0.1.0"
+version = "1.0.0"
 description = "Open-source econometric forecasting of food-price risk from environmental and economic signals."
 readme = "README.md"
 license = { text = "MIT" }
