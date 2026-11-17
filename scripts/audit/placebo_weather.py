@@ -17,12 +17,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from shocktrace.data.store import DatasetStore
-from shocktrace.evaluation.backtest import BacktestConfig, common_sample, run_backtest
-from shocktrace.evaluation.inference import diebold_mariano
-from shocktrace.features.weather import WEATHER_FEATURES, ClimatologyConfig, weather_features
-from shocktrace.forecasting.models import default_specs
-from shocktrace.services import load_datasets
+from market_almanac.data.store import DatasetStore
+from market_almanac.evaluation.backtest import BacktestConfig, common_sample, run_backtest
+from market_almanac.evaluation.inference import diebold_mariano
+from market_almanac.features.weather import WEATHER_FEATURES, ClimatologyConfig, weather_features
+from market_almanac.forecasting.models import default_specs
+from market_almanac.services import load_datasets
 
 SHIFT = int(sys.argv[1]) if len(sys.argv) > 1 else 60
 data, _ = load_datasets(DatasetStore(Path("data/lake/live"), "live"))

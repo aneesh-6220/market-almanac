@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture(scope="module")
 def client(seeded_env):  # type: ignore[no-untyped-def]
-    from shocktrace_api.main import create_app
+    from market_almanac_api.main import create_app
 
     return TestClient(create_app())
 
@@ -79,7 +79,7 @@ def test_history_json_and_csv_keep_missing_months_explicit(client, series):
     body = [ln for ln in r.text.splitlines() if not ln.startswith("#")]
     rows = list(csv.DictReader(io.StringIO("\n".join(body))))
     assert len(rows) == len(h["items"]) and set(rows[0]) == {"period", "price", "currency", "unit"}
-    assert r.text.startswith("# ShockTrace series") and "not interpolated" in r.text
+    assert r.text.startswith("# Market Almanac series") and "not interpolated" in r.text
 
 
 def test_movement_seasonality_environment(client, series):
@@ -182,7 +182,7 @@ def test_peer_panel_matches_per_series_definition(client, series):  # type: igno
     """The vectorised, cached peer panel equals one column per comparable series built one by one."""
     import pandas as pd
 
-    from shocktrace_api.deps import cache
+    from market_almanac_api.deps import cache
 
     cat, _, _ = cache.catalog()
     sid = series[0]["series_id"]

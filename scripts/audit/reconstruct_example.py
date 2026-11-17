@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from shocktrace.data.store import DatasetStore
-from shocktrace.services import load_datasets
+from market_almanac.data.store import DatasetStore
+from market_almanac.services import load_datasets
 
 exp = Path(sys.argv[1])
 market = sys.argv[2] if len(sys.argv) > 2 else "Sankaryare"

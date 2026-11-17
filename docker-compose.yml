@@ -1,18 +1,18 @@
 # Local stack: PostgreSQL, API and web. Demo mode by default (synthetic data, no credentials).
 #   docker compose up --build
-# Live mode: set SHOCKTRACE_MODE=live and provider credentials in .env, then run ingestion with
-#   docker compose exec api shocktrace ingest --source prices --country BFA
+# Live mode: set MARKET_ALMANAC_MODE=live and provider credentials in .env, then run ingestion with
+#   docker compose exec api market-almanac ingest --source prices --country BFA
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: shocktrace
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shocktrace}
-      POSTGRES_DB: shocktrace
+      POSTGRES_USER: market_almanac
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-market_almanac}
+      POSTGRES_DB: market_almanac
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U shocktrace -d shocktrace"]
+      test: ["CMD-SHELL", "pg_isready -U market_almanac -d market_almanac"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -26,13 +26,13 @@ services:
       - path: .env
         required: false
     environment:
-      SHOCKTRACE_MODE: ${SHOCKTRACE_MODE:-demo}
-      DATABASE_URL: postgresql://shocktrace:${POSTGRES_PASSWORD:-shocktrace}@postgres:5432/shocktrace
+      MARKET_ALMANAC_MODE: ${MARKET_ALMANAC_MODE:-demo}
+      DATABASE_URL: postgresql://market_almanac:${POSTGRES_PASSWORD:-market_almanac}@postgres:5432/market_almanac
       DATA_DIR: /app/data
       CACHE_DIR: /app/data/cache
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
     volumes:
-      - shocktrace-data:/app/data
+      - market-almanac-data:/app/data
     ports:
       - "8000:8000"
     depends_on:
@@ -55,4 +55,4 @@ services:
 
 volumes:
   pgdata:
-  shocktrace-data:
+  market-almanac-data:

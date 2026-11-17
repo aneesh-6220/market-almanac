@@ -3,5 +3,5 @@
 set -uo pipefail
 for c in "$@"; do
   echo "===== $c"
-  uv run shocktrace discover --mode live --country "$c" --top 6 2>&1 | grep -v '"level"'
+  uv run market-almanac discover --mode live --country "$c" --top 6 2>&1 | grep -v '"level"'
 done

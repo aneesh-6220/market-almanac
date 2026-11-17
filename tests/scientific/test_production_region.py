@@ -6,18 +6,18 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shocktrace.data.identity import power_grid_cell, weather_location_id
-from shocktrace.experiments.config import ExperimentConfig
-from shocktrace.experiments.runner import run_experiment
-from shocktrace.features.builder import PRODUCTION_FEATURES
-from shocktrace.features.production_weather import (
+from market_almanac.data.identity import power_grid_cell, weather_location_id
+from market_almanac.experiments.config import ExperimentConfig
+from market_almanac.experiments.runner import run_experiment
+from market_almanac.features.builder import PRODUCTION_FEATURES
+from market_almanac.features.production_weather import (
     MIN_WEIGHT_COVERAGE,
     build_production_features,
     production_index,
     season_features,
 )
-from shocktrace.geo.calendar import CropSeason, dekad_month, season_for
-from shocktrace.geo.spam import (
+from market_almanac.geo.calendar import CropSeason, dekad_month, season_for
+from market_almanac.geo.spam import (
     CROP_SPAM_CODES,
     CropGeographyError,
     cell_weights,
@@ -236,7 +236,7 @@ def test_features_never_use_weather_after_the_information_month():
 
 
 def test_build_features_keys_by_origin_and_respects_the_weather_lag(monkeypatch):
-    import shocktrace.features.production_weather as pw
+    import market_almanac.features.production_weather as pw
 
     monkeypatch.setattr(pw, "season_for", lambda iso, crop: SEASON)
     wx = _weather({"a": 1.0, "b": 0.5})

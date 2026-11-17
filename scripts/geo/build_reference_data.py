@@ -1,4 +1,4 @@
-"""Rebuild the reference data committed under packages/shocktrace/src/shocktrace/geo/data/.
+"""Rebuild the reference data committed under packages/market-almanac/src/market_almanac/geo/data/.
 
 Inputs are downloaded once into the git-ignored cache and verified against recorded checksums:
 
@@ -21,10 +21,10 @@ from pathlib import Path
 import httpx
 import yaml
 
-from shocktrace.geo import spam
+from market_almanac.geo import spam
 
 CACHE = Path("data/cache")
-OUT = Path("packages/shocktrace/src/shocktrace/geo/data")
+OUT = Path("packages/market-almanac/src/market_almanac/geo/data")
 CAL_URL = "https://datacatalogfiles.worldbank.org/ddh-published/0066842/DR0095318/crop_calendar_gaul0.csv"
 CAL_SHA256 = "4aec81e67dd8db2fc95e56d25f9031d9692421d8226519ca773449dbb442b147"
 CAL_NAMES = {"Burkina Faso": "BFA", "Mali": "MLI", "Niger": "NER"}
@@ -67,7 +67,7 @@ def build_weights(countries: list[str]) -> None:
         f"# Crop-production weights on the NASA POWER grid, derived from {spam.SOURCE_CITATION}\n"
         f"# Source licence: {spam.SOURCE_LICENSE}. Source file {spam.ARCHIVE_NAME} (md5 {spam.ARCHIVE_MD5}), member "
         f"{spam.MEMBER_NAME} (harvested area, all technologies, 2009-2011 average).\n"
-        f"# Method: shocktrace.geo.spam.cell_weights; cells holding the top {spam.COVERAGE_TARGET:.0%} of national "
+        f"# Method: market_almanac.geo.spam.cell_weights; cells holding the top {spam.COVERAGE_TARGET:.0%} of national "
         "harvested area, renormalised to sum to 1 per country and crop.\n"
         f"# Built {datetime.now(UTC):%Y-%m-%d} for {', '.join(countries)} by scripts/geo/build_reference_data.py\n"
     )

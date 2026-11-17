@@ -1,11 +1,11 @@
 [project]
-name = "shocktrace"
+name = "market-almanac"
 version = "1.0.0"
 description = "Open-source econometric forecasting of food-price risk from environmental and economic signals."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.12,<3.14"
-authors = [{ name = "ShockTrace contributors" }]
+authors = [{ name = "Market Almanac contributors" }]
 dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.30",
@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.scripts]
-shocktrace = "shocktrace.cli:app"
+market-almanac = "market_almanac.cli:app"
 
 [dependency-groups]
 dev = [
@@ -48,7 +48,7 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["packages/shocktrace/src/shocktrace", "apps/api/src/shocktrace_api"]
+packages = ["packages/market-almanac/src/market_almanac", "apps/api/src/market_almanac_api"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -61,7 +61,7 @@ filterwarnings = ["ignore::DeprecationWarning:statsmodels.*"]
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-src = ["packages/shocktrace/src", "apps/api/src", "tests"]
+src = ["packages/market-almanac/src", "apps/api/src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
@@ -77,5 +77,5 @@ plugins = ["pydantic.mypy"]
 ignore_missing_imports = true
 warn_unused_ignores = false
 check_untyped_defs = true
-mypy_path = ["packages/shocktrace/src", "apps/api/src"]
-packages = ["shocktrace", "shocktrace_api"]
+mypy_path = ["packages/market-almanac/src", "apps/api/src"]
+packages = ["market_almanac", "market_almanac_api"]

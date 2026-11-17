@@ -3,8 +3,8 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from shocktrace.http import ProviderHTTPError, backoff_delay, parse_retry_after
-from shocktrace.logging import redact
+from market_almanac.http import ProviderHTTPError, backoff_delay, parse_retry_after
+from market_almanac.logging import redact
 from tests.conftest import run
 
 URL = "https://api.worldbank.org/v2/x"

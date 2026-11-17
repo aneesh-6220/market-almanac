@@ -4,8 +4,8 @@ import { defineConfig, devices } from "@playwright/test";
  * Two end-to-end suites, chosen with E2E_MODE:
  *
  * - demo (default, used in CI): the synthetic Demoland data. Seed it first with `make demo`.
- * - live: real ingested data from the public data bundle (`shocktrace bundle-install`, then
- *   `shocktrace sync-db`). Run with `E2E_MODE=live npm run test:e2e`.
+ * - live: real ingested data from the public data bundle (`market-almanac bundle-install`, then
+ *   `market-almanac sync-db`). Run with `E2E_MODE=live npm run test:e2e`.
  *
  * Existing servers on :8000 / :3000 are reused, so `make dev` + `npm run test:e2e` also works.
  */
@@ -28,11 +28,11 @@ export default defineConfig({
     ? undefined
     : [
         {
-          command: "uv run uvicorn shocktrace_api.main:app --port 8000",
+          command: "uv run uvicorn market_almanac_api.main:app --port 8000",
           cwd: "../..",
           url: "http://localhost:8000/health",
           reuseExistingServer: true,
-          env: { SHOCKTRACE_MODE: mode, API_RATE_LIMIT_PER_MINUTE: "100000" },
+          env: { MARKET_ALMANAC_MODE: mode, API_RATE_LIMIT_PER_MINUTE: "100000" },
           timeout: 120_000,
         },
         {

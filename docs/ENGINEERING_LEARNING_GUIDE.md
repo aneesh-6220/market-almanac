@@ -1,9 +1,9 @@
 # Engineering learning guide
 
-A guide to owning ShockTrace: what each part does, why it is built that way, the mathematics
+A guide to owning Market Almanac: what each part does, why it is built that way, the mathematics
 behind it, the bugs that taught the most, and exercises with objective tests. Every file and
 function named here exists in the repository; paths are relative to
-`packages/shocktrace/src/shocktrace/` unless they start with `apps/`, `scripts/` or `tests/`.
+`packages/market-almanac/src/market_almanac/` unless they start with `apps/`, `scripts/` or `tests/`.
 
 Part I explains. Part II is exercises. Part III is interview questions.
 
@@ -229,7 +229,7 @@ features). A real effect should beat both placebos; here it did not.
 
 ### 14. API design
 
-`apps/api/src/shocktrace_api/`:
+`apps/api/src/market_almanac_api/`:
 
 - read-only `GET` endpoints under `/api/v1`, strict patterns for every identifier (so path tricks
   return 404/422 before any file is touched), pagination with caps, per-IP rate limiting, CORS
@@ -308,7 +308,7 @@ uv run pytest exercises/tests/test_ex1_holm.py -q
 ```
 
 The tests are objective: they compare your implementation with known values, with an independent
-library, or with a property that must hold. Do not read ShockTrace's implementation until your tests
+library, or with a property that must hold. Do not read Market Almanac's implementation until your tests
 pass; then compare.
 
 1. **Holm adjustment** (`exercises/ex1_holm.py: holm`). Implement step-down Holm adjusted
@@ -332,7 +332,7 @@ pass; then compare.
 
 ## Part III — Interview questions
 
-1. Walk through what happens between `shocktrace ingest --source prices` and a price appearing on
+1. Walk through what happens between `market-almanac ingest --source prices` and a price appearing on
    the market page. Where could a wrong number enter, and what catches it?
 2. Why is the Diebold–Mariano statistic computed on monthly means of loss differences rather than on
    all forecast rows? What would go wrong otherwise?

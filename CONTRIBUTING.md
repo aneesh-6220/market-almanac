@@ -1,6 +1,6 @@
-# Contributing to ShockTrace
+# Contributing to Market Almanac
 
-Thank you for helping. ShockTrace is research software: correctness and honesty about
+Thank you for helping. Market Almanac is research software: correctness and honesty about
 uncertainty matter more than features.
 
 ## Getting started
@@ -35,7 +35,7 @@ If you believe a rule is wrong, open an issue to discuss the methodology before 
 ## Reporting bugs and data problems
 
 Open an issue with steps to reproduce, the mode (demo/live), the experiment or snapshot ID, and
-the output of `shocktrace doctor`. Never paste credentials or `.env` contents. For security
+the output of `market-almanac doctor`. Never paste credentials or `.env` contents. For security
 issues follow [SECURITY.md](SECURITY.md).
 
 ## Code of conduct

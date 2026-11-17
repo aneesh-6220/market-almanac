@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shocktrace.analytics.brief import build_brief
-from shocktrace.analytics.compare import align, assess_comparability, compare, index_series
-from shocktrace.analytics.movement import (
+from market_almanac.analytics.brief import build_brief
+from market_almanac.analytics.compare import align, assess_comparability, compare, index_series
+from market_almanac.analytics.movement import (
     MIN_HISTORY,
     assess_movement,
     label_for,
@@ -16,7 +16,7 @@ from shocktrace.analytics.movement import (
     movement_history,
     peer_context,
 )
-from shocktrace.analytics.summary import monthly_records, seasonal_profile, series_summary
+from market_almanac.analytics.summary import monthly_records, seasonal_profile, series_summary
 
 
 def _series(n: int = 72, seed: int = 0, sd: float = 0.03, start: str = "2019-01-01") -> pd.Series:

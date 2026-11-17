@@ -24,7 +24,7 @@ describe("VerdictBadge", () => {
 
 describe("ErrorState", () => {
   it("explains how to fix an unreachable API", () => {
-    render(<ErrorState error={new ApiError(0, "Cannot reach the ShockTrace API")} what="prices" />);
+    render(<ErrorState error={new ApiError(0, "Cannot reach the Market Almanac API")} what="prices" />);
     expect(screen.getByRole("alert")).toHaveTextContent("Could not load prices.");
     expect(screen.getByRole("alert")).toHaveTextContent("NEXT_PUBLIC_API_URL");
   });

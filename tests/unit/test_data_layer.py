@@ -4,19 +4,19 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shocktrace.data.alignment import RULES, asof_align
-from shocktrace.data.quality import (
+from market_almanac.data.alignment import RULES, asof_align
+from market_almanac.data.quality import (
     EligibilityCriteria,
     assess_prices,
     build_quality_report,
     classify_extremes,
     clean_monthly_series,
 )
-from shocktrace.data.schema import PRICES, SchemaError, coerce, validate
-from shocktrace.data.store import DatasetStore
-from shocktrace.data.weather import aggregate_daily_to_monthly
-from shocktrace.evaluation.inference import diebold_mariano, moving_block_bootstrap_ratio, newey_west_variance
-from shocktrace.evaluation.metrics import calibration_table, classification_metrics, regression_metrics
+from market_almanac.data.schema import PRICES, SchemaError, coerce, validate
+from market_almanac.data.store import DatasetStore
+from market_almanac.data.weather import aggregate_daily_to_monthly
+from market_almanac.evaluation.inference import diebold_mariano, moving_block_bootstrap_ratio, newey_west_variance
+from market_almanac.evaluation.metrics import calibration_table, classification_metrics, regression_metrics
 
 
 def _prices(
@@ -27,7 +27,7 @@ def _prices(
     start: str = "2015-01-01",
     values: np.ndarray | None = None,
 ) -> pd.DataFrame:
-    from shocktrace.data.identity import series_id
+    from market_almanac.data.identity import series_id
 
     periods = pd.date_range(start, periods=n, freq="MS")
     sid = series or series_id(

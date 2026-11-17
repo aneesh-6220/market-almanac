@@ -9,26 +9,26 @@
 #   data volume into a fresh database).
 set -e
 DATA="${DATA_DIR:-/app/data}"
-MODE="${SHOCKTRACE_MODE:-demo}"
+MODE="${MARKET_ALMANAC_MODE:-demo}"
 
-shocktrace db-init
+market-almanac db-init
 
 if [ "$MODE" = "demo" ] && [ ! -d "$DATA/lake/demo/prices" ]; then
   echo "seeding synthetic demo data (first start)"
-  shocktrace demo-seed
+  market-almanac demo-seed
 fi
 
 if [ "$MODE" = "live" ] && [ -n "${DATA_BUNDLE_URL:-}" ] && [ ! -f "$DATA/bundles/live-installed.json" ]; then
   echo "installing public data bundle"
   if [ -n "${DATA_BUNDLE_SHA256:-}" ]; then
-    shocktrace bundle-install "$DATA_BUNDLE_URL" --sha256 "$DATA_BUNDLE_SHA256"
+    market-almanac bundle-install "$DATA_BUNDLE_URL" --sha256 "$DATA_BUNDLE_SHA256"
   else
     echo "warning: DATA_BUNDLE_SHA256 not set; the archive is checked only against its own manifest"
-    shocktrace bundle-install "$DATA_BUNDLE_URL"
+    market-almanac bundle-install "$DATA_BUNDLE_URL"
   fi
-  shocktrace sync-db
+  market-almanac sync-db
 elif [ "${SYNC_DB_ON_START:-0}" = "1" ]; then
-  shocktrace sync-db
+  market-almanac sync-db
 fi
 
 exec "$@"

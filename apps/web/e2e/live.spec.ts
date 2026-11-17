@@ -10,7 +10,7 @@ import { API, noHorizontalScroll, selectByText, trackPageErrors, waitForContent 
 const MILLET_ANSONGO = "ps_0ea6a8b827d55559"; // Mali, Gao, Ansongo, millet, retail, XOF/KG
 const MILLET_BADALABOUGOU = "ps_59dd8957cb1cb5d7"; // Mali, Bamako, Badalabougou, millet, retail, XOF/KG
 
-test.describe("ShockTrace (live data)", () => {
+test.describe("Market Almanac (live data)", () => {
   test("home shows real coverage and the pre-registered study outcome", async ({ page }) => {
     const errors = trackPageErrors(page);
     await page.goto("/");

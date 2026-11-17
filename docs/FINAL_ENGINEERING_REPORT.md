@@ -1,4 +1,4 @@
-# Final engineering report: ShockTrace v1.0.0
+# Final engineering report: Market Almanac v1.0.0
 
 Date: 2026-11-17. Branch `release/v1.0.0`. Prepared from executed checks; where something was
 not run, this says so.
@@ -82,7 +82,7 @@ national crop-area proxy; nominal local-currency prices. See `docs/RESULTS.md`,
 
 A read-only JSON backup of every Neon table was written to `data/backups/` (gitignored) before the
 rehearsal. Storage for deployment: lake snapshots, catalog and experiment artefacts travel as a
-hash-verified data bundle (`shocktrace bundle-export/install`); the container entrypoint installs it
+hash-verified data bundle (`market-almanac bundle-export/install`); the container entrypoint installs it
 from `DATA_BUNDLE_URL` and indexes it. Bundle built: 355 files, 125 MB (75 MB compressed), SHA-256
 `0963b87d0aed79bec156c0e323726147a01c729cc9b2bc656df3922b83ebd11d`.
 
@@ -133,7 +133,7 @@ the tail; one worker per container is the documented default.
 ## 10. Clean-install evidence
 
 Fresh `git clone` into an empty directory (no `.env`, no `data/`): `uv sync --frozen`, `npm ci`,
-`shocktrace db-init`, `demo-seed`, `bundle-install` with hash check, `sync-db`, API start, `next build`,
+`market-almanac db-init`, `demo-seed`, `bundle-install` with hash check, `sync-db`, API start, `next build`,
 `next start` and the standalone server laid out as in the web Dockerfile (page, static assets and
 favicon served). The demo Playwright suite passed against that production build. The live suite
 ran against the development servers on the workstation's own live data; the clean-clone API built
@@ -172,7 +172,7 @@ IMF data may be redistributed for non-commercial use with attribution.
     app creates no popups and injects no HTML into the map; exposure is limited to attribution HTML
     from the configured style URL (OpenFreeMap by default, or an operator-set URL).
   - `zod` < 4.6.6, high: memory exhaustion validating oversized constrained collections
-    (GHSA-mrhx-c7xc-m3w5). Zod validates only responses from ShockTrace's own API.
+    (GHSA-mrhx-c7xc-m3w5). Zod validates only responses from Market Almanac's own API.
   - `echarts` < 6.1.0, moderate: XSS (GHSA-fgmj-fm8m-jvvx). Chart labels include market and
     commodity names from WFP data; the only custom HTML tooltip shows internal model names.
   Exploitation needs a hostile style URL, a compromised API or hostile names in WFP data, so this is
@@ -195,8 +195,8 @@ See `docs/PORTFOLIO_RELEASE.md`: every claim there maps to a test, artefact or t
 | Blocker | Fix |
 |---|---|
 | No remote / CI never run on GitHub | Create the repository, push `release/v1.0.0`, open a PR to `main`, fix anything CI finds |
-| Data bundle unpublished | Confirm the HDX licence; attach `dist/shocktrace-live-data-20261117T114519Z.tar.gz` to a release; put its URL and SHA-256 in the README |
+| Data bundle unpublished | Confirm the HDX licence; attach `dist/market-almanac-live-data-20261117T114519Z.tar.gz` to a release; put its URL and SHA-256 in the README |
 | npm advisories (ECharts, MapLibre, Zod) | Upgrade to ECharts 6, MapLibre 6, Zod 4; rerun tsc, Vitest and both Playwright suites |
 | Docker unverified | `docker compose up --build` on a machine with Docker, or let the CI `docker` job run |
-| No deployment | Choose a host; set `SHOCKTRACE_MODE=live`, `DATA_BUNDLE_URL`, `DATA_BUNDLE_SHA256`, `DATABASE_URL`, `CORS_ORIGINS`, `NEXT_PUBLIC_API_URL`; deploy; run the live e2e suite against the public URLs |
+| No deployment | Choose a host; set `MARKET_ALMANAC_MODE=live`, `DATA_BUNDLE_URL`, `DATA_BUNDLE_SHA256`, `DATABASE_URL`, `CORS_ORIGINS`, `NEXT_PUBLIC_API_URL`; deploy; run the live e2e suite against the public URLs |
 | Dependency audit not run | `npm audit --omit=dev` and `uvx pip-audit` |

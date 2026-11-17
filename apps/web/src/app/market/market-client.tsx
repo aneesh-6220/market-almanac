@@ -255,7 +255,7 @@ export function MarketClient() {
               <Field label="Range" htmlFor="f-range">
                 <Select id="f-range" value={range} onChange={(v) => set({ range: v === "all" ? null : v })} options={RANGES} />
               </Field>
-              <button type="button" onClick={() => chartRef.current?.downloadPng(`shocktrace_${s.series_id}.png`)} className="inline-flex h-9 items-center gap-1.5 rounded border border-line px-2.5 text-sm text-ink hover:bg-surface-2">
+              <button type="button" onClick={() => chartRef.current?.downloadPng(`market_almanac_${s.series_id}.png`)} className="inline-flex h-9 items-center gap-1.5 rounded border border-line px-2.5 text-sm text-ink hover:bg-surface-2">
                 <Download className="h-3.5 w-3.5" aria-hidden /> PNG
               </button>
               <a href={historyCsvUrl(s.series_id)} className="inline-flex h-9 items-center gap-1.5 rounded border border-line px-2.5 text-sm text-ink hover:bg-surface-2">
@@ -287,7 +287,7 @@ export function MarketClient() {
         <Panel
           title="Market brief"
           note={brief.data ? `As of ${month(brief.data.as_of_period)} · generated from the statistics on this page` : undefined}
-          actions={brief.data && <CopyButton label="Copy brief" text={() => `${brief.data!.title}\n\n${brief.data!.text}\n\nSource: ShockTrace, ${window.location.href}`} />}
+          actions={brief.data && <CopyButton label="Copy brief" text={() => `${brief.data!.title}\n\n${brief.data!.text}\n\nSource: Market Almanac, ${window.location.href}`} />}
         >
           {brief.isLoading && <Loading label="Writing brief" />}
           {brief.isError && <ErrorState error={brief.error} what="the market brief" />}

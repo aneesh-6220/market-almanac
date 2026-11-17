@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from shocktrace.data.public_bundle import BundleError, build_bundle, install_bundle
+from market_almanac.data.public_bundle import BundleError, build_bundle, install_bundle
 
 
 def _seed(root: Path) -> None:
@@ -81,7 +81,7 @@ def test_only_https_urls(tmp_path: Path) -> None:
 
 
 def test_run_manifest_records_code_provenance() -> None:
-    from shocktrace.experiments.runner import code_provenance
+    from market_almanac.experiments.runner import code_provenance
 
     prov = code_provenance()
     assert set(prov) == {"git_commit", "dirty"}

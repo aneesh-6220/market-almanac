@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Methodology",
-  description: "How ShockTrace measures unusual price movements, compares markets, builds weather features and evaluates forecasts, with formulas and limits.",
+  description: "How Market Almanac measures unusual price movements, compares markets, builds weather features and evaluates forecasts, with formulas and limits.",
 };
 
 const SECTIONS = [
@@ -108,14 +108,14 @@ export default function Methodology() {
           I<sub>t</sub> = 100 × P<sub>t</sub> / P<sub>base</sub>
         </F>
         <p>
-          An index compares movements. It does not compare living costs, and ShockTrace applies no currency conversion: it holds no verified, date-matched exchange rates for
+          An index compares movements. It does not compare living costs, and Market Almanac applies no currency conversion: it holds no verified, date-matched exchange rates for
           every pair, and a nominal conversion would not make prices comparable in purchasing-power terms. Series that differ in commodity, unit or price type are refused.
         </p>
 
         <h2 id="timing">What was known when</h2>
         <p>
           A forecast made at the end of month <i>t</i> may use only information available then. The price sources do not publish release dates, and the newest WFP month typically
-          appears one to two months late. ShockTrace therefore states an explicit assumption, the price release lag L, and evaluates three scenarios: L = 0, 1 and 2 months. At
+          appears one to two months late. Market Almanac therefore states an explicit assumption, the price release lag L, and evaluates three scenarios: L = 0, 1 and 2 months. At
           origin <i>t</i> the last price a model may use is P<sub>t−L</sub>. Weather is used through the complete month <i>t</i>.
         </p>
         <p>

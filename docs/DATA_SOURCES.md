@@ -73,7 +73,7 @@ raise `DatasetNotAvailable`. Annual values are context only and never interpolat
 
 ## Redistribution (public data bundle)
 
-The public data bundle (`shocktrace bundle-export`) redistributes derived snapshots of these
+The public data bundle (`market-almanac bundle-export`) redistributes derived snapshots of these
 sources. Checked 2026-11-17; confirm before each publication:
 
 | Source | What the terms allow | Status |
@@ -104,4 +104,4 @@ latency.
 
 `data/fixtures/` contains small real responses recorded from each provider (Kenya, 2019–2025
 slices) used by offline tests. They contain no credentials. Passing fixture tests does **not**
-establish live compatibility; that is checked by `make test-live` and `shocktrace doctor --live`.
+establish live compatibility; that is checked by `make test-live` and `market-almanac doctor --live`.

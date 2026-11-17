@@ -63,13 +63,13 @@ export function ThemeToggle() {
 function Wordmark() {
   // The mark: a price line that jumps after a dry spell (two bars), drawn as a single stroke.
   return (
-    <Link href="/" className="flex items-center gap-2 text-ink" aria-label="ShockTrace home">
+    <Link href="/" className="flex items-center gap-2 text-ink" aria-label="Market Almanac home">
       <svg width="26" height="20" viewBox="0 0 26 20" aria-hidden>
         <rect x="1" y="12" width="3" height="7" rx="1" fill="var(--rain)" />
         <rect x="5.5" y="15" width="3" height="4" rx="1" fill="var(--rain)" opacity="0.6" />
         <path d="M1 9 L8 9 L12 8 L15 3 L19 5 L25 2" fill="none" stroke="var(--grain)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      <span className="font-serif text-xl tracking-tight">ShockTrace</span>
+      <span className="font-serif text-xl tracking-tight">Market Almanac</span>
     </Link>
   );
 }
@@ -129,8 +129,8 @@ export function ModeBand() {
     return (
       <div className="border-b border-bad/30 bg-bad/5 px-4 py-1.5 text-center text-sm text-ink-2" role="status">
         {LOCAL_API
-          ? "The ShockTrace API is unreachable. Pages will show errors until it is running."
-          : "The ShockTrace data service is temporarily unavailable. Pages will show errors until it is back."}
+          ? "The Market Almanac API is unreachable. Pages will show errors until it is running."
+          : "The Market Almanac data service is temporarily unavailable. Pages will show errors until it is back."}
       </div>
     );
   }

@@ -168,7 +168,7 @@ export function LabClient() {
 
   if (exps.isError) return <ErrorState error={exps.error} what="experiments" />;
   if (exps.isLoading) return <Loading label="Loading experiments" />;
-  if (!exps.data?.length) return <Empty>No experiments yet. Run <code className="code">make demo</code> or <code className="code">shocktrace backtest</code> first.</Empty>;
+  if (!exps.data?.length) return <Empty>No experiments yet. Run <code className="code">make demo</code> or <code className="code">market-almanac backtest</code> first.</Empty>;
 
   return (
     <div>
@@ -376,7 +376,7 @@ export function LabClient() {
           </div>
 
           <Panel title="Reproduce this experiment" note="The manifest pins data snapshots, software versions, configuration and random seed.">
-            <pre className="code-block">{`shocktrace reproduce ${r.experiment_id}`}</pre>
+            <pre className="code-block">{`market-almanac reproduce ${r.experiment_id}`}</pre>
             <details className="mt-3 text-sm">
               <summary className="cursor-pointer text-ink-2">Manifest</summary>
               <pre className="code-block mt-2 max-h-80 overflow-auto">{JSON.stringify(r.manifest, null, 2)}</pre>

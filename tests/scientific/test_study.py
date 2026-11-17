@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shocktrace.geo.spam import packaged_weights
-from shocktrace.research.report import render_markdown
-from shocktrace.research.study import (
+from market_almanac.geo.spam import packaged_weights
+from market_almanac.research.report import render_markdown
+from market_almanac.research.study import (
     MIN_NATIONAL_AREA_HA,
     PLACEBO_SHIFT_MONTHS,
     STUDY,
@@ -89,7 +89,7 @@ def _weather(seed: int = 1) -> pd.DataFrame:
 
 
 def test_time_shift_placebo_keeps_the_calendar_and_uses_only_older_weather():
-    from shocktrace.features.production_weather import build_production_features
+    from market_almanac.features.production_weather import build_production_features
 
     wx = _weather()
     real, _ = build_production_features(wx, "NER", {"73": "Millet"})

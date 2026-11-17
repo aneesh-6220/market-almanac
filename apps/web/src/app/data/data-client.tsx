@@ -205,7 +205,7 @@ export function DataClient() {
           </Field>
         </div>
       </div>
-      {quality.isError && <Empty>No quality report yet. Run <code className="code">shocktrace validate</code>.</Empty>}
+      {quality.isError && <Empty>No quality report yet. Run <code className="code">market-almanac validate</code>.</Empty>}
       {quality.isLoading && <Loading />}
       {q && (
         <div className="mb-10 grid grid-cols-[minmax(0,1fr)] gap-5">
@@ -244,7 +244,7 @@ export function DataClient() {
                   className="h-8 rounded border border-line px-3 text-sm text-ink hover:bg-surface-2"
                   onClick={() =>
                     download(
-                      "shocktrace_series_quality.csv",
+                      "market_almanac_series_quality.csv",
                       toCsv(series.map((s) => ({ ...s, reasons: s.reasons.join("; "), extreme_change_classes: JSON.stringify(s.extreme_change_classes) }))),
                     )
                   }

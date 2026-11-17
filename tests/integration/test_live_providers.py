@@ -10,9 +10,9 @@ from datetime import date
 
 import pytest
 
-from shocktrace.config import Settings
-from shocktrace.providers import build_providers
-from shocktrace.providers.base import HealthStatus
+from market_almanac.config import Settings
+from market_almanac.providers import build_providers
+from market_almanac.providers.base import HealthStatus
 from tests.conftest import run
 
 pytestmark = pytest.mark.live

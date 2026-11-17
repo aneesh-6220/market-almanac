@@ -1,7 +1,7 @@
 # Data dictionary
 
 All datasets are stored as Parquet snapshots under `data/lake/{mode}/<dataset>/<snapshot_id>/`
-and validated against the schemas in `packages/shocktrace/src/shocktrace/data/schema.py`.
+and validated against the schemas in `packages/market-almanac/src/market_almanac/data/schema.py`.
 Dates are month-start (`YYYY-MM-01`) for monthly data; timestamps are UTC.
 
 ## `prices` — key (`series_id`, `period`)
@@ -24,7 +24,7 @@ Dates are month-start (`YYYY-MM-01`) for monthly data; timestamps are UTC.
 | `source_ref` | str | Provider reference for the record |
 | `reference_period_start`, `reference_period_end` | datetime | Provider reference period |
 | `published_at` | datetime | Publication time if known (empty for HDX) |
-| `retrieved_at` | datetime | When ShockTrace fetched the record |
+| `retrieved_at` | datetime | When Market Almanac fetched the record |
 | `quality_flags` | str | Semicolon-separated: `invalid_price`, `duplicate_conflict`, … (demo also marks injected issues) |
 
 ## `weather_monthly` — key (`location_id`, `period`)

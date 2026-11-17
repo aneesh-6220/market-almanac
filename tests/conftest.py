@@ -45,7 +45,7 @@ class Recorder:
 
 @pytest.fixture
 def make_http(tmp_path: Path):  # type: ignore[no-untyped-def]
-    from shocktrace.http import HttpClient, HttpConfig
+    from market_almanac.http import HttpClient, HttpConfig
 
     def factory(
         handler: Callable[[httpx.Request], httpx.Response], cache: bool = False, retries: int = 2
@@ -68,7 +68,7 @@ def make_http(tmp_path: Path):  # type: ignore[no-untyped-def]
 
 @pytest.fixture
 def settings_factory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):  # type: ignore[no-untyped-def]
-    from shocktrace.config import Settings, reset_settings_cache
+    from market_almanac.config import Settings, reset_settings_cache
 
     def factory(**overrides: Any) -> Settings:
         for k in ("HDX_HAPI_APP_IDENTIFIER", "FAOSTAT_ACCESS_TOKEN", "FAOSTAT_USERNAME", "FAOSTAT_PASSWORD"):
@@ -88,7 +88,7 @@ def settings_factory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):  # type: 
 
 @pytest.fixture(scope="session")
 def demo_data() -> dict[str, pd.DataFrame]:
-    from shocktrace.data.demo import generate_demo_datasets
+    from market_almanac.data.demo import generate_demo_datasets
 
     return generate_demo_datasets()
 
@@ -96,20 +96,20 @@ def demo_data() -> dict[str, pd.DataFrame]:
 @pytest.fixture(scope="session")
 def seeded_env(tmp_path_factory: pytest.TempPathFactory) -> Iterator[dict[str, Any]]:
     """A fully seeded demo deployment on SQLite (runs the demo experiments once per session)."""
-    from shocktrace.config import get_settings, reset_settings_cache
+    from market_almanac.config import get_settings, reset_settings_cache
 
     d = tmp_path_factory.mktemp("seeded")
     env = {
         "DATABASE_URL": f"sqlite:///{d}/api.db",
         "DATA_DIR": str(d / "data"),
         "CACHE_DIR": str(d / "cache"),
-        "SHOCKTRACE_MODE": "demo",
+        "MARKET_ALMANAC_MODE": "demo",
         "API_RATE_LIMIT_PER_MINUTE": "100000",
     }
     old = {k: os.environ.get(k) for k in env}
     os.environ.update(env)
     reset_settings_cache()
-    from shocktrace.services import init_db, seed_demo
+    from market_almanac.services import init_db, seed_demo
 
     s = get_settings()
     init_db(s)

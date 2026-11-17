@@ -6,7 +6,7 @@ Usage (needs the optional ``pgserver`` package, which bundles a PostgreSQL binar
 
 Steps, none of which write to the source database:
 
-1. Read every ShockTrace table from the configured ``DATABASE_URL`` (read-only) and save a JSON
+1. Read every Market Almanac table from the configured ``DATABASE_URL`` (read-only) and save a JSON
    backup of the rows.
 2. Start a throw-away local PostgreSQL, create the schema at the source's current revision and
    copy the rows into it.
@@ -31,11 +31,11 @@ from typing import Any
 from alembic import command
 from sqlalchemy import MetaData, select, text
 
-from shocktrace.config import Settings, get_settings
-from shocktrace.db import models as m
-from shocktrace.db.migrate import _config, current_revision, head_revision
-from shocktrace.db.session import get_engine, session_scope
-from shocktrace.services import sync_database
+from market_almanac.config import Settings, get_settings
+from market_almanac.db import models as m
+from market_almanac.db.migrate import _config, current_revision, head_revision
+from market_almanac.db.session import get_engine, session_scope
+from market_almanac.services import sync_database
 
 KEY_FIELDS = ("verdict", "config_hash", "conclusion", "mode", "created_at")
 
@@ -117,11 +117,14 @@ def main() -> int:
                     _jsonable(b[f]), sort_keys=True, default=str
                 ):
                     problems.append(f"{eid}: {f} changed")
-        mode = src.shocktrace_mode.value
+        mode = src.market_almanac_mode.value
         current = sorted(e.id for e in after.values() if e.superseded_by is None and e.mode == mode)
         superseded = sorted(f"{e.id} -> {e.superseded_by}" for e in after.values() if e.superseded_by)
         n_dup = s.execute(text("select count(*) - count(distinct id) from experiments")).scalar()
-    print(f"experiments after: {len(after)} (duplicates: {n_dup}); current {src.shocktrace_mode.value}: {len(current)}")
+    print(
+        f"experiments after: {len(after)} (duplicates: {n_dup}); "
+        f"current {src.market_almanac_mode.value}: {len(current)}"
+    )
     print("superseded:\n  " + "\n  ".join(superseded))
     stale_current = [e for e in current if e.startswith("exp_")]
     if stale_current:

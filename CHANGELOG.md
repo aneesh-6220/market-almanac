@@ -31,9 +31,9 @@ All notable changes to this project are documented here. The format follows
 - Scientific integrity: price publication-lag scenarios, precipitation quality control with
   independent cross-checks, month-weighted bootstrap matching the Diebold–Mariano estimand.
 - Experiment lineage (migration `0002`): supersession with reasons, evidence class, study and
-  variant; `shocktrace sync-db` rebuilds the database index from artefacts idempotently; public
+  variant; `market-almanac sync-db` rebuilds the database index from artefacts idempotently; public
   listings exclude superseded runs.
-- Public data bundle: `shocktrace bundle-export` / `bundle-install` with per-file SHA-256,
+- Public data bundle: `market-almanac bundle-export` / `bundle-install` with per-file SHA-256,
   path-traversal protection and no overwriting of immutable files; container entrypoint installs a
   bundle from `DATA_BUNDLE_URL`.
 - `scripts/audit/recompute_study.py` (independent recomputation of the study tables) and
@@ -58,7 +58,7 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- Research package `shocktrace` with providers for HDX HAPI (WFP food prices), NASA POWER,
+- Research package `market-almanac` with providers for HDX HAPI (WFP food prices), NASA POWER,
   World Bank Indicators, IMF SDMX and FAOSTAT (API and public bulk file), sharing a resilient
   HTTP client (allow-list, retries, backoff, `Retry-After`, timeouts, bounded concurrency,
   credential-free caching).
@@ -70,7 +70,7 @@ All notable changes to this project are documented here. The format follows
 - Rolling-origin backtests, regression and classification metrics, Diebold–Mariano tests with
   HAC variance and HLN correction, moving-block bootstrap, sub-period stability, threshold
   sensitivity, verdict rules, forward forecasts with validation status, permutation importance.
-- Reproducibility manifests and `shocktrace reproduce`.
+- Reproducibility manifests and `market-almanac reproduce`.
 - Typer CLI: `sources`, `doctor`, `db-init`, `demo-seed`, `discover`, `ingest`, `validate`,
   `features`, `backtest`, `reproduce`, `forecast`, `report`.
 - FastAPI service with discovery, data, research and export endpoints.

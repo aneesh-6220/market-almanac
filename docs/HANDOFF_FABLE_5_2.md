@@ -1,4 +1,4 @@
-# Handoff to Fable 5.2 — ShockTrace
+# Handoff to Fable 5.2 — Market Almanac
 
 You are picking up an audited research codebase. Read this whole file first, then
 `docs/audits/SCIENTIFIC_VALIDITY_AUDIT.md`. You have no access to the previous conversation;
@@ -6,7 +6,7 @@ everything you need is in the repo.
 
 ## 0. State
 
-- Repo: `/Users/aneeshmahatekar/Projects/shocktrace`, branch **`release/v0.1.0`**. Base commit
+- Repo: `/Users/aneeshmahatekar/Projects/market-almanac`, branch **`release/v0.1.0`**. Base commit
   `675cfc7`; audit commit `5cec719` on top (plus this doc-only follow-up; check `git log -3`). There is no Git remote,
   `main` has no commits, and nothing has been pushed. **Do not push, deploy or touch remote
   infrastructure** (Neon DB, Vercel, Render) without explicit user authorization.
@@ -26,7 +26,7 @@ uv run pytest -q tests/scientific tests/unit tests/integration/test_api.py   # 7
 uv run ruff check . && uv run ruff format --check . && uv run mypy packages apps/api/src
 cd apps/web && npx tsc --noEmit && npx vitest run            # 20 pass
 export DATABASE_URL=sqlite:////tmp/st.db && uv run alembic upgrade head
-SHOCKTRACE_MODE=live uv run shocktrace backtest --country BFA --commodity 120   # ~40 s, uses stored snapshots
+MARKET_ALMANAC_MODE=live uv run market-almanac backtest --country BFA --commodity 120   # ~40 s, uses stored snapshots
 uv run python scripts/audit/reconstruct_example.py data/experiments/live/<exp> Sankaryare
 uv run python scripts/audit/placebo_weather.py 60
 make demo / make dev / make test-web                         # from Makefile (not re-run in audit)
@@ -37,7 +37,7 @@ not installed on this machine), and live provider tests (`make test-live`).
 
 ## 2. Architecture (keep it)
 
-- `packages/shocktrace/src/shocktrace/`: `providers/` (HDX HAPI, NASA POWER, IMF, World Bank,
+- `packages/market-almanac/src/market_almanac/`: `providers/` (HDX HAPI, NASA POWER, IMF, World Bank,
   FAOSTAT), `data/` (schema, Parquet lake `store.py`, `alignment.py` release lags, `quality.py`,
   `weather.py` daily→monthly), `features/` (`builder.py` families A–D, `weather.py` anomalies),
   `forecasting/` (`targets.py`, `models.py`), `evaluation/` (`backtest.py`, `inference.py`,
@@ -62,7 +62,7 @@ not installed on this machine), and live provider tests (`make test-live`).
    `docs/audits/*`, `docs/research/NEXT_STUDY_PROTOCOL.md`, `docs/RELEASE_STATUS.md`.
 6. `scripts/audit/reconstruct_example.py` and `scripts/audit/placebo_weather.py`.
 
-Consequence: `shocktrace reproduce <pre-audit id>` will now produce *different* metrics. That
+Consequence: `market-almanac reproduce <pre-audit id>` will now produce *different* metrics. That
 is expected, because the method revision differs. Do not "fix" it by reverting the clip.
 
 ## 4. Open issues
@@ -86,7 +86,7 @@ those take priority over everything below.
   a sensitivity (the protocol's primary timing). Test: perturbing P_{t−L+1..t} leaves
   features at *t* unchanged.
 - **P1-4 Reproducibility packaging.** Either commit a small, licensed, hashed BFA snapshot
-  bundle (check HDX/WFP and POWER terms first), or add `shocktrace snapshot export/import`
+  bundle (check HDX/WFP and POWER terms first), or add `market-almanac snapshot export/import`
   with manifests. Add DB auto-migration or a clear error in `run_and_register` when tables are
   missing.
 - **P1-5 Stale DB rows.** The user's Neon DB still has the pre-audit experiment rows. Propose a

@@ -129,7 +129,7 @@ export function ForecastsClient() {
 
   if (exps.isError) return <ErrorState error={exps.error} what="experiments" />;
   if (exps.isLoading) return <Loading label="Loading experiments" />;
-  if (!exps.data?.length) return <Empty>No experiments yet. Run <code className="code">make demo</code> or <code className="code">shocktrace backtest</code> first.</Empty>;
+  if (!exps.data?.length) return <Empty>No experiments yet. Run <code className="code">make demo</code> or <code className="code">market-almanac backtest</code> first.</Empty>;
 
   return (
     <div>

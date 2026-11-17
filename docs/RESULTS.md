@@ -1,6 +1,6 @@
 # Results
 
-This file records results produced by ShockTrace on **live** data. Demo-mode results describe
+This file records results produced by Market Almanac on **live** data. Demo-mode results describe
 synthetic data and are not reported here.
 
 ## Current results (v1.0)
@@ -55,7 +55,7 @@ p: one-sided Diebold–Mariano (Newey–West, Harvey–Leybourne–Newbold), Hol
 | B vs A | 3 | 65 | 14,916 | 1.031 | 0.903–1.183 | 0.674 |
 
 These replace the v0.1 and audit-corrected Burkina Faso runs below (supersession reasons in
-`packages/shocktrace/src/shocktrace/research/supersessions.yaml`). Burkina Faso was used to develop
+`packages/market-almanac/src/market_almanac/research/supersessions.yaml`). Burkina Faso was used to develop
 the method, so its results cannot confirm anything.
 
 ---
@@ -69,7 +69,7 @@ kept, retrievable by ID and marked superseded; public listings exclude them by d
 
 ### How the case was chosen
 
-The country and commodities were chosen from data evidence, not fixed in advance. `shocktrace
+The country and commodities were chosen from data evidence, not fixed in advance. `market-almanac
 discover` was run live for ten countries with WFP market monitoring (AFG, BFA, ETH, KEN, MLI, MOZ,
 MWI, NER, NGA, SOM). It ranks each market–commodity group by the number of series that meet the
 eligibility rules (≥48 valid monthly prices, ≥80% coverage of their span, no gap longer than six

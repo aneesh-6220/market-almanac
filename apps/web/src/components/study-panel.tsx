@@ -78,7 +78,7 @@ export function StudyPanel({ compact = false }: { compact?: boolean }) {
         production-region weather (0 of 8 confirmatory tests significant after Holm adjustment). The full tables are in{" "}
         <code className="code">docs/research/generated/sahel_study_confirmatory.md</code>; install the public data bundle to see them here.
       </Empty>
-    ) : <Empty>No stored results for the production-region study in this deployment. Run <code className="code">shocktrace study</code> on live data.</Empty>;
+    ) : <Empty>No stored results for the production-region study in this deployment. Run <code className="code">market-almanac study</code> on live data.</Empty>;
   }
   const d = study.data;
   const evidence = phase;

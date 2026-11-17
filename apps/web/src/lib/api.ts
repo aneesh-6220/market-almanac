@@ -31,8 +31,8 @@ export async function apiGet<S extends z.ZodTypeAny>(path: string, schema: S, pa
     throw new ApiError(
       0,
       LOCAL_API
-        ? `Cannot reach the ShockTrace API at ${API_URL}. Start it with \`make api\`.`
-        : "The ShockTrace data service is temporarily unavailable. Please try again in a few minutes.",
+        ? `Cannot reach the Market Almanac API at ${API_URL}. Start it with \`make api\`.`
+        : "The Market Almanac data service is temporarily unavailable. Please try again in a few minutes.",
     );
   }
   if (!res.ok) {

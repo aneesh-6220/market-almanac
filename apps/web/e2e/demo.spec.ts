@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { API, noHorizontalScroll, trackPageErrors, waitForContent } from "./helpers";
 
-test.describe("ShockTrace (synthetic demo)", () => {
+test.describe("Market Almanac (synthetic demo)", () => {
   test("home explains the product and labels synthetic data", async ({ page }) => {
     const errors = trackPageErrors(page);
     await page.goto("/");

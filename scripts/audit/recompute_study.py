@@ -1,7 +1,7 @@
 """Independently recompute the pooled confirmatory comparisons of sahel-production-weather-v1.
 
 Reads only the stored per-forecast predictions (``predictions.parquet`` of each primary run) and
-re-derives, with code that does not import ShockTrace's evaluation module: the common-sample row
+re-derives, with code that does not import Market Almanac's evaluation module: the common-sample row
 count, the loss ratio (MSE of model b / MSE of model a) and a one-sided Diebold-Mariano p-value
 (HAC variance with h-1 lags, Harvey-Leybourne-Newbold correction, Student t with T-1 df) on the
 equally weighted monthly mean loss differential. Prints stored and recomputed values side by side.

@@ -1,6 +1,6 @@
 # Deployment
 
-ShockTrace runs as three services: PostgreSQL, the API (which also hosts the research CLI and
+Market Almanac runs as three services: PostgreSQL, the API (which also hosts the research CLI and
 the Parquet data lake on a volume) and the Next.js web app.
 
 > **Verification status (2026-11-17).** Docker is not installed on the development machine, so
@@ -23,9 +23,9 @@ open http://localhost:3000
 ```
 
 - `postgres`: `postgres:16-alpine`, data in the `pgdata` volume, `pg_isready` health check.
-- `api`: runs `shocktrace db-init` (Alembic migrations) on start, seeds the synthetic demo on
-  first start when `SHOCKTRACE_MODE=demo`, then serves on :8000. Lake, cache and experiment
-  artefacts are kept in the `shocktrace-data` volume. Health check: `GET /health`.
+- `api`: runs `market-almanac db-init` (Alembic migrations) on start, seeds the synthetic demo on
+  first start when `MARKET_ALMANAC_MODE=demo`, then serves on :8000. Lake, cache and experiment
+  artefacts are kept in the `market-almanac-data` volume. Health check: `GET /health`.
 - `web`: Next.js standalone server on :3000, started after the API is healthy.
 
 `NEXT_PUBLIC_API_URL` is compiled into the web bundle at build time; set it to the API URL that
@@ -35,16 +35,16 @@ changes. Add that web origin to `CORS_ORIGINS` on the API.
 ### Live mode with Compose
 
 ```bash
-echo "SHOCKTRACE_MODE=live" >> .env
+echo "MARKET_ALMANAC_MODE=live" >> .env
 echo "HDX_HAPI_APP_IDENTIFIER=..." >> .env        # never commit .env
 docker compose up -d --build
-docker compose exec api shocktrace doctor --live
-docker compose exec api shocktrace ingest --source prices --country BFA
-docker compose exec api shocktrace ingest --source weather --country BFA
-docker compose exec api shocktrace ingest --source macro --country BFA
-docker compose exec api shocktrace ingest --source agriculture --country BFA --bulk
-docker compose exec api shocktrace validate
-docker compose exec api shocktrace backtest --country BFA --commodity 67
+docker compose exec api market-almanac doctor --live
+docker compose exec api market-almanac ingest --source prices --country BFA
+docker compose exec api market-almanac ingest --source weather --country BFA
+docker compose exec api market-almanac ingest --source macro --country BFA
+docker compose exec api market-almanac ingest --source agriculture --country BFA --bulk
+docker compose exec api market-almanac validate
+docker compose exec api market-almanac backtest --country BFA --commodity 67
 ```
 
 Schedule ingestion (e.g. a monthly cron running the same commands) rather than running it in
@@ -61,7 +61,7 @@ the public catalog and experiment artefacts. A deployment therefore needs a pers
 1. Build it where the data were ingested: `make bundle` (writes `dist/*.tar.gz` and `.sha256`).
 2. Publish the archive somewhere the server can download over HTTPS (for example a GitHub release
    asset), after checking the redistribution terms in [DATA_SOURCES.md](DATA_SOURCES.md).
-3. Set `SHOCKTRACE_MODE=live`, `DATA_BUNDLE_URL` and `DATA_BUNDLE_SHA256` on the API service. On
+3. Set `MARKET_ALMANAC_MODE=live`, `DATA_BUNDLE_URL` and `DATA_BUNDLE_SHA256` on the API service. On
    first start the entrypoint migrates the database, installs and verifies the bundle, and runs
    `sync-db`. Later starts reuse the volume (the bundle is not downloaded again).
 4. To update the data, publish a new bundle and install it into a new volume (snapshots are
@@ -74,7 +74,7 @@ already-installed data keep being served.
 
 Any PostgreSQL 14+ works (the project was developed against a hosted Neon database).
 `DATABASE_URL` accepts `postgres://`, `postgresql://` or `postgresql+psycopg://`; use TLS
-parameters required by your provider (e.g. `?sslmode=require`). Run `shocktrace db-init` once
+parameters required by your provider (e.g. `?sslmode=require`). Run `market-almanac db-init` once
 per release to apply migrations (the container entrypoint does this on every start; migrations
 are additive). Before upgrading a database that already holds results, rehearse the upgrade with
 `scripts/ops/rehearse_db_upgrade.py` (read-only on the source).
@@ -96,8 +96,8 @@ are additive). Before upgrading a database that already holds results, rehearse 
 
 ```bash
 uv sync --frozen --no-dev
-shocktrace db-init
-uvicorn shocktrace_api.main:app --host 0.0.0.0 --port 8000 --workers 2
+market-almanac db-init
+uvicorn market_almanac_api.main:app --host 0.0.0.0 --port 8000 --workers 2
 cd apps/web && npm ci && NEXT_PUBLIC_API_URL=https://api.example.org npm run build && node .next/standalone/server.js
 ```
 

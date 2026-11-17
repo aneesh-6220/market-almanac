@@ -6,7 +6,7 @@ yet (a public URL, a published repository, users) are not claimed. Fill in links
 
 ## Title
 
-**ShockTrace: food-price intelligence and pre-registered forecast evaluation**
+**Market Almanac: food-price intelligence and pre-registered forecast evaluation**
 
 ## GitHub description (≤ 350 characters)
 
@@ -30,7 +30,7 @@ demo URL only once a deployment is running and checked.
 | Fact | Source of evidence |
 |---|---|
 | 10 countries, 959 markets, 22,880 series (11,212 with ≥ 12 monthly prices), 502,883 monthly prices, Jan 2017 – Nov 2026 | `data/public/live/coverage.json`, `/api/v1/catalog/coverage` |
-| 5 live data providers plus MapSPAM crop geography and a crop calendar | `packages/shocktrace/src/shocktrace/providers/`, `geo/` |
+| 5 live data providers plus MapSPAM crop geography and a crop calendar | `packages/market-almanac/src/market_almanac/providers/`, `geo/` |
 | Pre-registered study, 8 confirmatory tests, Holm-adjusted, 0 significant, all 8 ratios > 1 | `docs/research/generated/sahel_study_confirmatory.md`, tag `protocol-sahel-v1` |
 | Study tables recomputed independently to 4.4 × 10⁻¹⁶ | `scripts/audit/recompute_study.py` |
 | A data defect (one 276.5 mm rainfall day giving z = 217) found and fixed; it had moved a loss ratio from 0.98 to 1.42 | `docs/audits/SCIENTIFIC_VALIDITY_AUDIT.md` |
@@ -42,7 +42,7 @@ demo URL only once a deployment is running and checked.
 
 **Software engineering**
 
-- Built ShockTrace, an open-source food-price analytics platform (Python/FastAPI, Next.js/TypeScript)
+- Built Market Almanac, an open-source food-price analytics platform (Python/FastAPI, Next.js/TypeScript)
   serving 22,880 market price series from 10 countries through a read-only, rate-limited API with
   strict input validation and schema-checked frontend contracts.
 - Diagnosed a CPU-bound hot path under concurrency (per-series slicing of a 500k-row table) and
@@ -79,7 +79,7 @@ demo URL only once a deployment is running and checked.
 
 **Project description**
 
-ShockTrace is an open-source tool for looking at food prices in markets monitored by the World Food
+Market Almanac is an open-source tool for looking at food prices in markets monitored by the World Food
 Programme. It shows what a price did, how unusual a change is for that market, whether other markets
 moved too, and what simple forecasting models can and cannot do, with every number traced to its
 source. It also contains a pre-registered study asking whether rainfall in crop-growing areas helps
@@ -101,7 +101,7 @@ irrelevant to prices.
 
 **Launch post (draft; post only after the repository is public):**
 
-> I've released ShockTrace v1.0, an open-source tool for exploring WFP food-price data across 10
+> I've released Market Almanac v1.0, an open-source tool for exploring WFP food-price data across 10
 > countries: market histories, how unusual a price change is, valid comparisons between markets,
 > and forecasts that are always shown next to a no-change benchmark.
 >

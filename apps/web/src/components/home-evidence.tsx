@@ -18,7 +18,7 @@ export function HomeEvidence() {
     return (
       <Empty>
         No experiments have been run yet. Seed the demo with <code className="code">make demo</code> or run{" "}
-        <code className="code">shocktrace backtest</code> on live data.
+        <code className="code">market-almanac backtest</code> on live data.
       </Empty>
     );
   const r = detail.data?.results;

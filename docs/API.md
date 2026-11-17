@@ -1,6 +1,6 @@
 # API
 
-The ShockTrace API is a read-only FastAPI service. Interactive OpenAPI documentation is served at
+The Market Almanac API is a read-only FastAPI service. Interactive OpenAPI documentation is served at
 `/docs` (Swagger UI) and `/redoc`; the machine-readable schema is at `/openapi.json`.
 
 - Base path: `/api/v1` (plus `/health`).
@@ -99,6 +99,6 @@ curl -so bundle.zip 'localhost:8000/api/v1/exports/demo_1_dm-maize?format=zip'
 
 ## Mode
 
-The API serves one mode, set by `SHOCKTRACE_MODE` at start-up. Demo and live data are stored
+The API serves one mode, set by `MARKET_ALMANAC_MODE` at start-up. Demo and live data are stored
 separately (`data/lake/demo`, `data/lake/live`) and database rows carry a `mode` column, so the two
 never mix.

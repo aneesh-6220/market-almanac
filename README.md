@@ -1,6 +1,6 @@
-# ShockTrace
+# Market Almanac
 
-**Open-source food-price intelligence with honest forecast evaluation.** ShockTrace collects
+**Open-source food-price intelligence with honest forecast evaluation.** Market Almanac collects
 monthly market prices published by the World Food Programme, places them next to weather and
 crop data, and shows what prices did, whether a movement is unusual for that market, how markets
 compare, and what forecasting models can and cannot predict, with every number traceable to its
@@ -67,24 +67,24 @@ make dev          # API on :8000, web on :3000
 **Real data from a published data bundle (no provider credentials needed):**
 
 ```bash
-export SHOCKTRACE_MODE=live DATABASE_URL=sqlite:///./data/live.db
-uv run shocktrace bundle-install <bundle.tar.gz or https URL> --sha256 <published hash>
-uv run shocktrace db-init && uv run shocktrace sync-db
+export MARKET_ALMANAC_MODE=live DATABASE_URL=sqlite:///./data/live.db
+uv run market-almanac bundle-install <bundle.tar.gz or https URL> --sha256 <published hash>
+uv run market-almanac db-init && uv run market-almanac sync-db
 make dev
 ```
 
 A bundle holds the lake snapshots, the public catalog and the experiment results, with a SHA-256
-for every file; `shocktrace bundle-export` builds one from your own ingested data. See
+for every file; `market-almanac bundle-export` builds one from your own ingested data. See
 [Reproducibility](docs/REPRODUCIBILITY.md).
 
 **Ingest from the providers yourself** (needs an HDX HAPI app identifier in `.env`):
 
 ```bash
-export SHOCKTRACE_MODE=live
-uv run shocktrace doctor --live
-uv run shocktrace ingest --source prices --country MLI
-uv run shocktrace ingest --source weather --country MLI
-uv run shocktrace materialize && uv run shocktrace sync-db
+export MARKET_ALMANAC_MODE=live
+uv run market-almanac doctor --live
+uv run market-almanac ingest --source prices --country MLI
+uv run market-almanac ingest --source weather --country MLI
+uv run market-almanac materialize && uv run market-almanac sync-db
 ```
 
 ## Architecture
@@ -106,7 +106,7 @@ PostgreSQL / SQLite index  ◄── sync-db ── FastAPI (read-only /api/v1) 
 (experiments, lineage, forecasts)
 ```
 
-- `packages/shocktrace`: providers, data lake, features, models, evaluation, study runner, CLI.
+- `packages/market-almanac`: providers, data lake, features, models, evaluation, study runner, CLI.
 - `apps/api`: FastAPI, read-only, rate-limited, OpenAPI at `/docs`.
 - `apps/web`: Next.js 16, TypeScript, Tailwind, ECharts, MapLibre, TanStack Query, Zod.
 

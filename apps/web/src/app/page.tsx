@@ -33,7 +33,7 @@ export default function Home() {
         <div className="pt-2">
           <h1 className="font-serif text-5xl leading-[1.05] text-ink md:text-6xl">What are food prices doing, and can anyone forecast them?</h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-2">
-            ShockTrace turns public market-price, weather and crop data into evidence you can check: price histories, unusual movements, market comparisons, and an honest account
+            Market Almanac turns public market-price, weather and crop data into evidence you can check: price histories, unusual movements, market comparisons, and an honest account
             of what forecasting models can and cannot do.
           </p>
           <HomeSearch />
@@ -124,7 +124,7 @@ export default function Home() {
           <pre className="mt-4 overflow-x-auto rounded-md bg-ink p-4 text-sm leading-relaxed text-bg">
 {`make demo                              # synthetic demo, no credentials
 curl "$API/api/v1/catalog/series?q=millet&country=MLI"
-shocktrace study --phase confirmatory  # re-run the pre-registered study`}
+market-almanac study --phase confirmatory  # re-run the pre-registered study`}
           </pre>
         </div>
       </section>

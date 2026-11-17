@@ -11,7 +11,7 @@ Updated 2026-11-17. Branch `release/v1.0.0`. Supersedes the state described in
 | Research integrity | Verified | Tag `protocol-sahel-v1` (4dd600f) precedes the confirmatory run; no model, feature, evaluation or study code changed between tag and results commit 57b1a3b; all 18 pooled comparisons recomputed independently (max discrepancy 4.4e-16) |
 | Local database lineage | Done | `data/live_local.db` and a clean-install SQLite: revision 0002, 9 superseded runs, public listings exclude them |
 | Neon (shared) database | Done (2026-11-17, owner-authorised) | Migrated 0001 → 0002 and synced: 77 experiment rows, no duplicates, 9 superseded, 0 pre-v1 runs current; the 7 prior rows kept verdict, config hash, conclusion and timestamp unchanged; an API pointed at Neon lists 11 current experiments and none superseded, and still serves an old run by id. Pre-migration backup: `data/backups/db_backup_rev0001_*.json` (local) |
-| Production data | Done locally | `shocktrace bundle-export/install`; bundle `dist/shocktrace-live-data-20261117T114519Z.tar.gz` (SHA-256 `0963b87d0aed79bec156c0e323726147a01c729cc9b2bc656df3922b83ebd11d`) installed into a fresh clone and served the full app |
+| Production data | Done locally | `market-almanac bundle-export/install`; bundle `dist/market-almanac-live-data-20261117T114519Z.tar.gz` (SHA-256 `0963b87d0aed79bec156c0e323726147a01c729cc9b2bc656df3922b83ebd11d`) installed into a fresh clone and served the full app |
 | Clean install | Done | Fresh `git clone`, `uv sync --frozen`, `npm ci`, migrations, demo seed, production build, standalone server, e2e |
 | Docker | Not verified | Docker not installed on this machine |
 | Git remote / publication | Not done | No remote configured; nothing pushed |

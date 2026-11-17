@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ShockTrace tokens. Semantic colours carry meaning across every chart:
+/* Market Almanac tokens. Semantic colours carry meaning across every chart:
    rain = environmental signals, grain = prices, good/warn/neutral = verdicts. */
 :root {
   --bg: #f3f5f7;

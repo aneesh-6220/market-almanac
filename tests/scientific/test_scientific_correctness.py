@@ -6,16 +6,16 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shocktrace.data.alignment import RULES, asof_align
-from shocktrace.data.quality import assess_prices, clean_monthly_series
-from shocktrace.evaluation.backtest import BacktestConfig, InsufficientDataError, run_backtest
-from shocktrace.experiments.config import ExperimentConfig
-from shocktrace.experiments.runner import overall_conclusion, qualify_forecast, run_experiment, select_series
-from shocktrace.features.builder import build_panel, family_features
-from shocktrace.features.weather import ClimatologyConfig, LeakageError, anomaly, check_fixed_climatology
-from shocktrace.forecasting.models import FittedModel, default_specs
-from shocktrace.forecasting.targets import log_change_target, spike_target
-from shocktrace.providers.hdx_hapi import normalize_food_prices
+from market_almanac.data.alignment import RULES, asof_align
+from market_almanac.data.quality import assess_prices, clean_monthly_series
+from market_almanac.evaluation.backtest import BacktestConfig, InsufficientDataError, run_backtest
+from market_almanac.experiments.config import ExperimentConfig
+from market_almanac.experiments.runner import overall_conclusion, qualify_forecast, run_experiment, select_series
+from market_almanac.features.builder import build_panel, family_features
+from market_almanac.features.weather import ClimatologyConfig, LeakageError, anomaly, check_fixed_climatology
+from market_almanac.forecasting.models import FittedModel, default_specs
+from market_almanac.forecasting.targets import log_change_target, spike_target
+from market_almanac.providers.hdx_hapi import normalize_food_prices
 from tests.conftest import fixture_json
 from tests.unit.test_data_layer import _prices
 
@@ -237,10 +237,10 @@ def test_experiment_is_deterministic(demo_data):
 
 
 def test_models_without_overlapping_predictions_are_insufficient_not_a_crash():
-    from shocktrace.evaluation.backtest import BacktestConfig, BacktestResult, common_sample
-    from shocktrace.experiments.config import ExperimentConfig
-    from shocktrace.experiments.runner import _task_block
-    from shocktrace.forecasting.models import default_specs
+    from market_almanac.evaluation.backtest import BacktestConfig, BacktestResult, common_sample
+    from market_almanac.experiments.config import ExperimentConfig
+    from market_almanac.experiments.runner import _task_block
+    from market_almanac.forecasting.models import default_specs
 
     t = pd.date_range("2020-01-01", periods=30, freq="MS")
     rows = [
@@ -261,7 +261,7 @@ def test_models_without_overlapping_predictions_are_insufficient_not_a_crash():
 # audit regressions (docs/audits/SCIENTIFIC_VALIDITY_AUDIT.md) -------------------------------
 def test_anomaly_is_bounded_when_climatological_sd_is_near_zero():
     """Dry-season rainfall: near-zero s.d. plus one spurious value must not produce z ~ 200."""
-    from shocktrace.features.weather import ANOMALY_CLIP
+    from market_almanac.features.weather import ANOMALY_CLIP
 
     idx = pd.date_range("1991-12-01", periods=35, freq="12MS")  # 35 Decembers
     x = pd.Series(np.r_[np.tile([0.0, 0.1, 0.0, 2.1, 0.0], 6), 0.0, 0.0, 0.0, 0.0, 291.3], index=idx)
@@ -285,8 +285,8 @@ def test_anomaly_clip_does_not_reintroduce_future_information():
 
 
 def test_results_disclose_lag_assumption_timing(demo_data):
-    from shocktrace.data.alignment import RULES
-    from shocktrace.experiments.runner import TIMING_DISCLOSURE
+    from market_almanac.data.alignment import RULES
+    from market_almanac.experiments.runner import TIMING_DISCLOSURE
 
     assert "ASSUMED" in RULES["price"].basis and "not a real-time" in RULES["price"].basis
     cfg = ExperimentConfig(

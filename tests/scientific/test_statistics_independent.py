@@ -1,7 +1,7 @@
 """Independent numerical checks of the inference machinery.
 
-Each test compares ShockTrace's implementation with a hand calculation or with a different
-implementation (statsmodels), never with ShockTrace itself.
+Each test compares Market Almanac's implementation with a hand calculation or with a different
+implementation (statsmodels), never with Market Almanac itself.
 """
 
 from __future__ import annotations
@@ -15,14 +15,14 @@ import statsmodels.api as sm
 from scipy import stats
 from statsmodels.stats.multitest import multipletests
 
-from shocktrace.evaluation.backtest import common_sample
-from shocktrace.evaluation.inference import (
+from market_almanac.evaluation.backtest import common_sample
+from market_almanac.evaluation.inference import (
     diebold_mariano,
     holm_adjust,
     moving_block_bootstrap_ratio,
     newey_west_variance,
 )
-from shocktrace.evaluation.metrics import classification_metrics, regression_metrics
+from market_almanac.evaluation.metrics import classification_metrics, regression_metrics
 
 
 def test_newey_west_variance_by_hand():

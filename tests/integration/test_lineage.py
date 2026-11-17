@@ -6,16 +6,16 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import inspect
 
-from shocktrace.db import models as m
-from shocktrace.db import repository as repo
-from shocktrace.db.migrate import (
+from market_almanac.db import models as m
+from market_almanac.db import repository as repo
+from market_almanac.db.migrate import (
     SchemaOutOfDateError,
     current_revision,
     head_revision,
     migrate,
     require_current_schema,
 )
-from shocktrace.db.session import get_engine, session_scope
+from market_almanac.db.session import get_engine, session_scope
 
 
 def test_migrations_reach_head_and_are_idempotent(tmp_path):
@@ -107,7 +107,7 @@ def test_supersession_rules(tmp_path):
 
 @pytest.fixture(scope="module")
 def client(seeded_env):  # type: ignore[no-untyped-def]
-    from shocktrace_api.main import create_app
+    from market_almanac_api.main import create_app
 
     return TestClient(create_app())
 

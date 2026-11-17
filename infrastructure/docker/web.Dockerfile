@@ -1,4 +1,4 @@
-# ShockTrace web (Next.js standalone build).
+# Market Almanac web (Next.js standalone build).
 # Build from the repository root:
 #   docker build -f infrastructure/docker/web.Dockerfile --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 .
 FROM node:22-alpine AS deps

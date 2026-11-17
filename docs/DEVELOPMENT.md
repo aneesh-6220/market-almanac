@@ -10,8 +10,8 @@ make demo                   # database + synthetic demo data and experiments
 make dev                    # API :8000 and web :3000 with reload
 ```
 
-The default database is SQLite at `data/shocktrace.db`. To use PostgreSQL locally set
-`DATABASE_URL` and run `shocktrace db-init` (Alembic).
+The default database is SQLite at `data/market-almanac.db`. To use PostgreSQL locally set
+`DATABASE_URL` and run `market-almanac db-init` (Alembic).
 
 ## Project conventions
 
@@ -42,7 +42,7 @@ is a scientific regression, not a test to update.
 
 ## Adding a provider
 
-1. Implement `Provider` in `packages/shocktrace/src/shocktrace/providers/<name>.py`: `info`
+1. Implement `Provider` in `packages/market-almanac/src/market_almanac/providers/<name>.py`: `info`
    (licence, attribution, auth, datasets, caveats), `is_configured`, `_probe` (cheap health
    request) and `fetch` returning a schema-valid frame.
 2. Add the host to `ALLOWED_HOSTS` in `http.py`; read credentials only from `Settings`.
@@ -67,10 +67,10 @@ uv run alembic upgrade head
 ## Useful CLI commands
 
 ```bash
-shocktrace sources                    # providers, credentials state, licences
-shocktrace doctor --live              # environment and provider health (records live verification)
-shocktrace discover --country NER     # rank series by forecasting evidence (live)
-shocktrace features XDM --commodity DM-MAIZE   # inspect the feature panel
-shocktrace forecast <experiment-id>   # print forward forecasts
-shocktrace report <experiment-id>     # Markdown report
+market-almanac sources                    # providers, credentials state, licences
+market-almanac doctor --live              # environment and provider health (records live verification)
+market-almanac discover --country NER     # rank series by forecasting evidence (live)
+market-almanac features XDM --commodity DM-MAIZE   # inspect the feature panel
+market-almanac forecast <experiment-id>   # print forward forecasts
+market-almanac report <experiment-id>     # Markdown report
 ```

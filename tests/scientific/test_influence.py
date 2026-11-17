@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shocktrace.evaluation.influence import _loo, influence_report
+from market_almanac.evaluation.influence import _loo, influence_report
 
 
 def _rows(n_months: int = 40, n_series: int = 5) -> pd.DataFrame:

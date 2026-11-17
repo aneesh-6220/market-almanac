@@ -20,8 +20,8 @@ uv run ruff check . && uv run ruff format --check .                            #
 uv run mypy packages apps/api/src                                              # no issues, 51 files
 cd apps/web && npx tsc --noEmit && npx vitest run                              # tsc ok; 20/20 tests
 DATABASE_URL=sqlite:///<tmp>/audit.db uv run alembic upgrade head              # ok; 14 tables created
-SHOCKTRACE_MODE=live DATABASE_URL=sqlite:///<tmp>/audit.db \
-  uv run shocktrace backtest --country BFA --commodity {120,67,73,135}         # corrected live runs
+MARKET_ALMANAC_MODE=live DATABASE_URL=sqlite:///<tmp>/audit.db \
+  uv run market-almanac backtest --country BFA --commodity {120,67,73,135}         # corrected live runs
 uv run python scripts/audit/reconstruct_example.py data/experiments/live/exp_20261116234216_a5e201 Sankaryare
 uv run python scripts/audit/placebo_weather.py 60
 ```

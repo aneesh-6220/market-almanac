@@ -5,7 +5,7 @@
 
 This protocol was written and tagged before any model was estimated on the confirmatory
 countries (Mali and Niger). The executable definition is
-`packages/shocktrace/src/shocktrace/research/study.py` (`STUDY`); if this document and that
+`packages/market-almanac/src/market_almanac/research/study.py` (`STUDY`); if this document and that
 object ever disagree, the code at the tag is what was run. Changes after the tag are listed in
 §14 and make the affected results exploratory.
 
@@ -47,7 +47,7 @@ Niger existed.
   and MapSPAM 2010 harvested area of at least 100,000 ha (so that a national production proxy is
   meaningful). Rice is excluded in advance: imported rice is not grown locally and local rice is
   largely irrigated.
-- **Series.** ShockTrace eligibility, unchanged: retail prices, `price_flag = actual`, a single
+- **Series.** Market Almanac eligibility, unchanged: retail prices, `price_flag = actual`, a single
   unit and currency, at least 48 valid monthly prices, at least 80% coverage, no gap over six
   months, market coordinates present.
 - **Period.** All available months (January 2017 onwards). The first 48 months of origins train
@@ -191,7 +191,7 @@ ACLED conflict covariate were not implemented.
 
 ```bash
 uv run python scripts/geo/build_reference_data.py          # optional: rebuild weights and calendar
-shocktrace ingest --source weather --country MLI --production-cells --mode live   # likewise BFA, NER
-shocktrace study --phase exploratory --mode live
-shocktrace study --phase confirmatory --mode live
+market-almanac ingest --source weather --country MLI --production-cells --mode live   # likewise BFA, NER
+market-almanac study --phase exploratory --mode live
+market-almanac study --phase confirmatory --mode live
 ```

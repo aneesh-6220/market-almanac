@@ -1,6 +1,6 @@
 # Code of conduct
 
-ShockTrace adopts the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)
+Market Almanac adopts the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)
 as its code of conduct. In summary:
 
 - Be respectful and inclusive. Harassment, discrimination, personal attacks and sustained

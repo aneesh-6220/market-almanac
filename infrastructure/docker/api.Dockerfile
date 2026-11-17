@@ -1,4 +1,4 @@
-# ShockTrace API (FastAPI + research package).
+# Market Almanac API (FastAPI + research package).
 # Build from the repository root:  docker build -f infrastructure/docker/api.Dockerfile .
 FROM python:3.12-slim AS base
 
@@ -24,10 +24,10 @@ RUN uv sync --frozen --no-dev
 
 COPY infrastructure/docker/api-entrypoint.sh /usr/local/bin/api-entrypoint.sh
 RUN chmod +x /usr/local/bin/api-entrypoint.sh \
-    && useradd --create-home --uid 10001 shocktrace \
-    && mkdir -p /app/data && chown -R shocktrace /app/data
+    && useradd --create-home --uid 10001 market-almanac \
+    && mkdir -p /app/data && chown -R market-almanac /app/data
 
-USER shocktrace
+USER market-almanac
 ENV DATA_DIR=/app/data CACHE_DIR=/app/data/cache
 EXPOSE 8000
 
@@ -35,4 +35,4 @@ HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
   CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status == 200 else 1)"
 
 ENTRYPOINT ["/usr/local/bin/api-entrypoint.sh"]
-CMD ["uvicorn", "shocktrace_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+CMD ["uvicorn", "market_almanac_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

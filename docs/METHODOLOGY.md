@@ -1,7 +1,7 @@
 # Methodology
 
-This document specifies exactly what ShockTrace computes. Code references point to
-`packages/shocktrace/src/shocktrace/`.
+This document specifies exactly what Market Almanac computes. Code references point to
+`packages/market-almanac/src/market_almanac/`.
 
 ## 1. Research question and estimand
 
@@ -73,7 +73,7 @@ When a publication date is known it is used, but never earlier than the end of t
 Unknown publication dates are never inferred from the retrieval date. Annual values are never
 interpolated to months; the latest available annual value is carried forward as-of.
 
-**Remaining limitation:** providers revise data, and ShockTrace sees today's vintage. The lags
+**Remaining limitation:** providers revise data, and Market Almanac sees today's vintage. The lags
 reduce but do not eliminate look-ahead from revisions (see RESEARCH_LIMITATIONS.md).
 
 ## 5. Targets (`forecasting/targets.py`)
@@ -180,7 +180,7 @@ events for classification.
 ## 10. Inference (`evaluation/inference.py`)
 
 Errors for different markets in the same month are correlated and multi-step targets overlap.
-ShockTrace therefore aggregates first:
+Market Almanac therefore aggregates first:
 
     d_t = (1/N_t) Σ_i [ L(A)_{it} − L(B)_{it} ]      (mean loss differential at origin t)
 

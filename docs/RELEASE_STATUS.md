@@ -8,5 +8,5 @@
 | Reproducible open-source release | **Not yet** | Clean-clone install, demo and data-bundle install all verified locally, but there is no Git remote, CI has never run on GitHub and the data bundle is not published |
 | Publicly deployed operational product | **No** | No deployment; Docker images never built (the shared Neon database is migrated and current) |
 
-Do not describe ShockTrace as deployed, real-time validated, or as having found a weather effect.
+Do not describe Market Almanac as deployed, real-time validated, or as having found a weather effect.
 Details: [FINAL_ENGINEERING_REPORT.md](FINAL_ENGINEERING_REPORT.md).

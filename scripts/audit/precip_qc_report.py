@@ -5,7 +5,7 @@ or live API) and counts flagged days under the fixed rule and under alternative 
 The alternatives are reported for transparency only: the rule's constants were fixed from a
 physical argument (docs/METHODOLOGY.md) and are not selected from this table.
 
-Usage: SHOCKTRACE_MODE=live HTTP_CACHE_TTL_HOURS=100000 uv run python scripts/audit/precip_qc_report.py BFA
+Usage: MARKET_ALMANAC_MODE=live HTTP_CACHE_TTL_HOURS=100000 uv run python scripts/audit/precip_qc_report.py BFA
 """
 
 from __future__ import annotations
@@ -17,10 +17,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from shocktrace.config import get_settings
-from shocktrace.data.weather import PRECIP_QC_VERSION, flag_implausible_precipitation
-from shocktrace.providers import build_providers
-from shocktrace.services import store_for
+from market_almanac.config import get_settings
+from market_almanac.data.weather import PRECIP_QC_VERSION, flag_implausible_precipitation
+from market_almanac.providers import build_providers
+from market_almanac.services import store_for
 
 FACTORS = (1.5, 2.0, 3.0)
 

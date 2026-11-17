@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shocktrace.data.weather import aggregate_daily_to_monthly, flag_implausible_precipitation
+from market_almanac.data.weather import aggregate_daily_to_monthly, flag_implausible_precipitation
 
 
 def _daily(end: str = "2025-12-31", seed: int = 3) -> pd.DataFrame:

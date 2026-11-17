@@ -10,7 +10,7 @@ const plex = IBM_Plex_Sans({ variable: "--font-plex", subsets: ["latin"], weight
 const newsreader = Newsreader({ variable: "--font-newsreader", subsets: ["latin"], weight: ["400", "500"], style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
-  title: { default: "ShockTrace", template: "%s · ShockTrace" },
+  title: { default: "Market Almanac", template: "%s · Market Almanac" },
   description:
     "Open-source food-price intelligence: market price histories, unusual movements, market comparisons, weather context and accountable forecast evaluation.",
 };

@@ -7,14 +7,14 @@ Every experiment writes a manifest containing:
 - the ID, row count and content hash of each dataset snapshot used;
 - the full validated configuration and its hash;
 - the random seed (models and bootstrap);
-- ShockTrace, Python, NumPy, pandas, scikit-learn and statsmodels versions.
+- Market Almanac, Python, NumPy, pandas, scikit-learn and statsmodels versions.
 
 Snapshots are immutable: ingestion never edits an existing snapshot, it writes a new one.
 
 ## Re-running an experiment
 
 ```bash
-shocktrace reproduce <experiment-id> [--mode live]
+market-almanac reproduce <experiment-id> [--mode live]
 ```
 
 This loads the stored configuration, runs the experiment on the snapshots named in the manifest
@@ -33,7 +33,7 @@ compares every metric.
 ## Two kinds of reproduction
 
 1. **Exact reproduction from immutable snapshots.** Install the public data bundle (below) and run
-   `shocktrace reproduce <id>` or `scripts/audit/recompute_study.py`. Inputs are byte-identical
+   `market-almanac reproduce <id>` or `scripts/audit/recompute_study.py`. Inputs are byte-identical
    (SHA-256 per file), so results must match to floating-point precision.
 2. **Re-running on today's provider data.** Ingesting again produces new snapshots: providers add
    months and revise history. Results can then differ; the snapshot hashes in each manifest say
@@ -44,13 +44,13 @@ compares every metric.
 
 ```bash
 # build (from a workstation that has ingested data)
-SHOCKTRACE_MODE=live uv run shocktrace bundle-export --out dist
-# -> dist/shocktrace-live-data-<UTC stamp>.tar.gz and .sha256
+MARKET_ALMANAC_MODE=live uv run market-almanac bundle-export --out dist
+# -> dist/market-almanac-live-data-<UTC stamp>.tar.gz and .sha256
 
 # install anywhere (fresh clone, server, container)
-export SHOCKTRACE_MODE=live DATABASE_URL=sqlite:///./data/live.db
-uv run shocktrace bundle-install dist/shocktrace-live-data-<stamp>.tar.gz --sha256 <hash>
-uv run shocktrace db-init && uv run shocktrace sync-db
+export MARKET_ALMANAC_MODE=live DATABASE_URL=sqlite:///./data/live.db
+uv run market-almanac bundle-install dist/market-almanac-live-data-<stamp>.tar.gz --sha256 <hash>
+uv run market-almanac db-init && uv run market-almanac sync-db
 ```
 
 Contents: every lake snapshot (prices, monthly weather, macro, agriculture, countries), the public
@@ -90,9 +90,9 @@ The live lake and experiment artefacts are not committed (size, and provider ter
 them you need an HDX HAPI app identifier:
 
 ```bash
-export SHOCKTRACE_MODE=live
+export MARKET_ALMANAC_MODE=live
 ./scripts/live_discovery.sh BFA NER MLI      # optional: re-rank candidates
-shocktrace ingest --source prices --country BFA
+market-almanac ingest --source prices --country BFA
 ./scripts/live_bfa.sh                        # weather (1991–), macro, agriculture (bulk), validate
 ./scripts/live_bfa_experiments.sh            # cowpeas, maize, millet, sorghum
 ```

@@ -14,14 +14,14 @@ import pandas as pd
 import pytest
 from pydantic import SecretStr
 
-from shocktrace.data.identity import power_grid_cell, weather_location_id
-from shocktrace.data.schema import AGRICULTURE, MACRO, PRICES, WEATHER_MONTHLY, validate
-from shocktrace.providers.base import (
+from market_almanac.data.identity import power_grid_cell, weather_location_id
+from market_almanac.data.schema import AGRICULTURE, MACRO, PRICES, WEATHER_MONTHLY, validate
+from market_almanac.providers.base import (
     HealthStatus,
     ProviderNotConfigured,
     ProviderSchemaError,
 )
-from shocktrace.providers.faostat import (
+from market_almanac.providers.faostat import (
     FaostatProvider,
     area_code_for_iso3,
     fao_item_for_commodity,
@@ -29,10 +29,10 @@ from shocktrace.providers.faostat import (
     parse_api_rows,
     parse_bulk_zip,
 )
-from shocktrace.providers.hdx_hapi import PAGE_LIMIT, HdxHapiProvider, normalize_food_prices
-from shocktrace.providers.imf import ImfProvider, parse_sdmx_period, parse_structure_specific
-from shocktrace.providers.nasa_power import NasaPowerProvider, parse_power_daily
-from shocktrace.providers.world_bank import WorldBankProvider, parse_country, parse_indicator_rows
+from market_almanac.providers.hdx_hapi import PAGE_LIMIT, HdxHapiProvider, normalize_food_prices
+from market_almanac.providers.imf import ImfProvider, parse_sdmx_period, parse_structure_specific
+from market_almanac.providers.nasa_power import NasaPowerProvider, parse_power_daily
+from market_almanac.providers.world_bank import WorldBankProvider, parse_country, parse_indicator_rows
 from tests.conftest import fixture_json, fixture_text, run
 
 # ---------------------------------------------------------------- HDX HAPI

@@ -41,7 +41,7 @@ FAOSTAT ───┘                   ▼
 
 | Path | Responsibility |
 |---|---|
-| `packages/shocktrace/src/shocktrace/config.py` | Settings from environment / `.env`; secrets as `SecretStr`; demo/live mode. |
+| `packages/market-almanac/src/market_almanac/config.py` | Settings from environment / `.env`; secrets as `SecretStr`; demo/live mode. |
 | `…/http.py` | Shared HTTP client: host allow-list, retries, backoff with jitter, `Retry-After`, timeouts, semaphore, response cache keyed without credentials. |
 | `…/providers/` | One adapter per source with a common interface (`info`, `is_configured`, `health_check`, `fetch`). |
 | `…/data/` | Schemas, series identity, weather aggregation, snapshot store, availability rules, quality checks, demo generator. |
@@ -52,8 +52,8 @@ FAOSTAT ───┘                   ▼
 | `…/reporting/` | Markdown reports and export bundles. |
 | `…/db/` | SQLAlchemy models, Alembic migrations, repository functions. |
 | `…/services.py` | Use-cases shared by CLI and API (ingest, validate, run, seed demo). |
-| `…/cli.py` | Typer CLI (`shocktrace …`). |
-| `apps/api/src/shocktrace_api/` | FastAPI app, routers, response schemas, middleware (rate limit, request log, safe errors). |
+| `…/cli.py` | Typer CLI (`market-almanac …`). |
+| `apps/api/src/market_almanac_api/` | FastAPI app, routers, response schemas, middleware (rate limit, request log, safe errors). |
 | `apps/web/` | Next.js App Router UI. |
 
 ## Storage decisions

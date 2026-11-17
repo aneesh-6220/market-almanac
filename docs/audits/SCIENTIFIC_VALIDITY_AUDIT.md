@@ -1,4 +1,4 @@
-# Scientific validity audit — ShockTrace v0.1.0 (+ audit fixes)
+# Scientific validity audit — Market Almanac v0.1.0 (+ audit fixes)
 
 Auditor: Claude Opus 5.5 (independent re-inspection of the code, data and stored results).
 Date: 2026-11-16. Base commit: `675cfc7` on `release/v0.1.0`. Documentation was not trusted
@@ -19,7 +19,7 @@ where it disagreed with code; every claim below was checked against source or da
 
 | Step | File : function |
 |---|---|
-| Targets | `packages/shocktrace/src/shocktrace/forecasting/targets.py`: `log_change_target`, `spike_target` |
+| Targets | `packages/market-almanac/src/market_almanac/forecasting/targets.py`: `log_change_target`, `spike_target` |
 | Price features, seasonal naive | `features/builder.py`: `_price_features`, `build_panel`, `family_features` |
 | Macro / agri derivation | `features/builder.py`: `_macro_derived`, `_agri_derived` |
 | Release lags, as-of join | `data/alignment.py`: `AvailabilityRule.available_from`, `asof_align`, `RULES` |
@@ -197,7 +197,7 @@ pooled ridge overfits them. This is a secondary comparison only; do not interpre
 
 ## Final scientific validity verdict
 
-ShockTrace's forecasting engine is **arithmetically and temporally sound under its stated
+Market Almanac's forecasting engine is **arithmetically and temporally sound under its stated
 assumptions** (no look-ahead found; inference correctly specified). After the anomaly fix, it
 supports this conclusion only: *in a lag-assumption-based retrospective backtest of 54–62
 Burkina Faso markets for four staples (2021–2026), market-local NASA POWER weather anomalies

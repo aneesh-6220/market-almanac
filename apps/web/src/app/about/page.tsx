@@ -14,9 +14,9 @@ export default function About() {
   return (
     <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <article className="prose-st">
-        <h1 className="font-serif text-4xl leading-tight text-ink md:text-5xl">About ShockTrace</h1>
+        <h1 className="font-serif text-4xl leading-tight text-ink md:text-5xl">About Market Almanac</h1>
         <p className="mt-4 text-xl">
-          ShockTrace is an open-source research platform for testing whether weather anomalies help forecast food-price
+          Market Almanac is an open-source research platform for testing whether weather anomalies help forecast food-price
           changes and spikes. It is built for analysts, researchers and students who want results they can inspect,
           reproduce and challenge.
         </p>
@@ -52,7 +52,7 @@ export default function About() {
 
         <h2>Citing</h2>
         <p>
-          If you use ShockTrace results, cite the experiment ID and its manifest (data snapshot IDs, configuration hash and
+          If you use Market Almanac results, cite the experiment ID and its manifest (data snapshot IDs, configuration hash and
           software version), and the original data providers.
         </p>
       </article>

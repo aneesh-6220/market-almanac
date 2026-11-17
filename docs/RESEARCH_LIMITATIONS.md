@@ -1,6 +1,6 @@
 # Research limitations
 
-ShockTrace is designed to make limitations visible rather than to hide them. Each experiment
+Market Almanac is designed to make limitations visible rather than to hide them. Each experiment
 lists its own; these apply in general.
 
 ## Inference is predictive, not causal

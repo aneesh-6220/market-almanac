@@ -214,7 +214,7 @@ export function CompareClient() {
                         options={[{ value: "index", label: "Indexed (base = 100)" }, ...(canPrice ? [{ value: "price", label: "Price levels" }] : [])]}
                       />
                     </Field>
-                    <button type="button" onClick={() => chartRef.current?.downloadPng("shocktrace_comparison.png")} className="inline-flex h-9 items-center gap-1.5 rounded border border-line px-2.5 text-sm text-ink hover:bg-surface-2">
+                    <button type="button" onClick={() => chartRef.current?.downloadPng("market_almanac_comparison.png")} className="inline-flex h-9 items-center gap-1.5 rounded border border-line px-2.5 text-sm text-ink hover:bg-surface-2">
                       <Download className="h-3.5 w-3.5" aria-hidden /> PNG
                     </button>
                     <a href={compareUrl(ids, undefined, undefined, "csv")} className="inline-flex h-9 items-center gap-1.5 rounded border border-line px-2.5 text-sm text-ink hover:bg-surface-2">

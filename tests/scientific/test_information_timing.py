@@ -6,13 +6,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from shocktrace.evaluation.backtest import BacktestConfig, run_backtest
-from shocktrace.experiments.config import ExperimentConfig
-from shocktrace.experiments.runner import run_experiment, select_series
-from shocktrace.features.builder import PRICE_FEATURES, _price_features, build_panel, family_features
-from shocktrace.features.weather import WEATHER_FEATURES
-from shocktrace.forecasting.models import default_specs
-from shocktrace.forecasting.targets import log_change_target, spike_target
+from market_almanac.evaluation.backtest import BacktestConfig, run_backtest
+from market_almanac.experiments.config import ExperimentConfig
+from market_almanac.experiments.runner import run_experiment, select_series
+from market_almanac.features.builder import PRICE_FEATURES, _price_features, build_panel, family_features
+from market_almanac.features.weather import WEATHER_FEATURES
+from market_almanac.forecasting.models import default_specs
+from market_almanac.forecasting.targets import log_change_target, spike_target
 
 
 def _series(n: int = 60, seed: int = 0) -> pd.Series:

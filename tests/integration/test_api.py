@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture(scope="module")
 def client(seeded_env):  # type: ignore[no-untyped-def]
-    from shocktrace_api.main import create_app
+    from market_almanac_api.main import create_app
 
     return TestClient(create_app())
 
@@ -77,7 +77,7 @@ def test_input_validation_and_safe_errors(client):
 
 
 def test_unhandled_errors_return_generic_json_without_details(seeded_env):  # type: ignore[no-untyped-def]
-    from shocktrace_api.main import create_app
+    from market_almanac_api.main import create_app
 
     app = create_app()
 
@@ -159,8 +159,8 @@ def test_openapi_documents_versioned_routes(client):
 
 
 def test_rate_limit(seeded_env, monkeypatch):
-    from shocktrace.config import reset_settings_cache
-    from shocktrace_api.main import create_app
+    from market_almanac.config import reset_settings_cache
+    from market_almanac_api.main import create_app
 
     monkeypatch.setenv("API_RATE_LIMIT_PER_MINUTE", "3")
     reset_settings_cache()
