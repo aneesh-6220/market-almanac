@@ -10,10 +10,11 @@ import { useStatus } from "@/lib/queries";
 import { cn } from "./ui";
 
 const NAV = [
-  { href: "/explorer", label: "Explorer" },
+  { href: "/explorer", label: "Explore" },
+  { href: "/compare", label: "Compare" },
   { href: "/forecasts", label: "Forecasts" },
-  { href: "/lab", label: "Model lab" },
-  { href: "/data", label: "Data & provenance" },
+  { href: "/lab", label: "Research Lab" },
+  { href: "/data", label: "Data coverage" },
   { href: "/methodology", label: "Methodology" },
   { href: "/about", label: "About" },
 ];
@@ -141,7 +142,7 @@ export function ModeBand() {
   }
   return (
     <div className="border-b border-line bg-surface px-4 py-1.5 text-center text-sm text-ink-2" role="status">
-      Live mode · results computed from official provider data. Predictive results are not causal estimates.
+      Real data from public providers. Prices are shown with the month observed; statistical results are not causal estimates.
     </div>
   );
 }
@@ -152,10 +153,10 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 text-sm text-ink-3 md:grid-cols-3 md:px-6">
         <div>
           <Wordmark />
-          <p className="mt-2 max-w-xs">From environmental signals to economic risk. Open-source, MIT-licensed code.</p>
+          <p className="mt-2 max-w-xs">Open-source food-price intelligence and forecast accountability. MIT-licensed code.</p>
         </div>
         <p>
-          Data: WFP via HDX HAPI · NASA POWER · World Bank WDI · IMF · FAOSTAT. Each source keeps its own licence;
+          Data: WFP via HDX HAPI · NASA POWER · IFPRI MapSPAM · World Bank · IMF · FAOSTAT. Each source keeps its own licence;
           see <Link className="underline" href="/data">Data &amp; provenance</Link>.
         </p>
         <p>

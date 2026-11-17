@@ -257,6 +257,14 @@ export const ExperimentSummarySchema = z.object({
   statement: str,
   n_series: z.number(),
   config_hash: z.string(),
+  evidence_class: z.string().optional(),
+  study: str.optional(),
+  variant: z.string().optional(),
+  method_revision: str.optional(),
+  price_release_lag_months: z.number().optional(),
+  superseded_by: str.optional(),
+  superseded_reason: str.optional(),
+  current: z.boolean().optional(),
 });
 export type ExperimentSummary = z.infer<typeof ExperimentSummarySchema>;
 
@@ -277,6 +285,7 @@ export const ComparisonSchema = z
     positives: num.optional(),
     dm: z.object({ stat: num, p_value_two_sided: num, p_value_b_better: num, n_periods: z.number(), lags: z.number() }).passthrough(),
     bootstrap_loss_ratio: Bootstrap,
+    influence: z.object({ fragile: z.boolean().optional(), reasons: z.array(z.string()).optional() }).passthrough().nullable().optional(),
     subperiods: z.array(z.object({ period: z.string(), start: z.string(), mean_diff: num, n: z.number() })),
     verdict: z.string(),
     reason: z.string(),

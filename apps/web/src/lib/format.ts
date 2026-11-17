@@ -11,6 +11,8 @@ export const MODEL_LABEL: Record<string, string> = {
   climatology: "Base rate",
   ridge_A: "Ridge · price only (A)",
   ridge_B: "Ridge · + weather (B)",
+  ridge_P: "Ridge · + production-region weather (P)",
+  logit_P: "Logistic · + production-region weather (P)",
   ridge_C: "Ridge · + macro (C)",
   ridge_D: "Ridge · + agriculture (D)",
   enet_A: "Elastic net (A)",

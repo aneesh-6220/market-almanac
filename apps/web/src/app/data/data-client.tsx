@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { Empty, ErrorState, Field, Loading, Note, PageHeader, Panel, Select, Stat, Tag } from "@/components/ui";
 import type { Source } from "@/lib/api";
 import { dateTime, download, month, pct, toCsv } from "@/lib/format";
+import { useCoverageSummary } from "@/lib/market-api";
 import { useCountries, useJobs, useQuality, useSnapshots, useSources, useStatus } from "@/lib/queries";
 import { useUrlState } from "@/lib/url-state";
 
@@ -65,6 +66,97 @@ function SourceCard({ s }: { s: Source }) {
   );
 }
 
+const FEATURES: [string, string][] = [
+  ["price_history", "Price history"],
+  ["comparison", "Comparison"],
+  ["unusual_movements", "Unusual movements"],
+  ["weather_context", "Weather context"],
+  ["production_region_context", "Production-region context"],
+  ["forecast_evaluation", "Forecast evaluation"],
+];
+
+function CoverageTable() {
+  const cov = useCoverageSummary();
+  if (cov.isLoading) return <Loading label="Loading coverage" />;
+  if (cov.isError) return <ErrorState error={cov.error} what="the coverage inventory" />;
+  const d = cov.data;
+  if (!d || d.countries.length === 0) return <Empty>No price data have been ingested yet.</Empty>;
+  return (
+    <section aria-label="Coverage by country">
+      <h2 className="mb-1 font-serif text-2xl text-ink">Coverage by country</h2>
+      <p className="mb-4 max-w-3xl text-sm text-ink-2">
+        {d.scope_note} Price history and forecast evaluation are different things: most series can be explored and compared, far fewer are complete enough to evaluate a forecasting
+        model, and fewer still are covered by one.
+      </p>
+      <div className="overflow-x-auto rounded-md border border-line bg-surface" tabIndex={0} role="region" aria-label="Coverage table">
+        <table className="w-full min-w-[980px] text-sm">
+          <thead>
+            <tr className="border-b border-line text-left text-xs text-ink-3">
+              <th className="px-3 py-2 font-medium">Country</th>
+              <th className="px-3 py-2 text-right font-medium">Markets</th>
+              <th className="px-3 py-2 text-right font-medium">Commodities</th>
+              <th className="px-3 py-2 text-right font-medium">Series (1+ year)</th>
+              <th className="px-3 py-2 text-right font-medium">Complete enough to evaluate</th>
+              <th className="px-3 py-2 text-right font-medium">Covered by an evaluation</th>
+              <th className="px-3 py-2 font-medium">Period</th>
+              <th className="px-3 py-2 text-right font-medium">Updated in last 3 months</th>
+              <th className="px-3 py-2 font-medium">Supported</th>
+            </tr>
+          </thead>
+          <tbody>
+            {d.countries.map((c) => (
+              <tr key={c.country_iso3} className="border-b border-line/60 align-top">
+                <td className="px-3 py-2">
+                  <Link href={`/explorer?country=${c.country_iso3}`} className="font-medium text-ink underline decoration-line underline-offset-2">
+                    {c.name}
+                  </Link>
+                  <div className="text-xs text-ink-3">{c.currencies.join(", ")}</div>
+                </td>
+                <td className="px-3 py-2 text-right text-ink-2">{c.markets}</td>
+                <td className="px-3 py-2 text-right text-ink-2">{c.commodities}</td>
+                <td className="px-3 py-2 text-right text-ink-2">
+                  {c.usable_series.toLocaleString()} <span className="text-xs text-ink-3">of {c.series.toLocaleString()}</span>
+                </td>
+                <td className="px-3 py-2 text-right text-ink-2">{c.eligible_series.toLocaleString()}</td>
+                <td className="px-3 py-2 text-right text-ink-2">{c.forecast_evaluated_series.toLocaleString()}</td>
+                <td className="whitespace-nowrap px-3 py-2 text-ink-2">
+                  {month(c.first_period)} – {month(c.last_period)}
+                </td>
+                <td className="px-3 py-2 text-right text-ink-2">{c.series_updated_within_3_months.toLocaleString()}</td>
+                <td className="px-3 py-2">
+                  <div className="flex max-w-[22rem] flex-wrap gap-1">
+                    {FEATURES.map(([k, name]) => (
+                      <Tag key={k} tone={c.features[k] ? "good" : "muted"}>
+                        {c.features[k] ? name : `no ${name.toLowerCase()}`}
+                      </Tag>
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {d.definitions && (
+        <dl className="mt-3 grid gap-x-6 gap-y-1 text-xs text-ink-3 md:grid-cols-3">
+          <div>
+            <dt className="inline font-medium text-ink-2">Series (1+ year): </dt>
+            <dd className="inline">{d.definitions.usable}.</dd>
+          </div>
+          <div>
+            <dt className="inline font-medium text-ink-2">Complete enough to evaluate: </dt>
+            <dd className="inline">{d.definitions.eligible}.</dd>
+          </div>
+          <div>
+            <dt className="inline font-medium text-ink-2">Covered by an evaluation: </dt>
+            <dd className="inline">{d.definitions.forecast_evaluated}.</dd>
+          </div>
+        </dl>
+      )}
+    </section>
+  );
+}
+
 export function DataClient() {
   const status = useStatus();
   const sources = useSources();
@@ -82,8 +174,8 @@ export function DataClient() {
   return (
     <div>
       <PageHeader
-        title="Data quality and provenance"
-        lede="Where every number comes from, when it was retrieved, what was checked, and which series are fit to forecast. Nothing here is hidden or smoothed over."
+        title="Data coverage"
+        lede="What this deployment holds, how complete and how recent it is, where every number comes from, and which series are fit for forecast evaluation."
       />
 
       {status.data?.synthetic && (
@@ -92,7 +184,9 @@ export function DataClient() {
         </div>
       )}
 
-      <h2 className="mb-3 font-serif text-2xl text-ink">Sources</h2>
+      <CoverageTable />
+
+      <h2 className="mb-3 mt-10 font-serif text-2xl text-ink">Sources</h2>
       {sources.isError && <ErrorState error={sources.error} what="sources" />}
       {sources.isLoading && <Loading />}
       <div className="mb-10 grid gap-4 lg:grid-cols-2">{sources.data?.map((s) => <SourceCard key={s.provider_id} s={s} />)}</div>

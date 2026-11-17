@@ -12,7 +12,7 @@ const newsreader = Newsreader({ variable: "--font-newsreader", subsets: ["latin"
 export const metadata: Metadata = {
   title: { default: "ShockTrace", template: "%s · ShockTrace" },
   description:
-    "Open-source econometric forecasting: do weather anomalies improve out-of-sample prediction of food-price changes and spikes?",
+    "Open-source food-price intelligence: market price histories, unusual movements, market comparisons, weather context and accountable forecast evaluation.",
 };
 
 // Applies the saved theme before paint to avoid a light/dark flash.

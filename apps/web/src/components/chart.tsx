@@ -13,7 +13,7 @@ import {
 } from "echarts/components";
 import * as echarts from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useRef, useState } from "react";
 
 echarts.use([
   LineChart, BarChart, ScatterChart, CustomChart, HeatmapChart, GridComponent, TooltipComponent, LegendComponent,
@@ -68,19 +68,39 @@ export function baseOption(p: Palette): echarts.EChartsCoreOption {
   };
 }
 
+export type ChartHandle = { downloadPng: (filename: string) => void };
+
 export function Chart({
   option,
   height = 300,
   ariaLabel,
   onClick,
+  ref: handle,
 }: {
   option: echarts.EChartsCoreOption | null;
   height?: number;
   ariaLabel: string;
   onClick?: (params: unknown) => void;
+  ref?: React.Ref<ChartHandle>;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const inst = useRef<echarts.ECharts | null>(null);
+  useImperativeHandle(
+    handle,
+    () => ({
+      // Exports what is on screen, on the page background so the image is legible in either theme.
+      downloadPng: (filename: string) => {
+        const i = inst.current;
+        if (!i) return;
+        const bg = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim() || "#ffffff";
+        const a = document.createElement("a");
+        a.href = i.getDataURL({ type: "png", pixelRatio: 2, backgroundColor: bg });
+        a.download = filename;
+        a.click();
+      },
+    }),
+    [],
+  );
   useEffect(() => {
     if (!ref.current) return;
     inst.current = echarts.init(ref.current, undefined, { renderer: "canvas" });

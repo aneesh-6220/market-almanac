@@ -5,7 +5,10 @@ import { Loading } from "@/components/ui";
 
 import { DataClient } from "./data-client";
 
-export const metadata: Metadata = { title: "Data quality and provenance" };
+export const metadata: Metadata = {
+  title: "Data coverage",
+  description: "Coverage by country, source freshness, data quality and provenance.",
+};
 
 export default function Page() {
   return (

@@ -4,16 +4,19 @@ import { useMemo, useState } from "react";
 
 import { baseOption, Chart, usePalette } from "@/components/chart";
 import { ForestPlot } from "@/components/forest-plot";
-import { Empty, ErrorState, Field, Loading, Note, PageHeader, Panel, Select, VerdictBadge } from "@/components/ui";
+import { Empty, ErrorState, Field, Loading, Note, PageHeader, Panel, Select, Tag, VerdictBadge } from "@/components/ui";
 import { apiUrl, type Comparison, type Task } from "@/lib/api";
 import { fmt, modelLabel, month, pct, pValue, VERDICT } from "@/lib/format";
+import { StudyPanel } from "@/components/study-panel";
 import { useExperiment, useExperiments } from "@/lib/queries";
 import { useUrlState } from "@/lib/url-state";
 
-const ROLES: { id: string; label: string; help: string }[] = [
-  { id: "secondary", label: "Adding macro and agriculture", help: "Does adding IMF inflation/exchange-rate or FAOSTAT production features help beyond weather?" },
-  { id: "specification", label: "Other model types", help: "The same weather question asked with elastic-net and gradient-boosting models, to check it does not depend on one specification." },
-  { id: "vs_baseline", label: "Against simple baselines", help: "Whether the regression models beat a no-change forecast, and the spike models beat the historical base rate." },
+const ROLES = [
+  { id: "primary_production", label: "Production-region weather", help: "Price history plus production-region, crop-season weather (P) against price history alone (A), on identical rows." },
+  { id: "production_vs_local", label: "Production vs market-local", help: "Production-region weather (P) against market-local weather (B), on identical rows." },
+  { id: "secondary", label: "Macro and agriculture", help: "Does adding macro-economic (C) or agricultural (D) features help beyond weather?" },
+  { id: "specification", label: "Other model types", help: "The same weather comparison with elastic net and gradient boosting, as a specification check." },
+  { id: "vs_baseline", label: "Against simple baselines", help: "Does a fitted model beat the no-change forecast or the historical spike rate at all?" },
 ];
 
 type Row = Record<string, unknown>;
@@ -148,10 +151,13 @@ export function LabClient() {
   const exps = useExperiments();
   const expId = get("experiment") || exps.data?.[0]?.id || "";
   const detail = useExperiment(expId || undefined);
-  const [role, setRole] = useState("secondary");
+  const [roleChoice, setRole] = useState("");
   const r = detail.data?.results;
+  const summary = detail.data?.summary;
   const tasks = r?.tasks ?? [];
-  const comps = tasks.flatMap((t) => t.comparisons).filter((c) => c.role === role);
+  const all = tasks.flatMap((t) => t.comparisons);
+  const role = roleChoice || ROLES.find((x) => all.some((c) => c.role === x.id))?.id || "vs_baseline";
+  const comps = all.filter((c) => c.role === role);
   const primary = tasks.flatMap((t) => t.comparisons).filter((c) => c.role === "primary");
   const taskKey = get("task") || (tasks[0] ? `${tasks[0].task}:${tasks[0].horizon}` : "");
   const task = tasks.find((t) => `${t.task}:${t.horizon}` === taskKey) ?? tasks[0];
@@ -166,8 +172,8 @@ export function LabClient() {
   return (
     <div>
       <PageHeader
-        title="Model laboratory"
-        lede="Every comparison behind a verdict: which models were fitted, how they were scored out of sample, and how confident the evidence is."
+        title="Research Lab"
+        lede="The evidence behind every claim: the pre-registered study, each experiment's comparisons, how models were scored out of sample, and how much the results depend on a few observations."
       >
         {expId && (
           <>
@@ -181,6 +187,14 @@ export function LabClient() {
         )}
       </PageHeader>
 
+      <div className="mb-8">
+        <StudyPanel />
+      </div>
+
+      <h2 className="mb-3 font-serif text-2xl text-ink">Individual experiments</h2>
+      <p className="mb-4 max-w-3xl text-sm text-ink-2">
+        One experiment is one country and commodity under one timing assumption. Runs replaced by a later method revision are kept but hidden from this list.
+      </p>
       <div className="mb-6 max-w-xl">
         <Field label="Experiment" htmlFor="lab-exp">
           <Select id="lab-exp" value={expId} onChange={(v) => set({ experiment: v, task: null })} options={exps.data.map((e) => ({ value: e.id, label: `${e.name}${e.synthetic ? " (synthetic)" : ""}` }))} />
@@ -196,6 +210,8 @@ export function LabClient() {
             <div className="flex flex-wrap items-center gap-2">
               <VerdictBadge verdict={verdict} />
               {r.synthetic && <span className="synthetic-band rounded px-1.5 text-sm text-ink">synthetic data</span>}
+              <Tag tone={summary?.evidence_class === "confirmatory" ? "good" : "muted"}>{summary?.evidence_class ?? "exploratory"} evidence</Tag>
+              <Tag>price lag {summary?.price_release_lag_months ?? 0} mo</Tag>
               <span className="text-sm text-ink-3">
                 {r.data?.n_series as number} series · origins {month(r.data?.first_origin as string)}–{month(r.data?.last_origin as string)} · config {r.config_hash.slice(0, 10)}
               </span>
@@ -226,6 +242,7 @@ export function LabClient() {
                 {comps.map((c, i) => (
                   <li key={i}>
                     <span className="text-ink">{modelLabel(c.model_b)}</span> vs {modelLabel(c.model_a)}, {c.task === "regression" ? "price change" : "spike"} {c.horizon}m: {c.reason} (n periods {c.dm.n_periods}, HAC lags {c.dm.lags}).
+                    {c.influence?.fragile ? ` Depends on few observations: ${(c.influence.reasons ?? []).join("; ")}.` : ""}
                   </li>
                 ))}
               </ul>

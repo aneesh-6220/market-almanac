@@ -8,8 +8,11 @@ price snapshot changes and records the snapshot it was built from.
 
 from __future__ import annotations
 
+import csv
 import json
 from datetime import UTC, datetime
+from functools import lru_cache
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +44,13 @@ META_COLUMNS = [
     "currency",
     "source_ref",
 ]
+
+
+@lru_cache(maxsize=1)
+def iso3_names() -> dict[str, str]:
+    """ISO3 -> country name from the packaged FAOSTAT area table (used when no name was ingested)."""
+    with resources.files("shocktrace.providers").joinpath("faostat_areas.csv").open() as fh:
+        return {r["iso3"]: r["name"] for r in csv.DictReader(fh) if r.get("iso3")}
 
 
 def _longest_gap(observed: np.ndarray) -> int:
@@ -145,7 +155,8 @@ def coverage_inventory(
     production_proxy: set[tuple[str, str]] | None = None,
 ) -> dict[str, Any]:
     """Per-country coverage and feature support. Historical coverage and forecast coverage are separate."""
-    country_names = country_names or {}
+    # an ingested name wins, unless it is only the ISO code echoed back as a placeholder
+    names = {**iso3_names(), **{k: v for k, v in (country_names or {}).items() if v and v != k}}
     forecast_series = forecast_series or set()
     production_proxy = production_proxy or set()
     out = []
@@ -156,7 +167,7 @@ def coverage_inventory(
         out.append(
             {
                 "country_iso3": iso,
-                "name": country_names.get(iso, iso),
+                "name": names.get(iso, iso),
                 "markets": int(g["market_code"].nunique()),
                 "commodities": int(g["commodity_code"].nunique()),
                 "series": len(g),
