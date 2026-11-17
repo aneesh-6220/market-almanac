@@ -1,5 +1,6 @@
 "use client";
 
+import { format as echartsFormat } from "echarts/core";
 import { useMemo, useState } from "react";
 
 import { baseOption, Chart, usePalette } from "@/components/chart";
@@ -91,7 +92,7 @@ function CalibrationChart({ task }: { task: Task }) {
     });
     return {
       ...b,
-      tooltip: { trigger: "item", formatter: (x: { seriesName: string; value: number[] }) => `${x.seriesName}<br/>predicted ${pct(x.value[0], 1)} · observed ${pct(x.value[1], 1)} · ${x.value[2]} rows` },
+      tooltip: { trigger: "item", formatter: (x: { seriesName: string; value: number[] }) => `${echartsFormat.encodeHTML(x.seriesName)}<br/>predicted ${pct(x.value[0], 1)} · observed ${pct(x.value[1], 1)} · ${x.value[2]} rows` },
       xAxis: { ...(b.xAxis as object), type: "value", min: 0, max: 1, name: "predicted probability", nameLocation: "middle", nameGap: 26 },
       yAxis: { ...(b.yAxis as object), type: "value", min: 0, max: 1, name: "observed frequency" },
       series: [

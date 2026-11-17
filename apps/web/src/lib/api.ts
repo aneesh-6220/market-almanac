@@ -277,7 +277,7 @@ export type ExperimentSummary = z.infer<typeof ExperimentSummarySchema>;
 
 /* Experiment results are large nested JSON documents produced by the research engine.
    The shapes below cover the fields the interface reads; extra fields are ignored. */
-const Bootstrap = z.object({ ratio: num, ci_low: num, ci_high: num }).passthrough();
+const Bootstrap = z.object({ ratio: num, ci_low: num, ci_high: num }).loose();
 export const ComparisonSchema = z
   .object({
     role: z.string(),
@@ -290,14 +290,14 @@ export const ComparisonSchema = z
     mean_loss_b: z.number(),
     n_rows: z.number(),
     positives: num.optional(),
-    dm: z.object({ stat: num, p_value_two_sided: num, p_value_b_better: num, n_periods: z.number(), lags: z.number() }).passthrough(),
+    dm: z.object({ stat: num, p_value_two_sided: num, p_value_b_better: num, n_periods: z.number(), lags: z.number() }).loose(),
     bootstrap_loss_ratio: Bootstrap,
-    influence: z.object({ fragile: z.boolean().optional(), reasons: z.array(z.string()).optional() }).passthrough().nullable().optional(),
+    influence: z.object({ fragile: z.boolean().optional(), reasons: z.array(z.string()).optional() }).loose().nullable().optional(),
     subperiods: z.array(z.object({ period: z.string(), start: z.string(), mean_diff: num, n: z.number() })),
     verdict: z.string(),
     reason: z.string(),
   })
-  .passthrough();
+  .loose();
 export type Comparison = z.infer<typeof ComparisonSchema>;
 
 export const TaskSchema = z
@@ -318,7 +318,7 @@ export const TaskSchema = z
     residual_diagnostics: anyRecord.optional(),
     permutation_importance: z.record(z.string(), z.array(anyRecord)).optional(),
   })
-  .passthrough();
+  .loose();
 export type Task = z.infer<typeof TaskSchema>;
 
 export const ResultsSchema = z
@@ -343,7 +343,7 @@ export const ResultsSchema = z
     families_used: z.array(z.string()).optional(),
     feature_availability: anyRecord.optional(),
   })
-  .passthrough();
+  .loose();
 export type Results = z.infer<typeof ResultsSchema>;
 
 export const ExperimentDetailSchema = z.object({ summary: ExperimentSummarySchema, results: ResultsSchema });
@@ -384,7 +384,7 @@ export const QualitySchema = z
     created_at: z.string(),
     summary: anyRecord,
     consistency_issues: z.array(z.string()).default([]),
-    series: z.array(SeriesSchema.passthrough()).default([]),
+    series: z.array(SeriesSchema.loose()).default([]),
     extremes: z.array(anyRecord).default([]),
     weather: anyRecord.optional(),
     macro: anyRecord.optional(),
@@ -395,7 +395,7 @@ export const QualitySchema = z
     extremes_total: z.number().optional(),
     consistency_issues_total: z.number().optional(),
   })
-  .passthrough();
+  .loose();
 
 export const JobSchema = z.object({
   id: z.string(),

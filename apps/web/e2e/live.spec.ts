@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { API, noHorizontalScroll, selectByText, trackPageErrors } from "./helpers";
+import { API, noHorizontalScroll, selectByText, trackPageErrors, waitForContent } from "./helpers";
 
 /**
  * Journeys over real, ingested WFP / NASA POWER data and the stored study results.
@@ -72,7 +72,7 @@ test.describe("ShockTrace (live data)", () => {
   test("live pages fit a phone screen @mobile", async ({ page }) => {
     for (const path of ["/", "/explorer?country=MLI", `/market?series=${MILLET_ANSONGO}`, `/compare?s=${MILLET_ANSONGO},${MILLET_BADALABOUGOU}`, "/lab", "/data"]) {
       await page.goto(path);
-      await page.waitForLoadState("networkidle");
+      await waitForContent(page);
       await noHorizontalScroll(page);
     }
   });
