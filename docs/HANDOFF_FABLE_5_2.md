@@ -7,7 +7,7 @@ everything you need is in the repo.
 ## 0. State
 
 - Repo: `/Users/aneeshmahatekar/Projects/shocktrace`, branch **`release/v0.1.0`**. Base commit
-  `675cfc7`; the audit commit sits on top of it (check `git log -3`). There is no Git remote,
+  `675cfc7`; audit commit `5cec719` on top (plus this doc-only follow-up; check `git log -3`). There is no Git remote,
   `main` has no commits, and nothing has been pushed. **Do not push, deploy or touch remote
   infrastructure** (Neon DB, Vercel, Render) without explicit user authorization.
 - `.env` exists and is gitignored. Do not print it or overwrite it. `DATABASE_URL` there points
