@@ -18,6 +18,23 @@ The ShockTrace API is a read-only FastAPI service. Interactive OpenAPI documenta
 
 ## Endpoints
 
+### Market intelligence (public product)
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/v1/catalog/coverage` | Countries, markets, series, observations, last period; per country which features are supported (price history, comparison, unusual movements, weather context, production-region context, forecast evaluation). Historical coverage and forecast-evaluated coverage are separate fields. |
+| `GET /api/v1/catalog/series` | Search and filter series: `country`, `commodity`, `market`, `price_type`, `q` (text), `usable_only` (≥12 monthly prices, default true), `eligible_only` (forecast-evaluation rules), `sort`, `limit` (≤500), `offset`. |
+| `GET /api/v1/catalog/commodities`, `GET /api/v1/catalog/markets` | Commodities and markets (with coordinates) for a country. |
+| `GET /api/v1/movers` | Series whose latest monthly change is large for that series, updated within `recent_months`. |
+| `GET /api/v1/series/{id}` | Series metadata, summary statistics, eligibility and provenance (snapshot, source record, retrieval time). |
+| `GET /api/v1/series/{id}/history` | Monthly prices (`start`, `end`, `format=json|csv`); missing months are explicit, nothing is interpolated. |
+| `GET /api/v1/series/{id}/movement` | How unusual the latest (or `at=YYYY-MM`) change is: percentile and robust z against the series' own history and the same calendar month; peer markets' movement. |
+| `GET /api/v1/series/{id}/seasonality` | Typical within-year pattern. |
+| `GET /api/v1/series/{id}/environment` | Market-cell rainfall and temperature anomalies and the production-region seasonal index, with QC flags. |
+| `GET /api/v1/series/{id}/brief` | Deterministic plain-language summary with the evidence behind every sentence. |
+| `GET /api/v1/compare` | 2–8 `series_id`s: comparability decision with reasons, aligned prices, indices, statistics (`format=json|csv`). |
+| `GET /api/v1/studies`, `GET /api/v1/studies/{id}?phase=confirmatory|exploratory|all` | Pre-registered study results, as stored. |
+
 ### System
 
 | Endpoint | Purpose |
