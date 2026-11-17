@@ -23,7 +23,8 @@ from shocktrace.data.quality import EligibilityCriteria, assess_prices, build_qu
 from shocktrace.data.store import DatasetStore, SnapshotManifest
 from shocktrace.db import models as m
 from shocktrace.db import repository as repo
-from shocktrace.db.session import get_engine, session_scope
+from shocktrace.db.migrate import migrate, require_current_schema
+from shocktrace.db.session import session_scope
 from shocktrace.experiments.config import ExperimentConfig
 from shocktrace.experiments.runner import ExperimentOutput, run_experiment, save_experiment
 from shocktrace.geo.spam import packaged_weights
@@ -39,8 +40,8 @@ DATASETS = ("prices", "weather_monthly", "macro", "agriculture", "countries")
 
 
 def init_db(settings: Settings) -> None:
-    """Create tables directly (used for SQLite demo/test). PostgreSQL uses Alembic migrations."""
-    m.Base.metadata.create_all(get_engine(settings.database_url))
+    """Bring the database to the latest schema (Alembic; idempotent, also upgrades v0.1 databases)."""
+    migrate(settings.database_url)
 
 
 def store_for(settings: Settings) -> DatasetStore:
@@ -73,10 +74,31 @@ def default_experiment_name(settings: Settings, country: str, commodities: list[
     return f"{country_name}: {', '.join(names or commodities)}"
 
 
-def load_datasets(store: DatasetStore) -> tuple[dict[str, pd.DataFrame], dict[str, dict[str, Any]]]:
+class SnapshotMissingError(FileNotFoundError):
+    """An experiment's recorded input snapshot is not present in this data lake."""
+
+
+def load_datasets(
+    store: DatasetStore, pinned: dict[str, dict[str, Any]] | None = None
+) -> tuple[dict[str, pd.DataFrame], dict[str, dict[str, Any]]]:
+    """Load the datasets an experiment reads.
+
+    By default the latest snapshot of each dataset. With ``pinned`` (the ``snapshots`` block of
+    an experiment manifest) the exact recorded snapshots are loaded instead, so a reproduction
+    reads the same bytes as the original run even after newer data has been ingested.
+    """
     data, snaps = {}, {}
     for ds in DATASETS:
         latest = store.latest(ds)
+        if pinned and ds in pinned:
+            want = pinned[ds]["snapshot_id"]
+            hit = next((x for x in store.list_snapshots(ds) if x.snapshot_id == want), None)
+            if hit is None:
+                raise SnapshotMissingError(
+                    f"snapshot {want} of dataset '{ds}' is not in this lake; exact reproduction needs the original "
+                    "snapshot (import the published data bundle) rather than a fresh download"
+                )
+            latest = hit
         data[ds] = store.read(ds, latest.snapshot_id if latest else None)
         if latest:
             snaps[ds] = {
@@ -377,9 +399,26 @@ def run_quality(settings: Settings) -> dict[str, Any]:
     return report
 
 
-def run_and_register(settings: Settings, cfg: ExperimentConfig, experiment_id: str | None = None) -> ExperimentOutput:
+def run_and_register(
+    settings: Settings,
+    cfg: ExperimentConfig,
+    experiment_id: str | None = None,
+    *,
+    loaded: tuple[dict[str, pd.DataFrame], dict[str, dict[str, Any]]] | None = None,
+    extra_datasets: dict[str, pd.DataFrame] | None = None,
+    pinned_snapshots: dict[str, dict[str, Any]] | None = None,
+) -> ExperimentOutput:
+    """Run an experiment on the latest snapshots, save its artefacts and register it.
+
+    ``loaded`` lets a batch reuse datasets it has already read. ``extra_datasets`` adds or
+    replaces inputs (used by falsification variants that supply altered production features).
+    The schema check runs first so a stale database fails before any work is done.
+    """
+    require_current_schema(settings.database_url)
     store = store_for(settings)
-    data, snaps = load_datasets(store)
+    data, snaps = loaded if loaded is not None else load_datasets(store, pinned_snapshots)
+    if extra_datasets:
+        data = {**data, **extra_datasets}
     synthetic = settings.shocktrace_mode == RunMode.DEMO
     out = run_experiment(
         data,
@@ -408,7 +447,7 @@ DEMO_EXPERIMENTS = (
 def seed_demo(settings: Settings, run_experiments: bool = True) -> dict[str, Any]:
     if settings.shocktrace_mode != RunMode.DEMO:
         raise ValueError("demo-seed requires SHOCKTRACE_MODE=demo so synthetic data never enters the live lake")
-    init_db(settings) if settings.database_url.startswith("sqlite") else None
+    init_db(settings)
     sync_sources(settings)
     store = store_for(settings)
     data = generate_demo_datasets()

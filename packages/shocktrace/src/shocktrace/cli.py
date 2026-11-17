@@ -101,23 +101,12 @@ def doctor(
 
 @app.command("db-init")
 def db_init(mode: ModeOpt = None) -> None:
-    """Create database tables (SQLite) or run Alembic migrations (PostgreSQL)."""
+    """Bring the database to the latest schema (Alembic migrations; safe to re-run)."""
     s = _settings(mode)
-    if s.database_url.startswith("sqlite"):
-        from shocktrace.services import init_db
+    from shocktrace.db.migrate import migrate
 
-        init_db(s)
-    else:
-        from alembic import command
-        from alembic.config import Config
-
-        import shocktrace.db as dbpkg
-
-        ini = Path.cwd() / "alembic.ini"
-        cfg = Config(str(ini)) if ini.exists() else Config()
-        # Migrations ship inside the package, so this works from a source checkout or an installed wheel.
-        cfg.set_main_option("script_location", str(Path(dbpkg.__file__).resolve().parent / "migrations"))
-        command.upgrade(cfg, "head")
+    rev = migrate(s.database_url)
+    typer.echo(f"schema at revision {rev}")
     from shocktrace.services import sync_sources
 
     sync_sources(s)
@@ -334,13 +323,22 @@ def backtest(
 
 @app.command()
 def reproduce(experiment_id: str, mode: ModeOpt = None) -> None:
-    """Re-run a saved experiment configuration on the current snapshots and compare results."""
+    """Re-run a saved experiment on the snapshots recorded in its manifest and compare results.
+
+    Differences in metrics are expected when the stored run predates a method revision; the
+    command prints both revisions so the cause is visible.
+    """
     from shocktrace.services import load_saved_config, run_and_register
 
     s = _settings(mode)
     cfg = load_saved_config(s, experiment_id)
     old = json.loads((s.experiments_dir / experiment_id / "results.json").read_text())
-    out = run_and_register(s, cfg, experiment_id=f"{experiment_id}_repro")
+    out = run_and_register(
+        s, cfg, experiment_id=f"{experiment_id}_repro"[:64], pinned_snapshots=old["manifest"].get("snapshots") or None
+    )
+    typer.echo(
+        f"method revision: {old['manifest'].get('method_revision')!r} -> {out.results['manifest']['method_revision']!r}"
+    )
     same_data = all(
         old["manifest"]["snapshots"].get(k, {}).get("content_hash") == v.get("content_hash")
         for k, v in out.results["manifest"]["snapshots"].items()
@@ -394,3 +392,42 @@ def report(experiment_id: str, output: Path | None = None, mode: ModeOpt = None)
 
 if __name__ == "__main__":
     app()
+
+
+@app.command()
+def study(
+    phase: Annotated[str, typer.Option(help="exploratory | confirmatory | all")] = "exploratory",
+    variant: Annotated[list[str] | None, typer.Option(help="limit to these variants (default: all)")] = None,
+    mode: ModeOpt = None,
+) -> None:
+    """Run the pre-specified production-region weather study (docs/research/RESEARCH_PROTOCOL.md)."""
+    from shocktrace.research.report import render_markdown
+    from shocktrace.research.study import STUDY, VARIANTS, run_study
+
+    s = _settings(mode or "live")
+    res = run_study(
+        s, phase, STUDY, tuple(variant) if variant else VARIANTS, progress=lambda m: typer.echo(f"  run {m}")
+    )
+    out = s.experiments_dir / "studies" / STUDY.study_id / f"tables_{phase}.md"
+    out.write_text(render_markdown(res))
+    typer.echo(f"wrote {out}")
+    conf = res["confirmatory"]
+    if conf["n_tests"]:
+        typer.echo(f"confirmatory outcome: {conf['outcome']['label']} - {conf['outcome']['statement']}")
+
+
+@app.command()
+def supersede(
+    old_id: str,
+    new_id: str,
+    reason: Annotated[str, typer.Option(help="why the old run no longer represents the current method")],
+    mode: ModeOpt = None,
+) -> None:
+    """Mark an experiment as superseded by a newer run (history is kept; listings default to current)."""
+    from shocktrace.db import repository as repo
+    from shocktrace.db.session import session_scope
+
+    s = _settings(mode)
+    with session_scope(s.database_url) as db:
+        e = repo.supersede_experiment(db, old_id, new_id, reason)
+        typer.echo(f"{e.id} superseded by {e.superseded_by}")

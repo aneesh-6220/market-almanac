@@ -30,6 +30,8 @@ class ExperimentConfig(BaseModel):
     evidence_class: str = "exploratory"
     # Optional label tying the run to a frozen protocol / study (free text, recorded in the manifest).
     study: str | None = Field(None, max_length=80)
+    # "primary" or the name of a sensitivity / falsification variant of the same design.
+    variant: str = Field("primary", max_length=32)
 
     families: list[str] = ["A", "B", "C", "D"]
     include_trees: bool = True
@@ -104,5 +106,6 @@ _LATER_FIELD_DEFAULTS: dict[str, object] = {
     "weather_release_lag_months": 0,
     "evidence_class": "exploratory",
     "study": None,
+    "variant": "primary",
     "use_precip_qc": True,
 }

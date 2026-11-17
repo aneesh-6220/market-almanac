@@ -9,7 +9,9 @@ from shocktrace.config import get_settings
 from shocktrace.db.models import Base
 
 config = context.config
-config.set_main_option("sqlalchemy.url", get_settings().database_url.replace("%", "%%"))
+# A caller (shocktrace.db.migrate) may pass the URL explicitly; the `alembic` CLI uses the settings.
+_url = config.attributes.get("url") or get_settings().database_url
+config.set_main_option("sqlalchemy.url", _url.replace("%", "%%"))
 target_metadata = Base.metadata
 
 

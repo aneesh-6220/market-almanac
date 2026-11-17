@@ -44,19 +44,53 @@ def _summary(e: m.Experiment) -> ExperimentSummary:
         statement=(e.conclusion or {}).get("statement"),
         n_series=e.n_series,
         config_hash=e.config_hash,
+        evidence_class=e.evidence_class or "exploratory",
+        study=e.study,
+        variant=e.variant or "primary",
+        method_revision=e.method_revision,
+        price_release_lag_months=int((e.config or {}).get("price_release_lag_months", 0)),
+        superseded_by=e.superseded_by,
+        superseded_reason=e.superseded_reason,
+        current=e.superseded_by is None,
     )
+
+
+def _current(q: Any, include_superseded: bool, all_variants: bool = False) -> Any:
+    """Restrict a query joined to Experiment to scientifically current primary runs by default."""
+    if not include_superseded:
+        q = q.where(m.Experiment.superseded_by.is_(None))
+    if not all_variants:
+        q = q.where(m.Experiment.variant == "primary")
+    return q
 
 
 @router.get("/experiments", response_model=list[ExperimentSummary], tags=["research"])
 def experiments(
     country: Annotated[str | None, Query(pattern=r"^[A-Z]{3}$")] = None,
+    study: Annotated[str | None, Query(pattern=r"^[A-Za-z0-9_.\-]{1,80}$")] = None,
+    evidence_class: Annotated[str | None, Query(pattern="^(exploratory|confirmatory)$")] = None,
+    include_superseded: Annotated[
+        bool, Query(description="Also return runs replaced by a later method revision (hidden by default).")
+    ] = False,
+    all_variants: Annotated[
+        bool, Query(description="Also return sensitivity and falsification variants (primary runs only by default).")
+    ] = False,
     db: Session = Depends(db_dep),
     settings: Settings = Depends(settings_dep),
 ) -> list[ExperimentSummary]:
-    q = select(m.Experiment).where(m.Experiment.mode == settings.shocktrace_mode.value)
+    """Experiments, newest first. Defaults to scientifically current primary runs."""
+    q = _current(
+        select(m.Experiment).where(m.Experiment.mode == settings.shocktrace_mode.value),
+        include_superseded,
+        all_variants,
+    )
     if country:
         q = q.where(m.Experiment.country_iso3 == country)
-    return [_summary(e) for e in db.scalars(q.order_by(desc(m.Experiment.created_at)).limit(200))]
+    if study:
+        q = q.where(m.Experiment.study == study)
+    if evidence_class:
+        q = q.where(m.Experiment.evidence_class == evidence_class)
+    return [_summary(e) for e in db.scalars(q.order_by(desc(m.Experiment.created_at)).limit(500))]
 
 
 @router.get("/experiments/{experiment_id}", tags=["research"])
@@ -147,13 +181,20 @@ def predictions(
 @router.get("/model-comparisons", response_model=list[ComparisonOut], tags=["research"])
 def model_comparisons(
     experiment_id: Annotated[str | None, Query(pattern=r"^[A-Za-z0-9_\-]{1,64}$")] = None,
-    role: Annotated[str | None, Query(pattern="^(primary|secondary|specification|vs_baseline)$")] = None,
+    role: Annotated[
+        str | None,
+        Query(pattern="^(primary|primary_production|production_vs_local|secondary|specification|vs_baseline)$"),
+    ] = None,
+    include_superseded: bool = False,
     db: Session = Depends(db_dep),
     settings: Settings = Depends(settings_dep),
 ) -> list[ComparisonOut]:
+    """Model comparisons. Without ``experiment_id`` only current primary runs are included."""
     q = select(m.ModelComparison).join(m.Experiment).where(m.Experiment.mode == settings.shocktrace_mode.value)
     if experiment_id:
         q = q.where(m.ModelComparison.experiment_id == experiment_id)
+    else:
+        q = _current(q, include_superseded)
     if role:
         q = q.where(m.ModelComparison.role == role)
     return [ComparisonOut(**{c: getattr(r, c) for c in ComparisonOut.model_fields}) for r in db.scalars(q.limit(1000))]
@@ -168,14 +209,18 @@ def forecasts(
     series_id: Annotated[str | None, Query(pattern=r"^ps_[0-9a-f]{16}$")] = None,
     experiment_id: Annotated[str | None, Query(pattern=r"^[A-Za-z0-9_\-]{1,64}$")] = None,
     status: Annotated[str | None, Query(pattern="^(issued|withheld)$")] = None,
+    include_superseded: bool = False,
     db: Session = Depends(db_dep),
     settings: Settings = Depends(settings_dep),
 ) -> list[ForecastOut]:
+    """Forecast records. Without ``experiment_id`` only forecasts of current primary runs are returned."""
     q = select(m.Forecast).where(m.Forecast.mode == settings.shocktrace_mode.value)
     if series_id:
         q = q.where(m.Forecast.series_id == series_id)
     if experiment_id:
         q = q.where(m.Forecast.experiment_id == experiment_id)
+    else:
+        q = _current(q.join(m.Experiment, m.Experiment.id == m.Forecast.experiment_id), include_superseded)
     if status:
         q = q.where(m.Forecast.status == status)
     synthetic = settings.shocktrace_mode.value == "demo"

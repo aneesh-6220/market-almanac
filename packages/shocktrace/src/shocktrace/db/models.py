@@ -155,6 +155,15 @@ class Experiment(Base):
     artifact_dir: Mapped[str] = mapped_column(String(500))
     n_series: Mapped[int] = mapped_column(Integer, default=0)
     warnings: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    # Lineage (migration 0002). Rows are never deleted or rewritten when a method changes: the old
+    # run points at its replacement and public listings default to runs that are not superseded.
+    superseded_by: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    superseded_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    superseded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    evidence_class: Mapped[str] = mapped_column(String(16), default="exploratory", server_default="exploratory")
+    study: Mapped[str | None] = mapped_column(String(80), nullable=True, index=True)
+    variant: Mapped[str] = mapped_column(String(32), default="primary", server_default="primary")
+    method_revision: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class BacktestRun(Base):

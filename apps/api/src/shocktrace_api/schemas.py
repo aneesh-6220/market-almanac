@@ -206,6 +206,14 @@ class ExperimentSummary(BaseModel):
     statement: str | None
     n_series: int
     config_hash: str
+    evidence_class: str = "exploratory"  # exploratory | confirmatory
+    study: str | None = None
+    variant: str = "primary"
+    method_revision: str | None = None
+    price_release_lag_months: int = 0
+    superseded_by: str | None = None
+    superseded_reason: str | None = None
+    current: bool = True  # false when a later run supersedes this one
 
 
 class BacktestOut(BaseModel):

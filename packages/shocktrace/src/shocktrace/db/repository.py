@@ -198,6 +198,7 @@ def save_quality_report(
 def register_experiment(s: Session, out: ExperimentOutput, artifact_dir: str) -> None:
     r = clean_for_json(out.results)
     eid = out.experiment_id
+    prior = s.get(m.Experiment, eid)
     s.execute(delete(m.Forecast).where(m.Forecast.experiment_id == eid))
     s.execute(delete(m.ModelComparison).where(m.ModelComparison.experiment_id == eid))
     s.execute(delete(m.ModelEvaluation).where(m.ModelEvaluation.experiment_id == eid))
@@ -220,6 +221,14 @@ def register_experiment(s: Session, out: ExperimentOutput, artifact_dir: str) ->
             artifact_dir=artifact_dir,
             n_series=len(r.get("eligible_series", [])),
             warnings=r.get("warnings", []),
+            evidence_class=r["config"].get("evidence_class", "exploratory"),
+            study=r["config"].get("study"),
+            variant=r["config"].get("variant", "primary"),
+            method_revision=r.get("manifest", {}).get("method_revision"),
+            # re-registering the same id (reproduction of a run) must not erase its lineage
+            superseded_by=prior.superseded_by if prior else None,
+            superseded_reason=prior.superseded_reason if prior else None,
+            superseded_at=prior.superseded_at if prior else None,
         )
     )
     s.flush()
@@ -292,3 +301,39 @@ def register_experiment(s: Session, out: ExperimentOutput, artifact_dir: str) ->
                 payload=f,
             )
         )
+
+
+class SupersessionError(ValueError):
+    """A supersession request that would corrupt experiment lineage."""
+
+
+def supersede_experiment(s: Session, old_id: str, new_id: str, reason: str) -> m.Experiment:
+    """Mark ``old_id`` as superseded by ``new_id``. Nothing is deleted; the mark is idempotent.
+
+    Rules: both runs must exist in the same mode; a run cannot supersede itself; the replacement
+    must not itself be superseded (point at the current result); an existing mark is never
+    silently redirected to a different replacement.
+    """
+    if not reason.strip():
+        raise SupersessionError("a supersession needs a reason")
+    old, new = s.get(m.Experiment, old_id), s.get(m.Experiment, new_id)
+    if old is None or new is None:
+        raise SupersessionError("both experiments must exist")
+    if old_id == new_id:
+        raise SupersessionError("an experiment cannot supersede itself")
+    if old.mode != new.mode:
+        raise SupersessionError("experiments belong to different modes")
+    if new.superseded_by is not None:
+        raise SupersessionError(f"{new_id} is itself superseded by {new.superseded_by}; point at the current run")
+    if old.superseded_by not in (None, new_id):
+        raise SupersessionError(f"{old_id} is already superseded by {old.superseded_by}")
+    if old.superseded_by is None:
+        old.superseded_by, old.superseded_reason, old.superseded_at = new_id, reason.strip(), datetime.now(UTC)
+    return old
+
+
+def current_experiments(s: Session, mode: str, include_superseded: bool = False) -> list[m.Experiment]:
+    q = select(m.Experiment).where(m.Experiment.mode == mode)
+    if not include_superseded:
+        q = q.where(m.Experiment.superseded_by.is_(None))
+    return list(s.scalars(q.order_by(m.Experiment.created_at.desc())))
