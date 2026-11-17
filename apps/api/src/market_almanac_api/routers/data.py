@@ -226,15 +226,10 @@ def prices(
 ) -> Page[PriceObs]:
     if not (series_id or country):
         raise HTTPException(422, "provide series_id or country")
-    df, sid = cache.frame("prices")
-    if series_id:
-        df = df[df["series_id"] == series_id]
-    if country:
-        df = df[df["country_iso3"] == country]
-    if market:
-        df = df[df["market_code"] == market]
-    if commodity:
-        df = df[df["commodity_code"] == commodity]
+    # filtered scan of the snapshot: loading the whole price table needs ~300 MB
+    df = cache.price_rows(series_id=series_id, country_iso3=country, market_code=market, commodity_code=commodity)
+    latest = cache.store().latest("prices")
+    sid = latest.snapshot_id if latest else None
     if start:
         df = df[df["period"] >= pd.Timestamp(start if len(start) > 7 else start + "-01")]
     if end:

@@ -145,11 +145,11 @@ class DataCache:
             raise DataUnavailableError("No price snapshot is installed on this deployment.")
         return st.path("prices", latest.snapshot_id), latest.snapshot_id
 
-    def series_rows(self, series_id: str) -> pd.DataFrame:
-        """All raw price records of one series (empty frame if unknown).
+    def price_rows(self, **equals: str | None) -> pd.DataFrame:
+        """Raw price records whose columns equal the given values (``None`` values are ignored).
 
-        Read from the snapshot with a row filter: the full observation table is ~300 MB in memory,
-        more than a small host has, and per-series requests only need a few dozen rows.
+        Scans the snapshot in small batches and keeps only matches: the full observation table is
+        ~300 MB in memory, more than a small host has, and requests need a series or a country.
         """
         import pyarrow as pa
         import pyarrow.compute as pc
@@ -158,15 +158,24 @@ class DataCache:
         from market_almanac.data.schema import SCHEMAS, coerce, empty_frame
 
         path, _ = self._prices_file()
+        wanted = {k: v for k, v in equals.items() if v is not None}
         parts = []
-        for batch in pq.ParquetFile(path).iter_batches(batch_size=8192):  # bounded memory, whatever the file's layout
-            hit = batch.filter(pc.equal(batch["series_id"], series_id))
+        for batch in pq.ParquetFile(path).iter_batches(batch_size=8192):
+            mask = None
+            for col, val in wanted.items():
+                eq = pc.equal(batch[col], val)
+                mask = eq if mask is None else pc.and_(mask, eq)
+            hit = batch if mask is None else batch.filter(mask)
             if hit.num_rows:
                 parts.append(hit)
         pa.default_memory_pool().release_unused()
         if not parts:
             return empty_frame(SCHEMAS["prices"])
         return coerce(pa.Table.from_batches(parts).to_pandas(), SCHEMAS["prices"])
+
+    def series_rows(self, series_id: str) -> pd.DataFrame:
+        """All raw price records of one series (empty frame if unknown)."""
+        return self.price_rows(series_id=series_id)
 
     def _clean_rows(self, series_ids: list[str]) -> pd.DataFrame:
         """Valid price records (series_id, period, price) of the given series; invalid ones become NaN.

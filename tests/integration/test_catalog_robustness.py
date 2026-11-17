@@ -173,3 +173,19 @@ def test_db_indexed_false_for_empty_database(empty_deployment):
     from market_almanac_api.main import _db_indexed
 
     assert _db_indexed(get_settings()) is False
+
+
+def test_price_rows_filter_matches_full_frame(seeded_env):
+    """The memory-bounded filtered scan returns exactly what filtering the full frame would."""
+    from market_almanac_api.deps import cache
+
+    full, _ = cache.frame("prices")
+    sid = full["series_id"].iloc[0]
+    iso = full["country_iso3"].iloc[0]
+    key = ["series_id", "period", "retrieved_at"]
+    for kw, col in (({"series_id": sid}, "series_id"), ({"country_iso3": iso}, "country_iso3")):
+        exp = full[full[col] == kw[col]].sort_values(key).reset_index(drop=True)
+        got = cache.price_rows(**kw).sort_values(key).reset_index(drop=True)
+        assert len(got) == len(exp) > 0 and got.equals(exp)
+    assert cache.price_rows(series_id="ps_0000000000000000").empty
+    assert cache.series_rows(sid).equals(cache.price_rows(series_id=sid))
