@@ -125,17 +125,6 @@ class DataCache:
             self._catalog["catalog"] = (key, cat, meta)
         return cat, meta, sid
 
-    def _series_index(self) -> tuple[pd.DataFrame, dict[str, Any]]:
-        prices, sid = self.frame("prices")
-        with self._lock:
-            hit = self._catalog.get("index")
-            if hit and hit[0] == sid:
-                return prices, hit[1]
-        idx = prices.groupby("series_id", sort=False).indices
-        with self._lock:
-            self._catalog["index"] = (sid, idx)
-        return prices, idx
-
     def memo(self, key: tuple[Any, ...], ttl_seconds: float, compute: Callable[[], Any]) -> Any:
         """Cache a derived response for ``ttl_seconds`` (keys should include the snapshot id)."""
         now = time.monotonic()
@@ -150,35 +139,66 @@ class DataCache:
             self._memo[key] = (now, value)
         return value
 
+    def _prices_file(self) -> tuple[Path, str]:
+        st = self.store()
+        latest = st.latest("prices")
+        if latest is None:
+            raise DataUnavailableError("No price snapshot is installed on this deployment.")
+        return st.path("prices", latest.snapshot_id), latest.snapshot_id
+
     def series_rows(self, series_id: str) -> pd.DataFrame:
-        """All raw price records of one series (empty frame if unknown)."""
-        prices, idx = self._series_index()
-        pos = idx.get(series_id)
-        return prices.iloc[0:0] if pos is None else prices.iloc[pos]
+        """All raw price records of one series (empty frame if unknown).
+
+        Read from the snapshot with a row filter: the full observation table is ~300 MB in memory,
+        more than a small host has, and per-series requests only need a few dozen rows.
+        """
+        import pyarrow as pa
+        import pyarrow.compute as pc
+        import pyarrow.parquet as pq
+
+        from market_almanac.data.schema import SCHEMAS, coerce, empty_frame
+
+        path, _ = self._prices_file()
+        parts = []
+        for batch in pq.ParquetFile(path).iter_batches(batch_size=8192):  # bounded memory, whatever the file's layout
+            hit = batch.filter(pc.equal(batch["series_id"], series_id))
+            if hit.num_rows:
+                parts.append(hit)
+        pa.default_memory_pool().release_unused()
+        if not parts:
+            return empty_frame(SCHEMAS["prices"])
+        return coerce(pa.Table.from_batches(parts).to_pandas(), SCHEMAS["prices"])
 
     def _clean_rows(self) -> tuple[pd.DataFrame, dict[str, Any]]:
-        """Valid price records only (series, period, price), positionally aligned with the series index.
+        """Valid price records only (series, period, price) and each series' row positions in that table.
 
-        Invalid and conflicting records are dropped once per snapshot; slicing this narrow frame is
-        much cheaper than slicing the full observation table for every request.
+        Built from just the four columns it needs. Invalid and conflicting records are dropped once
+        per snapshot; slicing this narrow frame is much cheaper than slicing the full observation table.
         """
-        prices, idx = self._series_index()
-        _, sid = self.frame("prices")
+        import pyarrow.parquet as pq
+
+        path, sid = self._prices_file()
         with self._lock:
             hit = self._catalog.get("clean")
             if hit and hit[0] == sid:
-                return hit[1], idx
-        flags = prices["quality_flags"].fillna("")
-        ok = ~(flags.str.contains("invalid_price") | flags.str.contains("duplicate_conflict")) & (prices["price"] > 0)
+                return hit[1], hit[2]
+        raw = pq.read_table(path, columns=["series_id", "period", "price", "quality_flags"]).to_pandas()
+        flags = raw["quality_flags"].fillna("")
+        ok = ~(flags.str.contains("invalid_price") | flags.str.contains("duplicate_conflict")) & (raw["price"] > 0)
         narrow = pd.DataFrame(
             {
-                "series_id": prices["series_id"].to_numpy(),
-                "period": prices["period"].to_numpy(),
-                "price": prices["price"].astype("float64").where(ok).to_numpy(),
+                "series_id": raw["series_id"].astype("string"),
+                "period": pd.to_datetime(raw["period"]).dt.normalize().to_numpy(),
+                "price": raw["price"].astype("float64").where(ok).to_numpy(),
             }
         )
+        del raw, flags, ok
+        import pyarrow as pa
+
+        pa.default_memory_pool().release_unused()  # hand the Arrow buffers back to the OS
+        idx = narrow.groupby("series_id", sort=False).indices
         with self._lock:
-            self._catalog["clean"] = (sid, narrow)
+            self._catalog["clean"] = (sid, narrow, idx)
             self._peers.clear()
         return narrow, idx
 
