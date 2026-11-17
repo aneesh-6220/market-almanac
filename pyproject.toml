@@ -79,3 +79,6 @@ warn_unused_ignores = false
 check_untyped_defs = true
 mypy_path = ["packages/market-almanac/src", "apps/api/src"]
 packages = ["market_almanac", "market_almanac_api"]
+
+[tool.vercel]
+entrypoint = "apps.api.src.market_almanac_api.main:app"
