@@ -41,6 +41,8 @@ class DataCache:
         self._frames: dict[tuple[str, str, str], pd.DataFrame] = {}
         self._results: dict[str, tuple[float, dict[str, Any]]] = {}
         self._quality: dict[str, tuple[str, dict[str, Any]]] = {}
+        self._catalog: dict[str, Any] = {}
+        self._prod: dict[Any, Any] = {}
 
     def store(self) -> DatasetStore:
         s = get_settings()
@@ -57,6 +59,97 @@ class DataCache:
                 self._frames = {k: v for k, v in self._frames.items() if k[:2] != key[:2]}
                 self._frames[key] = st.read(dataset, latest.snapshot_id)
             return self._frames[key], latest.snapshot_id
+
+    # --- public analytics: catalog and per-series access ---------------------------------------
+
+    def catalog(self) -> tuple[pd.DataFrame, dict[str, Any], str | None]:
+        """Series catalog for the current price snapshot (materialised file if it matches, else built)."""
+        from shocktrace.analytics.catalog import build_catalog
+
+        s = get_settings()
+        st = self.store()
+        latest = st.latest("prices")
+        sid = latest.snapshot_id if latest else None
+        wx = st.latest("weather_monthly")
+        key = (st.mode, sid, wx.snapshot_id if wx else None)
+        with self._lock:
+            hit = self._catalog.get("catalog")
+            if hit and hit[0] == key:
+                return hit[1], hit[2], sid
+        pub = s.data_dir / "public" / st.mode
+        man_path = pub / "manifest.json"
+        cat = None
+        meta: dict[str, Any] = {"materialised": False}
+        if man_path.exists():
+            man = json.loads(man_path.read_text())
+            src = man.get("source", {})
+            if src.get("prices_snapshot_id") == sid and src.get("weather_snapshot_id") == key[2]:
+                cat = pd.read_parquet(pub / "series_catalog.parquet")
+                meta = {"materialised": True, **man}
+        if cat is None:
+            prices, _ = self.frame("prices")
+            weather, _ = self.frame("weather_monthly")
+            cat = build_catalog(prices, set(weather["location_id"].dropna().unique()))
+        cat = cat.set_index("series_id", drop=False)
+        with self._lock:
+            self._catalog["catalog"] = (key, cat, meta)
+        return cat, meta, sid
+
+    def _series_index(self) -> tuple[pd.DataFrame, dict[str, Any]]:
+        prices, sid = self.frame("prices")
+        with self._lock:
+            hit = self._catalog.get("index")
+            if hit and hit[0] == sid:
+                return prices, hit[1]
+        idx = prices.groupby("series_id", sort=False).indices
+        with self._lock:
+            self._catalog["index"] = (sid, idx)
+        return prices, idx
+
+    def series_rows(self, series_id: str) -> pd.DataFrame:
+        """All raw price records of one series (empty frame if unknown)."""
+        prices, idx = self._series_index()
+        pos = idx.get(series_id)
+        return prices.iloc[0:0] if pos is None else prices.iloc[pos]
+
+    def series_monthly(self, series_id: str) -> pd.Series:
+        """Cleaned monthly prices of one series: invalid and conflicting records removed, one value per month."""
+        rows = self.series_rows(series_id)
+        if rows.empty:
+            return pd.Series(dtype="float64")
+        flags = rows["quality_flags"].fillna("")
+        ok = ~(flags.str.contains("invalid_price") | flags.str.contains("duplicate_conflict")) & (rows["price"] > 0)
+        return rows.loc[ok].groupby("period")["price"].first().sort_index().astype("float64")
+
+    def peer_panel(self, cat: pd.DataFrame, series_id: str) -> pd.DataFrame:
+        """Monthly prices of every series sharing country, commodity, unit, price type and currency."""
+        if series_id not in cat.index:
+            return pd.DataFrame()
+        m = cat.loc[series_id]
+        same = cat[
+            (cat["country_iso3"] == m["country_iso3"])
+            & (cat["commodity_code"] == m["commodity_code"])
+            & (cat["unit"] == m["unit"])
+            & (cat["price_type"] == m["price_type"])
+            & (cat["currency"] == m["currency"])
+        ]
+        return pd.DataFrame({sid: self.series_monthly(sid) for sid in same.index[:400]})
+
+    def production_features(self, country: str, commodity_code: str, commodity_name: str) -> tuple[pd.DataFrame, Any]:
+        from shocktrace.features.production_weather import build_production_features
+
+        weather, wsid = self.frame("weather_monthly")
+        key = (wsid, country, commodity_code)
+        with self._lock:
+            hit = self._prod.get(key)
+            if hit is not None:
+                return hit
+        out = build_production_features(weather, country, {commodity_code: commodity_name})
+        with self._lock:
+            if len(self._prod) > 64:
+                self._prod.clear()
+            self._prod[key] = out
+        return out
 
     def quality(self, db: Any, mode: str) -> tuple[dict[str, Any], str, str] | None:
         """Latest data-quality report for a mode, cached by report id.

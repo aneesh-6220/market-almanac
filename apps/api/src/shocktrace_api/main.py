@@ -20,7 +20,7 @@ from starlette.responses import Response
 from shocktrace import __version__
 from shocktrace.config import get_settings
 from shocktrace.logging import configure_logging, get_logger, log_event
-from shocktrace_api.routers import data, research, system
+from shocktrace_api.routers import data, markets, research, system
 
 log = get_logger("api")
 
@@ -35,6 +35,7 @@ def _warm_caches() -> None:
         with session_scope(s.database_url) as db:
             cache.quality(db, s.shocktrace_mode.value)
         cache.frame("prices")
+        cache.catalog()
         log_event(log, "caches warmed")
     except Exception as exc:  # warming is best-effort; requests load lazily anyway
         log_event(log, "cache warm-up skipped", level=30, error=type(exc).__name__)
@@ -138,6 +139,7 @@ def create_app() -> FastAPI:
     app.include_router(system.router)
     app.include_router(data.router)
     app.include_router(research.router)
+    app.include_router(markets.router)
     return app
 
 
