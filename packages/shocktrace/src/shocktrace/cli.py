@@ -431,3 +431,23 @@ def supersede(
     with session_scope(s.database_url) as db:
         e = repo.supersede_experiment(db, old_id, new_id, reason)
         typer.echo(f"{e.id} superseded by {e.superseded_by}")
+
+
+@app.command()
+def materialize(mode: ModeOpt = None) -> None:
+    """Build the public series catalog and coverage inventory from the current snapshots."""
+    from shocktrace.services import materialize_public
+
+    _echo_json(materialize_public(_settings(mode)))
+
+
+@app.command("sync-db")
+def sync_db(mode: ModeOpt = None) -> None:
+    """Rebuild the database index (snapshots, markets, experiments, lineage) from stored artefacts."""
+    from shocktrace.services import sync_database
+
+    s = _settings(mode)
+    res = sync_database(s)
+    typer.echo(f"database: {s.redacted_database_url()}")
+    typer.echo(f"snapshots registered: {res['snapshots']} | experiments registered: {len(res['experiments'])}")
+    typer.echo(f"superseded: {len(res['superseded'])} | lineage entries skipped: {len(res['lineage_skipped'])}")

@@ -510,3 +510,67 @@ def load_saved_config(settings: Settings, experiment_id: str) -> ExperimentConfi
 
 
 _ = power_grid_cell
+
+
+def materialize_public(settings: Settings) -> dict[str, Any]:
+    """Build the series catalog and coverage inventory for the current snapshots (derived, rebuildable)."""
+    from shocktrace.analytics.catalog import build_catalog, coverage_inventory, write_catalog
+
+    store = store_for(settings)
+    prices, weather = store.read("prices"), store.read("weather_monthly")
+    cat = build_catalog(prices, set(weather["location_id"].dropna().unique()))
+    countries = store.read("countries")
+    names = dict(zip(countries["iso3"], countries["name"], strict=True)) if len(countries) else {}
+    pl, wl = store.latest("prices"), store.latest("weather_monthly")
+    source = {
+        "prices_snapshot_id": pl.snapshot_id if pl else None,
+        "prices_content_hash": pl.content_hash if pl else None,
+        "weather_snapshot_id": wl.snapshot_id if wl else None,
+    }
+    out = write_catalog(cat, coverage_inventory(cat, names), settings.data_dir / "public" / store.mode, source)
+    return {"path": str(out), "series": len(cat), "usable": int(cat["usable"].sum()) if len(cat) else 0, **source}
+
+
+def sync_database(settings: Settings) -> dict[str, Any]:
+    """Rebuild the database index from durable artefacts: snapshots, reference entities, experiments, lineage.
+
+    The database holds metadata only; everything in it can be reconstructed from the data lake
+    and the experiment directories. This is how a fresh or remote database (for example the
+    deployment's PostgreSQL) is brought in line with a set of published artefacts. The job is
+    idempotent and never deletes experiment history.
+    """
+    import json
+
+    import yaml
+
+    require_current_schema(settings.database_url)
+    store = store_for(settings)
+    mode = settings.shocktrace_mode.value
+    sync_sources(settings)
+    n_snap = 0
+    with session_scope(settings.database_url) as s:
+        for ds in DATASETS:
+            for man in store.list_snapshots(ds):
+                repo.register_snapshot(s, man)
+                n_snap += 1
+    _refresh_registry(settings)
+    registered: list[str] = []
+    root = Path(settings.experiments_dir)
+    for d in sorted(p for p in root.glob("*") if (p / "results.json").exists()):
+        res = json.loads((d / "results.json").read_text())
+        if res.get("mode") != mode:
+            continue
+        out = ExperimentOutput(res["experiment_id"], res, pd.DataFrame(), None, res.get("warnings", []))
+        with session_scope(settings.database_url) as s:
+            repo.register_experiment(s, out, str(d))
+        registered.append(res["experiment_id"])
+    applied, skipped = [], []
+    lineage = Path(__file__).parent / "research" / "supersessions.yaml"
+    for e in yaml.safe_load(lineage.read_text()) or []:
+        with session_scope(settings.database_url) as s:
+            if s.get(m.Experiment, e["old"]) is None or s.get(m.Experiment, e["new"]) is None:
+                skipped.append(e["old"])
+                continue
+            repo.supersede_experiment(s, e["old"], e["new"], " ".join(str(e["reason"]).split()))
+            applied.append(e["old"])
+    return {"snapshots": n_snap, "experiments": registered, "superseded": applied, "lineage_skipped": skipped}
