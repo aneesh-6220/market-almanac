@@ -165,8 +165,20 @@ IMF data may be redistributed for non-commercial use with attribution.
 - Outbound HTTP: host allow-list, redacted cache keys.
 - Data bundle: https-only downloads, 2 GiB cap, rejects absolute paths, `..` and non-regular files,
   verifies every file hash, never overwrites differing files.
-- Not done: dependency vulnerability audit (`npm audit`, `pip-audit`) and a review of rate-limit
-  behaviour behind a real proxy.
+- Dependency audit (2026-11-17): `pip-audit` on the locked runtime dependencies found no known
+  vulnerabilities. `npm audit --omit=dev` reports three advisories, each fixed only by a major
+  upgrade:
+  - `maplibre-gl` ≤ 6.4.0, critical: sanitiser bypass in `DOM.sanitize` (GHSA-jrc7-96c5-q579). The
+    app creates no popups and injects no HTML into the map; exposure is limited to attribution HTML
+    from the configured style URL (OpenFreeMap by default, or an operator-set URL).
+  - `zod` < 4.6.6, high: memory exhaustion validating oversized constrained collections
+    (GHSA-mrhx-c7xc-m3w5). Zod validates only responses from ShockTrace's own API.
+  - `echarts` < 6.1.0, moderate: XSS (GHSA-fgmj-fm8m-jvvx). Chart labels include market and
+    commodity names from WFP data; the only custom HTML tooltip shows internal model names.
+  Exploitation needs a hostile style URL, a compromised API or hostile names in WFP data, so this is
+  not release-blocking for a demonstration. Upgrading to ECharts 6, MapLibre 6 and Zod 4 is the
+  first follow-up before a public deployment.
+- Not done: review of rate-limit behaviour behind a real reverse proxy.
 
 ## 14. Git
 
@@ -185,6 +197,7 @@ See `docs/PORTFOLIO_RELEASE.md`: every claim there maps to a test, artefact or t
 | Neon at revision 0001 with stale runs | With authorisation: `SHOCKTRACE_MODE=live uv run shocktrace db-init && SHOCKTRACE_MODE=live uv run shocktrace sync-db`, then check `/api/v1/experiments` against Neon |
 | No remote / CI never run on GitHub | Create the repository, push `release/v1.0.0`, open a PR to `main`, fix anything CI finds |
 | Data bundle unpublished | Confirm the HDX licence; attach `dist/shocktrace-live-data-20261117T114519Z.tar.gz` to a release; put its URL and SHA-256 in the README |
+| npm advisories (ECharts, MapLibre, Zod) | Upgrade to ECharts 6, MapLibre 6, Zod 4; rerun tsc, Vitest and both Playwright suites |
 | Docker unverified | `docker compose up --build` on a machine with Docker, or let the CI `docker` job run |
 | No deployment | Choose a host; set `SHOCKTRACE_MODE=live`, `DATA_BUNDLE_URL`, `DATA_BUNDLE_SHA256`, `DATABASE_URL`, `CORS_ORIGINS`, `NEXT_PUBLIC_API_URL`; deploy; run the live e2e suite against the public URLs |
 | Dependency audit not run | `npm audit --omit=dev` and `uvx pip-audit` |
