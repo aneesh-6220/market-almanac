@@ -78,7 +78,7 @@ national crop-area proxy; nominal local-currency prices. See `docs/RESULTS.md`,
 | Local `data/live_local.db` | 0002 | 9 superseded, public listing excludes them | Verified by live e2e |
 | Clean-install SQLite (from bundle) | 0002 | same | Verified |
 | Isolated PostgreSQL copy of Neon | 0001 → 0002 | 7 prior rows unchanged; 75 registered; 0 duplicates; 9 superseded | Rehearsal passed |
-| **Neon (shared)** | **0001** | pre-audit runs still current | **Not migrated: awaiting owner authorisation** |
+| Neon (shared) | 0002 | 77 rows, 9 superseded, no pre-v1 run current; 7 prior rows unchanged | Migrated and synced 2026-11-17 with owner authorisation; API against Neon lists no superseded runs |
 
 A read-only JSON backup of every Neon table was written to `data/backups/` (gitignored) before the
 rehearsal. Storage for deployment: lake snapshots, catalog and experiment artefacts travel as a
@@ -194,7 +194,6 @@ See `docs/PORTFOLIO_RELEASE.md`: every claim there maps to a test, artefact or t
 
 | Blocker | Fix |
 |---|---|
-| Neon at revision 0001 with stale runs | With authorisation: `SHOCKTRACE_MODE=live uv run shocktrace db-init && SHOCKTRACE_MODE=live uv run shocktrace sync-db`, then check `/api/v1/experiments` against Neon |
 | No remote / CI never run on GitHub | Create the repository, push `release/v1.0.0`, open a PR to `main`, fix anything CI finds |
 | Data bundle unpublished | Confirm the HDX licence; attach `dist/shocktrace-live-data-20261117T114519Z.tar.gz` to a release; put its URL and SHA-256 in the README |
 | npm advisories (ECharts, MapLibre, Zod) | Upgrade to ECharts 6, MapLibre 6, Zod 4; rerun tsc, Vitest and both Playwright suites |
