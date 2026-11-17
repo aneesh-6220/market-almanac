@@ -4,7 +4,7 @@ import { clsx } from "clsx";
 import { AlertTriangle, Info, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-import { ApiError } from "@/lib/api";
+import { ApiError, LOCAL_API } from "@/lib/api";
 import { VERDICT } from "@/lib/format";
 
 export function cn(...a: Parameters<typeof clsx>) {
@@ -71,7 +71,7 @@ export function ErrorState({ error, what }: { error: unknown; what: string }) {
       <div>
         <p className="font-medium text-ink">Could not load {what}.</p>
         <p className="mt-1 text-ink-2">{msg}</p>
-        {offline && <p className="mt-1 text-ink-3">Check that the API is running and NEXT_PUBLIC_API_URL points to it.</p>}
+        {offline && LOCAL_API && <p className="mt-1 text-ink-3">Check that the API is running and NEXT_PUBLIC_API_URL points to it.</p>}
       </div>
     </div>
   );

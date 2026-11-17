@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 
+import { LOCAL_API } from "@/lib/api";
 import { useStatus } from "@/lib/queries";
 
 import { cn } from "./ui";
@@ -127,7 +128,9 @@ export function ModeBand() {
   if (isError) {
     return (
       <div className="border-b border-bad/30 bg-bad/5 px-4 py-1.5 text-center text-sm text-ink-2" role="status">
-        The ShockTrace API is unreachable. Pages will show errors until it is running.
+        {LOCAL_API
+          ? "The ShockTrace API is unreachable. Pages will show errors until it is running."
+          : "The ShockTrace data service is temporarily unavailable. Pages will show errors until it is back."}
       </div>
     );
   }

@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+/** A local API means a developer is running the stack, so errors may carry setup hints. */
+export const LOCAL_API = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(API_URL);
 
 export class ApiError extends Error {
   constructor(
@@ -26,7 +28,12 @@ export async function apiGet<S extends z.ZodTypeAny>(path: string, schema: S, pa
   try {
     res = await fetch(apiUrl(path, params), { headers: { accept: "application/json" } });
   } catch {
-    throw new ApiError(0, `Cannot reach the ShockTrace API at ${API_URL}. Start it with \`make api\`.`);
+    throw new ApiError(
+      0,
+      LOCAL_API
+        ? `Cannot reach the ShockTrace API at ${API_URL}. Start it with \`make api\`.`
+        : "The ShockTrace data service is temporarily unavailable. Please try again in a few minutes.",
+    );
   }
   if (!res.ok) {
     let detail = res.statusText;
