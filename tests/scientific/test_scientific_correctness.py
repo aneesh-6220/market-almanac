@@ -256,3 +256,49 @@ def test_models_without_overlapping_predictions_are_insufficient_not_a_crash():
     specs = [s for s in default_specs(("A",), include_trees=False) if s.task == "regression"]
     block, sample = _task_block(bt, pd.DataFrame(), specs, "regression", 1, cfg, None, [])
     assert block["status"] == "insufficient_evidence" and sample.empty and block["comparisons"] == []
+
+
+# audit regressions (docs/audits/SCIENTIFIC_VALIDITY_AUDIT.md) -------------------------------
+def test_anomaly_is_bounded_when_climatological_sd_is_near_zero():
+    """Dry-season rainfall: near-zero s.d. plus one spurious value must not produce z ~ 200."""
+    from shocktrace.features.weather import ANOMALY_CLIP
+
+    idx = pd.date_range("1991-12-01", periods=35, freq="12MS")  # 35 Decembers
+    x = pd.Series(np.r_[np.tile([0.0, 0.1, 0.0, 2.1, 0.0], 6), 0.0, 0.0, 0.0, 0.0, 291.3], index=idx)
+    z = anomaly(x, ClimatologyConfig())
+    assert z.iloc[-1] == ANOMALY_CLIP
+    assert z.abs().max() <= ANOMALY_CLIP
+    # ordinary values are untouched by the clip
+    raw = (x.iloc[-2] - x.iloc[:-2].mean()) / x.iloc[:-2].std()
+    assert z.iloc[-2] == pytest.approx(raw)
+
+
+def test_anomaly_clip_does_not_reintroduce_future_information():
+    idx = pd.date_range("1991-01-01", periods=12 * 30, freq="MS")
+    rng = np.random.default_rng(0)
+    x = pd.Series(rng.gamma(2.0, 30.0, len(idx)), index=idx)
+    cut = pd.Timestamp("2015-06-01")
+    x2 = x.copy()
+    x2[x2.index > cut] = 1e6
+    a, b = anomaly(x, ClimatologyConfig()), anomaly(x2, ClimatologyConfig())
+    pd.testing.assert_series_equal(a[a.index <= cut], b[b.index <= cut])
+
+
+def test_results_disclose_lag_assumption_timing(demo_data):
+    from shocktrace.data.alignment import RULES
+    from shocktrace.experiments.runner import TIMING_DISCLOSURE
+
+    assert "ASSUMED" in RULES["price"].basis and "not a real-time" in RULES["price"].basis
+    cfg = ExperimentConfig(
+        name="t",
+        country_iso3="XDM",
+        commodity_codes=["DM-MAIZE"],
+        horizons=[1],
+        families=["A", "B"],
+        include_trees=False,
+        bootstrap_reps=100,
+        sensitivity_thresholds=[0.10],
+    )
+    out = run_experiment(demo_data, cfg, mode="demo")
+    assert TIMING_DISCLOSURE in out.results["limitations"]
+    assert out.results["manifest"]["method_revision"].startswith("audit-")

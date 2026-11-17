@@ -63,7 +63,7 @@ A value for period *p* is usable at origin *t* when *t* ≥ available(*p*):
 
 | Input | Rule |
 |---|---|
-| WFP price, month *p* | available at end of *p* (lag 0) |
+| WFP price, month *p* | **assumed** available at end of *p* (lag 0) – defines the origin; observed HDX publication lag is ≥1–2 months, so this is not a real-time information set |
 | NASA POWER weather, month *p* | available at end of *p*; incomplete months (<90% of days) excluded |
 | IMF CPI, month *p* | *p* + 2 months |
 | IMF exchange rate, month *p* | *p* + 1 month |
@@ -121,7 +121,7 @@ Tmax ≥ 35 °C. For calendar month *m*:
     z_t = (x_t − μ_m) / σ_m
 
 - **Expanding climatology (default):** μ_m and σ_m use only the same calendar month in years
-  strictly before year(*t*), with at least 10 years. The feature is point-in-time at every *t*.
+  strictly before year(*t*), with at least 10 years. The feature uses no information after *t*. Standardised anomalies are clipped to ±4 (audit fix: near-zero dry-season s.d. produced z ≈ 217 from one spurious rainfall value).
 - **Fixed climatology:** a reference period (e.g. 1991–2010) is allowed only if it ends before
   the first test origin; otherwise the run raises `LeakageError`.
 

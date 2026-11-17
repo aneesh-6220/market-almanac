@@ -12,6 +12,13 @@ where (mu_m, sigma_m) is the *climatology* for calendar month m. Two reference m
 * ``fixed``: a fixed reference period [start_year, end_year]. To avoid leaking test-period
   climate information, the period must end before the first forecast-evaluation origin;
   ``check_fixed_climatology`` enforces this.
+
+Bounded influence (audit fix, v0.1.1): standardised anomalies are clipped to
+``[-ANOMALY_CLIP, ANOMALY_CLIP]``. In the Sahelian dry season the same-calendar-month
+climatological s.d. of rainfall is ~1 mm, so a single spurious near-real-time rainfall value
+(e.g. NASA POWER 276 mm on 2025-12-02 at 10.75N -4.69E) produced z = 217 and a linear model
+extrapolated a +266 log-point price change. Clipping is a pointwise transform of the month-t
+value and uses no future information.
 """
 
 from __future__ import annotations
@@ -20,6 +27,8 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+
+ANOMALY_CLIP = 4.0
 
 
 class LeakageError(ValueError):
@@ -68,7 +77,7 @@ def anomaly(x: pd.Series, cfg: ClimatologyConfig) -> pd.Series:
             mu = pd.Series(ref.mean(), index=s.index)
             sd = pd.Series(ref.std(), index=s.index)
         z = (s - mu) / sd.replace(0, np.nan)
-        out.loc[s.index] = z
+        out.loc[s.index] = z.clip(-ANOMALY_CLIP, ANOMALY_CLIP)
     return out
 
 

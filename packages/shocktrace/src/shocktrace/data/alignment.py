@@ -44,12 +44,26 @@ class AvailabilityRule:
 
 # Conservative defaults. Publication dates per value are not provided by these sources.
 RULES: dict[str, AvailabilityRule] = {
-    # WFP monthly prices are collected around mid-month; we assume they are known by the end
-    # of the same month and set the forecast origin to that month (lag 0).
-    "price": AvailabilityRule("hdx_hapi", "M", 0, "Price for month t is the origin information set at t."),
+    # WFP monthly prices are collected around mid-month. Lag 0 is an ASSUMPTION that defines the
+    # forecast origin, NOT a conservative or source-supported lag: the HDX HAPI snapshot retrieved
+    # 2026-11-16 contained no BFA price later than 2026-09, i.e. real publication lag >= ~1.5
+    # months. Results are therefore lag-assumption-based retrospective backtests, not real-time.
+    "price": AvailabilityRule(
+        "hdx_hapi",
+        "M",
+        0,
+        "ASSUMED lag 0 (defines the origin); observed HDX publication lag is >= 1-2 months, so this is "
+        "not a real-time information set.",
+    ),
     # NASA POWER provides near-real-time daily data (days of latency). A completed month t is
     # available at the end of month t.
-    "weather": AvailabilityRule("nasa_power", "M", 0, "NRT reanalysis; complete months only."),
+    "weather": AvailabilityRule(
+        "nasa_power",
+        "M",
+        0,
+        "Complete months only; POWER near-real-time (GEOS-IT) values are later replaced by MERRA-2, so "
+        "the stored vintage may differ from what was available in real time.",
+    ),
     # IMF monthly CPI is typically released 1-2 months after the reference month.
     "imf_cpi": AvailabilityRule("imf", "M", 2, "Conservative 2-month CPI release lag (unknown per-value dates)."),
     "imf_fx": AvailabilityRule("imf", "M", 1, "Conservative 1-month lag for monthly-average exchange rates."),

@@ -8,7 +8,7 @@ the answer either way, including null and inconclusive results.
 
 - **Five official data sources**: WFP market prices (HDX HAPI), NASA POWER weather, World Bank
   indicators, IMF consumer prices and exchange rates, and FAOSTAT crop production.
-- **Research engine** (`packages/shocktrace`): point-in-time feature construction, nested model
+- **Research engine** (`packages/shocktrace`): as-of feature construction under documented release-lag assumptions, nested model
   families (price → +weather → +macro → +agriculture), expanding-window backtests,
   Diebold–Mariano tests with HAC variance and block-bootstrap intervals, pre-registered verdicts.
 - **API** (`apps/api`): FastAPI, read-only `/api/v1`, OpenAPI docs at `/docs`.
@@ -29,13 +29,17 @@ Country and commodities were chosen by data evidence (`shocktrace discover`: mos
 
 | Commodity | Markets | Price change, 1 m: loss ratio B/A (95% CI) | Spike ≥10%, 1 m: Brier ratio B/A | Verdict |
 |---|---|---|---|---|
-| Cowpeas (niébé) | 62 | 1.42 (0.95–2.40) | 1.03 (0.99–1.08) | Not improved |
-| White maize | 54 | 1.04 (0.98–1.13) | 1.03 (0.99–1.11) | Not improved |
-| Millet | 61 | 1.12 (0.97–1.40) | 1.03 (1.00–1.08) | Not improved |
-| White sorghum | 60 | 1.02 (0.97–1.07) | 1.01 (1.00–1.03) | Not improved |
+| Cowpeas (niébé) | 62 | 1.00 (0.95–1.06) | 1.03 (0.99–1.08) | Not improved |
+| White maize | 54 | 1.01 (0.97–1.05) | 1.02 (0.99–1.07) | Not improved |
+| Millet | 61 | 1.01 (0.96–1.07) | 1.02 (1.00–1.04) | Not improved |
+| White sorghum | 60 | 1.01 (0.97–1.05) | 1.01 (1.00–1.03) | Not improved |
 
 Ratios above 1 mean the weather-enhanced model (B) had *higher* loss than the price-only model
-(A). In none of the 16 primary comparisons did market-local weather anomalies improve prediction,
+(A). Figures are from the corrected run after the 2026-11-16 scientific audit
+([docs/audits/SCIENTIFIC_VALIDITY_AUDIT.md](docs/audits/SCIENTIFIC_VALIDITY_AUDIT.md)), which fixed
+an anomaly-standardisation defect that had inflated the cowpeas ratio to 1.42. This is a
+lag-assumption-based retrospective backtest, not a real-time one. In none of the 16 primary
+comparisons did market-local weather anomalies improve prediction (nor did they significantly worsen it),
 the result held at spike thresholds of 5–20%, and no model significantly beat the naive
 no-change or base-rate baselines. See [docs/RESULTS.md](docs/RESULTS.md) for the full numbers and caveats.
 

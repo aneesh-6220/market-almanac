@@ -45,6 +45,13 @@ CAUSAL_DISCLAIMER = (
     "causes price changes; market-local weather is a geographic proxy, not crop-production exposure."
 )
 
+# Bumped whenever a change alters numerical results for an unchanged config (see docs/audits).
+METHOD_REVISION = "audit-2026-11-16: weather anomalies clipped to +/-4"
+TIMING_DISCLOSURE = (
+    "Timing classification: lag-assumption-based retrospective backtest. WFP prices for month t are assumed "
+    "known at origin t (lag 0), but true publication dates are not available and observed HDX publication "
+    "lags are at least 1-2 months; point-in-time availability was not independently established."
+)
 VERDICTS = ("improved", "not_improved", "inconsistent", "insufficient_evidence")
 
 
@@ -517,6 +524,7 @@ def _run_experiment(
     }
     results["manifest"] = {
         "software_version": shocktrace.__version__,
+        "method_revision": METHOD_REVISION,
         "python": platform.python_version(),
         "numpy": np.__version__,
         "pandas": pd.__version__,
@@ -668,6 +676,7 @@ def _run_experiment(
         CAUSAL_DISCLAIMER,
         "Weather is measured at the market's POWER grid cell (~50 km), not where the commodity was produced.",
         results["manifest"]["retrospective_note"],
+        TIMING_DISCLOSURE,
         "Pooled models assume comparable dynamics across the selected series.",
     ]
     if synthetic:

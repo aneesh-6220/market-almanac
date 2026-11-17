@@ -40,63 +40,81 @@ series with the longest uninterrupted coverage (median 117 monthly observations,
   last origin August 2026: **68 test months**.
 - Verdict rule as in [METHODOLOGY.md](METHODOLOGY.md#verdicts).
 
-### Primary results
+### Primary results (corrected 2026-11-16 audit; supersedes the first run)
+
+> **Correction.** The first run (experiments `exp_20261116234216_a5e201`, `…234257_4f0a72`,
+> `…234337_c5dfad`, `…234418_289dfa`) reported B/A ratios up to 1.42. The independent audit
+> ([docs/audits/SCIENTIFIC_VALIDITY_AUDIT.md](audits/SCIENTIFIC_VALIDITY_AUDIT.md)) traced the
+> cowpeas 1-month ratio of 1.42 entirely to one origin month (Dec 2025): a spurious NASA POWER
+> near-real-time value (276.5 mm on 2025-12-02 in a dry-season cell whose prior Decembers averaged
+> 0.5 mm) became a rainfall z-score of 217, and ridge B extrapolated a +266 log-point price change.
+> Standardised weather anomalies are now clipped to ±4 (`features/weather.py`). Inputs (snapshot
+> hashes) and configuration hashes are unchanged; only the anomaly transform changed. The fix was
+> made after seeing the test-period result and is therefore disclosed as a post-hoc correction.
 
 Loss ratio = mean loss of B ÷ mean loss of A (squared error for price changes, Brier score for
-spikes). Below 1 favours weather. 95% intervals: moving-block bootstrap over origin months.
-p: one-sided Diebold–Mariano (HAC, HLN-corrected) for "B better".
+spikes). Below 1 favours weather. 95% intervals: moving-block bootstrap over origin months of
+the ratio of *row-summed* losses. p: one-sided Diebold–Mariano (HAC, HLN-corrected) for "B
+better", computed on the *per-month mean* loss differential. The two use different weightings of
+markets and can disagree near the boundary (see audit §C).
 
-| Commodity | Task | h | Loss ratio B/A | 95% CI | p | Verdict |
-|---|---|---|---|---|---|---|
-| Cowpeas | price change | 1 | 1.423 | 0.950–2.403 | 0.837 | Not improved |
-| Cowpeas | spike ≥10% | 1 | 1.025 | 0.985–1.077 | 0.887 | Not improved |
-| Cowpeas | price change | 3 | 1.054 | 0.876–1.283 | 0.709 | Not improved |
-| Cowpeas | spike ≥10% | 3 | 1.017 | 0.883–1.184 | 0.583 | Not improved |
-| Maize | price change | 1 | 1.038 | 0.979–1.126 | 0.839 | Not improved |
-| Maize | spike ≥10% | 1 | 1.033 | 0.994–1.105 | 0.926 | Not improved |
-| Maize | price change | 3 | 1.117 | 0.904–1.434 | 0.800 | Not improved |
-| Maize | spike ≥10% | 3 | 1.013 | 0.928–1.123 | 0.602 | Not improved |
-| Millet | price change | 1 | 1.117 | 0.966–1.396 | 0.844 | Not improved |
-| Millet | spike ≥10% | 1 | 1.032 | 1.003–1.079 | 0.956 | Not improved |
-| Millet | price change | 3 | 1.027 | 0.926–1.153 | 0.687 | Not improved |
-| Millet | spike ≥10% | 3 | 1.034 | 0.951–1.158 | 0.736 | Not improved |
-| Sorghum | price change | 1 | 1.019 | 0.973–1.071 | 0.797 | Not improved |
-| Sorghum | spike ≥10% | 1 | 1.013 | 1.001–1.028 | 0.955 | Not improved |
-| Sorghum | price change | 3 | 1.095 | 0.937–1.356 | 0.816 | Not improved |
-| Sorghum | spike ≥10% | 3 | 1.007 | 0.937–1.093 | 0.568 | Not improved |
+| Commodity | Task | h | Rows | Spikes | Loss ratio B/A | 95% CI | p (B better) | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| Cowpeas | price change | 1 | 4055 | – | 0.999 | 0.948–1.063 | 0.501 | Not improved |
+| Cowpeas | spike ≥10% | 1 | 4133 | 695 | 1.026 | 0.986–1.078 | 0.895 | Not improved |
+| Cowpeas | price change | 3 | 3916 | – | 1.016 | 0.863–1.215 | 0.581 | Not improved |
+| Cowpeas | spike ≥10% | 3 | 3995 | 1374 | 1.011 | 0.881–1.176 | 0.551 | Not improved |
+| Maize | price change | 1 | 3536 | – | 1.005 | 0.971–1.048 | 0.615 | Not improved |
+| Maize | spike ≥10% | 1 | 3575 | 354 | 1.021 | 0.991–1.068 | 0.896 | Not improved |
+| Maize | price change | 3 | 3416 | – | 1.009 | 0.882–1.144 | 0.559 | Not improved |
+| Maize | spike ≥10% | 3 | 3457 | 918 | 1.016 | 0.931–1.125 | 0.628 | Not improved |
+| Millet | price change | 1 | 3941 | – | 1.006 | 0.957–1.074 | 0.584 | Not improved |
+| Millet | spike ≥10% | 1 | 4003 | 461 | 1.018 | 0.999–1.041 | 0.943 | Not improved |
+| Millet | price change | 3 | 3805 | – | 1.016 | 0.921–1.138 | 0.622 | Not improved |
+| Millet | spike ≥10% | 3 | 3868 | 1030 | 1.038 | 0.956–1.163 | 0.760 | Not improved |
+| Sorghum | price change | 1 | 3913 | – | 1.008 | 0.969–1.052 | 0.666 | Not improved |
+| Sorghum | spike ≥10% | 1 | 3962 | 439 | 1.012 | 1.000–1.027 | 0.953 | Not improved |
+| Sorghum | price change | 3 | 3784 | – | 1.005 | 0.922–1.115 | 0.561 | Not improved |
+| Sorghum | spike ≥10% | 3 | 3834 | 1097 | 1.011 | 0.942–1.096 | 0.610 | Not improved |
 
-**Experiment verdict for all four commodities: environmental features did not improve
-out-of-sample prediction.** In every one of the 16 primary comparisons the weather-enhanced
-model's point loss was *higher* than the price-only model's; for millet and sorghum spikes at
-one month the bootstrap interval lies entirely above 1, i.e. adding weather made the spike
-probabilities slightly worse.
+Test origins Jan 2021 – Aug 2026 (68 months at h=1; 66 at h=3); 54–62 markets per commodity.
 
-### Robustness
+**Verdict for all four commodities: no evidence that market-local weather anomalies improve
+out-of-sample prediction.** Point ratios lie between 0.999 and 1.038; no comparison is
+significant in either direction at 5% (two-sided DM p ≥ 0.09). The data do **not** establish
+that weather makes forecasts worse: the earlier statement to that effect was driven by the
+anomaly defect, and the one remaining bootstrap interval that excludes 1 (sorghum spikes, h=1,
+1.0003–1.027) coincides with a non-significant DM test (two-sided p = 0.095) among 16 tests.
 
-- **Spike threshold.** At 5%, 10%, 15% and 20%, and both horizons, all 32 weather comparisons
-  were "not improved" (loss ratios 0.999–1.097).
+**Falsification control** (`scripts/audit/placebo_weather.py`, run on the pre-fix panels):
+replacing each market's weather with the same cell's weather 60 months earlier gave B/A ratios of
+0.997–1.037, statistically indistinguishable from real weather in all 16 cells (DM real-vs-placebo
+two-sided p 0.19–0.94). Market-local weather carries no detectable predictive content beyond a
+time-shifted placebo in this design.
+
+### Robustness (corrected run)
+
+- **Spike threshold.** At 5%, 10%, 15% and 20%, both horizons: 32 weather comparisons, all "not
+  improved" (ratios 1.001–1.059).
 - **Other model types.** Elastic net and gradient boosting with vs without weather: 24
-  comparisons, none improved (ratios 0.969–1.369).
-- **Baselines.** No model significantly beat the no-change forecast for price changes (best:
-  white sorghum ridge A, MAE ratio 0.948 vs naive, one-sided p = 0.065) or the base rate for
-  spike risk in Brier score. Price-only logistic models did rank spikes better than the base rate
-  (PR-AUC e.g. 0.256 vs 0.133 for cowpeas at 1 month), but this did not translate into a
-  significantly better Brier score.
-- **Macro and agriculture.** Adding IMF CPI/exchange-rate (C) and FAOSTAT production (D)
-  features did not improve on B in any secondary comparison; the three-month agricultural
-  features often worsened errors (e.g. maize ratio 1.57).
-- **Reproduction.** `shocktrace reproduce exp_20261116234257_4f0a72` re-ran the maize
-  experiment from the stored snapshots: identical input hashes, identical configuration hash
-  (`02d8294694e3`) and identical metrics.
+  comparisons, none improved (ratios 0.969–1.088).
+- **Baselines.** No model significantly beat the no-change forecast or the base rate (best:
+  ridge A vs naive, h=3, loss ratio 0.914, one-sided p = 0.197).
+- **Macro and agriculture.** Adding IMF CPI/FX (C) and FAOSTAT production (D) did not improve on
+  B in any secondary comparison. Family D at h=3 is unstable (ratio C→D 1.455 cowpeas, 1.682
+  maize): ~10 annual values carried forward as step functions are overfit; see audit §D.
+- **Reproduction.** The superseded maize run was re-run from stored snapshots with identical
+  hashes and metrics (`exp_20261116234257_4f0a72_repro`). The corrected runs reuse the same
+  snapshot content hashes and config hashes.
 
 ### Experiment IDs
 
-| Commodity | Experiment |
-|---|---|
-| Cowpeas | `exp_20261116234216_a5e201` |
-| Maize (white) | `exp_20261116234257_4f0a72` |
-| Millet | `exp_20261116234337_c5dfad` |
-| Sorghum (white) | `exp_20261116234418_289dfa` |
+| Commodity | Corrected (current) | Superseded (pre-audit) |
+|---|---|---|
+| Cowpeas | `exp_20261117002500_f5d554` | `exp_20261116234216_a5e201` |
+| Maize (white) | `exp_20261117002546_1c6679` | `exp_20261116234257_4f0a72` |
+| Millet | `exp_20261117002627_e55203` | `exp_20261116234337_c5dfad` |
+| Sorghum (white) | `exp_20261117002703_cda949` | `exp_20261116234418_289dfa` |
 
 The artefacts (results, predictions, features, manifest) live in `data/experiments/live/` and are
 not committed (see [REPRODUCIBILITY.md](REPRODUCIBILITY.md) to regenerate them).
@@ -114,7 +132,10 @@ Sahelian food prices. Plausible reasons the market-local proxy adds nothing out 
   price-only model already captures seasonality and momentum.
 - **Pooled linear models.** One coefficient per feature across 54–62 markets; heterogeneous or
   nonlinear effects could be missed (boosted trees, which allow nonlinearity, also showed no gain).
-- **Data vintage.** Inputs are the current vintage with conservative release lags, not the
-  real-time information set.
+- **Timing.** This is a lag-assumption-based retrospective backtest. WFP prices for month *t*
+  are assumed known at origin *t* (lag 0); the HDX snapshot retrieved 2026-11-16 had no month
+  after 2026-09, so true publication lags are ≥1–2 months. Inputs are today's vintage (POWER
+  near-real-time values are later replaced by MERRA-2). Point-in-time availability was not
+  independently established.
 
 Results are predictive comparisons and carry no causal interpretation.

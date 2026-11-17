@@ -58,3 +58,11 @@ Demo results demonstrate the machinery and are not evidence about any real marke
 
 Research and education. Not for trading, investment, or operational humanitarian targeting
 without independent validation.
+
+## Audit qualifications (2026-11-16)
+
+See [audits/SCIENTIFIC_VALIDITY_AUDIT.md](audits/SCIENTIFIC_VALIDITY_AUDIT.md). In short: the backtest is
+**lag-assumption-based retrospective** (WFP price lag 0 is an assumption; observed HDX publication lag is
+≥1–2 months; data are today's vintage); weather anomalies are clipped to ±4 after a spurious NASA POWER
+value produced z = 217; no daily precipitation plausibility QC exists yet; DM and bootstrap use different
+weightings; there is no multiplicity adjustment.
