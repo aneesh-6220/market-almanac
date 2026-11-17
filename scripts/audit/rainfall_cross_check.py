@@ -113,7 +113,9 @@ def main() -> int:
     out["power_imerg_utc_mm"] = imerg["properties"]["parameter"].get("IMERG_PRECTOT")
 
     out["chirps_v3"] = {
-        "daily_rnl": [box_stats(chirps_file(f"daily/final/rnl/2025/chirps-v3.0.rnl.2025.12.{d}.tif")) for d in ("01", "02", "03")],
+        "daily_rnl": [
+            box_stats(chirps_file(f"daily/final/rnl/2025/chirps-v3.0.rnl.2025.12.{d}.tif")) for d in ("01", "02", "03")
+        ],
         "daily_sat_dec02": box_stats(chirps_file("daily/final/sat/2025/chirps-v3.0.sat.2025.12.02.tif")),
         "monthly_dec_2025": box_stats(chirps_file("monthly/africa/tifs/chirps-v3.0.2025.12.tif")),
     }

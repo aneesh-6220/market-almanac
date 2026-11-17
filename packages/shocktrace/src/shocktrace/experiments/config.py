@@ -23,6 +23,8 @@ class ExperimentConfig(BaseModel):
     # Information-availability scenario (months). See shocktrace.forecasting.targets.
     price_release_lag_months: int = Field(0, ge=0, le=2)
     weather_release_lag_months: int = Field(0, ge=0, le=3)
+    # True: QC'd precipitation (flagged days treated as missing). False: raw source totals (sensitivity).
+    use_precip_qc: bool = True
     # "exploratory": the evaluation period influenced model development; "confirmatory": the
     # design was frozen (docs/research/RESEARCH_PROTOCOL.md) before this evaluation sample was used.
     evidence_class: str = "exploratory"
@@ -102,4 +104,5 @@ _LATER_FIELD_DEFAULTS: dict[str, object] = {
     "weather_release_lag_months": 0,
     "evidence_class": "exploratory",
     "study": None,
+    "use_precip_qc": True,
 }

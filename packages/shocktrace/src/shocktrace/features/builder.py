@@ -36,7 +36,7 @@ PRODUCTION_FEATURES = (
     "c_rain_season_anom",
     "c_rain_season_anom_prev",
     "c_heat_season_anom",
-    "c_rain_recent3_anom",
+    "c_rain_onset_anom",
     "c_in_season",
     "c_months_since_harvest",
 )
@@ -82,10 +82,10 @@ FEATURE_DOCS: dict[str, dict[str, str]] = {
         "source": "nasa_power x mapspam",
         "desc": "production-weighted days with Tmax >= 35C, cumulative over the season to date, standardised",
     },
-    "c_rain_recent3_anom": {
+    "c_rain_onset_anom": {
         "family": "P",
         "source": "nasa_power x mapspam",
-        "desc": "production-weighted 3-month rainfall anomaly ending at the last available month",
+        "desc": "production-weighted rainfall over the first two months of the season (onset), standardised",
     },
     "c_in_season": {
         "family": "P",
@@ -145,8 +145,12 @@ def timing_statement(price_lag: int, weather_lag: int) -> str:
     )
 
 
-def _local_weather(w: pd.DataFrame, climatology: ClimatologyConfig, weather_lag: int) -> pd.DataFrame:
+def _local_weather(
+    w: pd.DataFrame, climatology: ClimatologyConfig, weather_lag: int, use_precip_qc: bool = True
+) -> pd.DataFrame:
     """Market-cell weather features, shifted so the row for origin t uses months <= t - weather_lag."""
+    if not use_precip_qc and "precip_total_mm_raw" in w:
+        w = w.assign(precip_total_mm=w["precip_total_mm_raw"].fillna(w["precip_total_mm"]))
     wf = weather_features(w, climatology).set_index("period")
     flags = (
         w.set_index("period")["precip_qc_flagged_days"].reindex(wf.index).fillna(0).astype(float)
@@ -269,6 +273,7 @@ def build_panel(
     price_release_lag: int = 0,
     weather_release_lag: int = 0,
     production_features: pd.DataFrame | None = None,
+    use_precip_qc: bool = True,
 ) -> FeatureBuildResult:
     """Assemble the modelling panel.
 
@@ -305,7 +310,9 @@ def build_panel(
             loc = weather_location_id(float(r.lat), float(r.lon))
             if loc not in wx_cache:
                 w = weather[weather["location_id"] == loc]
-                wx_cache[loc] = _local_weather(w, climatology, weather_release_lag) if len(w) else pd.DataFrame()
+                wx_cache[loc] = (
+                    _local_weather(w, climatology, weather_release_lag, use_precip_qc) if len(w) else pd.DataFrame()
+                )
             wf = wx_cache[loc]
             if wf.empty:
                 warnings.append(f"{r.series_id}: no weather for {loc}")
@@ -368,6 +375,7 @@ def build_panel(
         "price_release_lag_months": price_release_lag,
         "weather_release_lag_months": weather_release_lag,
         "feature_transform_version": FEATURE_TRANSFORM_VERSION,
+        "use_precip_qc": use_precip_qc,
         "timing": timing_statement(price_release_lag, weather_release_lag),
     }
     return FeatureBuildResult(panel=panel, series_meta=meta, warnings=warnings, availability=availability)

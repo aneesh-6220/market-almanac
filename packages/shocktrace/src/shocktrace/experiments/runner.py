@@ -47,6 +47,7 @@ from shocktrace.features.builder import (
     build_panel,
     timing_statement,
 )
+from shocktrace.features.production_weather import build_production_features
 from shocktrace.features.weather import ClimatologyConfig, check_fixed_climatology
 from shocktrace.forecasting.models import FittedModel, ModelSpec, default_specs
 
@@ -650,6 +651,26 @@ def _run_experiment(
         cfg.climatology_min_years,
     )
     prod = datasets.get("production_features")
+    if "P" in cfg.families:
+        if prod is None:
+            px = datasets["prices"]
+            names = (
+                px[px["series_id"].isin(eligible)]
+                .drop_duplicates("commodity_code")
+                .set_index("commodity_code")["commodity_name"]
+                .to_dict()
+            )
+            prod, prod_meta = build_production_features(
+                datasets.get("weather_monthly", pd.DataFrame()),
+                cfg.country_iso3,
+                {str(k): str(v) for k, v in names.items()},
+                clim,
+                weather_release_lag=cfg.weather_release_lag_months,
+                use_precip_qc=cfg.use_precip_qc,
+            )
+            results["production_region"] = prod_meta
+        else:
+            results["production_region"] = {"status": "features supplied by the caller (falsification variant)"}
     fb = build_panel(
         datasets,
         eligible,
@@ -659,6 +680,7 @@ def _run_experiment(
         price_release_lag=cfg.price_release_lag_months,
         weather_release_lag=cfg.weather_release_lag_months,
         production_features=prod,
+        use_precip_qc=cfg.use_precip_qc,
     )
     warnings.extend(fb.warnings)
     results["feature_availability"] = fb.availability

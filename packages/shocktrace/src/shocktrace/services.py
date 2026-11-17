@@ -26,6 +26,7 @@ from shocktrace.db import repository as repo
 from shocktrace.db.session import get_engine, session_scope
 from shocktrace.experiments.config import ExperimentConfig
 from shocktrace.experiments.runner import ExperimentOutput, run_experiment, save_experiment
+from shocktrace.geo.spam import packaged_weights
 from shocktrace.logging import get_logger, log_event
 from shocktrace.providers import build_providers
 from shocktrace.providers.base import HealthResult, ProviderError
@@ -221,7 +222,13 @@ async def ingest_weather(
     series_ids: list[str] | None = None,
     start: date | None = None,
     end: date | None = None,
+    include_production_cells: bool = False,
 ) -> JobOutcome:
+    """Fetch weather for every market cell of a country and, optionally, its crop-production cells.
+
+    Production cells are the NASA POWER cells that carry MapSPAM crop weights for the country
+    (``shocktrace.geo.spam.packaged_weights``); they feed the production-region features.
+    """
     _require_live(settings)
     store = store_for(settings)
     prices = store.read("prices")
@@ -233,9 +240,23 @@ async def ingest_weather(
     cells: dict[str, tuple[float, float]] = {}
     for r in coords.itertuples():
         cells.setdefault(weather_location_id(r.lat, r.lon), (float(r.lat), float(r.lon)))
+    n_market = len(cells)
+    if include_production_cells:
+        w = packaged_weights()
+        if country_iso3:
+            w = w[w["country_iso3"] == country_iso3]
+        for r in w.drop_duplicates("location_id").itertuples():
+            cells.setdefault(str(r.location_id), (float(r.lat), float(r.lon)))
     providers = build_providers(settings)
     power = providers["nasa_power"]
-    params = {"country_iso3": country_iso3, "cells": len(cells), "start": str(start), "end": str(end)}
+    params = {
+        "country_iso3": country_iso3,
+        "cells": len(cells),
+        "market_cells": n_market,
+        "production_cells_added": len(cells) - n_market,
+        "start": str(start),
+        "end": str(end),
+    }
 
     async def run() -> tuple[int, str, list[str], int]:
         if not cells:

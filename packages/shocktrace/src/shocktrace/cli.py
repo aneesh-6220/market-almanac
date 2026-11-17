@@ -168,6 +168,9 @@ def ingest(
     end_date: str | None = None,
     weather_start: str = "1991-01-01",
     bulk: Annotated[bool, typer.Option(help="FAOSTAT: use public bulk download instead of the API")] = False,
+    production_cells: Annotated[
+        bool, typer.Option(help="weather: also fetch the country's crop-production cells (MapSPAM weights)")
+    ] = False,
     mode: ModeOpt = None,
 ) -> None:
     """Ingest live data from providers into a new immutable snapshot (idempotent)."""
@@ -179,7 +182,13 @@ def ingest(
     if source in ("prices", "all"):
         outcomes += asyncio.run(sv.ingest_prices(s, iso3, commodity or None, start_date, end_date))
     if source in ("weather", "all"):
-        outcomes.append(asyncio.run(sv.ingest_weather(s, iso3, start=date.fromisoformat(weather_start))))
+        outcomes.append(
+            asyncio.run(
+                sv.ingest_weather(
+                    s, iso3, start=date.fromisoformat(weather_start), include_production_cells=production_cells
+                )
+            )
+        )
     if source in ("macro", "all"):
         outcomes += asyncio.run(sv.ingest_macro(s, iso3))
     if source in ("agriculture", "all"):

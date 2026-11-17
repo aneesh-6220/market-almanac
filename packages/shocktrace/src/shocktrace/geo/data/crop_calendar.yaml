@@ -1,0 +1,70 @@
+source:
+  title: Crop calendar for Africa (national level), World Bank Data Catalog dataset 0066842
+  url: https://datacatalogfiles.worldbank.org/ddh-published/0066842/DR0095318/crop_calendar_gaul0.csv
+  sha256: 4aec81e67dd8db2fc95e56d25f9031d9692421d8226519ca773449dbb442b147
+  license: CC BY 4.0
+  origin: Dimou, M. (2018). Crop calendar dataset compatible with satellite-derived land surface phenology. European
+    Commission, Joint Research Centre. http://data.europa.eu/89h/jrc-10112-10003
+  retrieved: '2026-11-16'
+units: 'dekads 1-36 (three per calendar month): sos = planting window, eos = harvest window'
+entries:
+- country_iso3: BFA
+  crop: maize
+  sos_s: 12
+  sos_e: 18
+  eos_s: 31
+  eos_e: 33
+- country_iso3: BFA
+  crop: millet
+  sos_s: 13
+  sos_e: 19
+  eos_s: 31
+  eos_e: 35
+- country_iso3: BFA
+  crop: sorghum
+  sos_s: 13
+  sos_e: 19
+  eos_s: 31
+  eos_e: 35
+- country_iso3: MLI
+  crop: maize
+  sos_s: 12
+  sos_e: 21
+  eos_s: 29
+  eos_e: 35
+- country_iso3: MLI
+  crop: millet
+  sos_s: 12
+  sos_e: 21
+  eos_s: 29
+  eos_e: 35
+- country_iso3: MLI
+  crop: sorghum
+  sos_s: 12
+  sos_e: 21
+  eos_s: 29
+  eos_e: 35
+- country_iso3: NER
+  crop: cowpea
+  sos_s: 17
+  sos_e: 20
+  eos_s: 28
+  eos_e: 36
+- country_iso3: NER
+  crop: maize
+  sos_s: 17
+  sos_e: 20
+  eos_s: 28
+  eos_e: 36
+- country_iso3: NER
+  crop: millet
+  sos_s: 17
+  sos_e: 20
+  eos_s: 28
+  eos_e: 36
+- country_iso3: NER
+  crop: sorghum
+  sos_s: 17
+  sos_e: 20
+  eos_s: 28
+  eos_e: 36
