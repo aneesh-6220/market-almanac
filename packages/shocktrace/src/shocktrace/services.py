@@ -1,0 +1,452 @@
+"""Application services shared by the CLI and the API (ingestion, seeding, experiments).
+
+Heavy work (ingestion, model training) runs here from CLI jobs, never inside public HTTP
+requests. Each job is idempotent: re-running merges into a new immutable snapshot.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import uuid
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
+from pathlib import Path
+from typing import Any
+
+import pandas as pd
+from sqlalchemy import select
+
+from shocktrace.config import RunMode, Settings
+from shocktrace.data.demo import generate_demo_datasets
+from shocktrace.data.identity import power_grid_cell, weather_location_id
+from shocktrace.data.quality import EligibilityCriteria, assess_prices, build_quality_report
+from shocktrace.data.store import DatasetStore, SnapshotManifest
+from shocktrace.db import models as m
+from shocktrace.db import repository as repo
+from shocktrace.db.session import get_engine, session_scope
+from shocktrace.experiments.config import ExperimentConfig
+from shocktrace.experiments.runner import ExperimentOutput, run_experiment, save_experiment
+from shocktrace.logging import get_logger, log_event
+from shocktrace.providers import build_providers
+from shocktrace.providers.base import HealthResult, ProviderError
+from shocktrace.providers.faostat import fao_item_for_commodity
+from shocktrace.providers.imf import SERIES as IMF_SERIES
+from shocktrace.providers.world_bank import INDICATORS as WB_INDICATORS
+
+log = get_logger("services")
+DATASETS = ("prices", "weather_monthly", "macro", "agriculture", "countries")
+
+
+def init_db(settings: Settings) -> None:
+    """Create tables directly (used for SQLite demo/test). PostgreSQL uses Alembic migrations."""
+    m.Base.metadata.create_all(get_engine(settings.database_url))
+
+
+def store_for(settings: Settings) -> DatasetStore:
+    return DatasetStore(settings.lake_dir, settings.shocktrace_mode.value)
+
+
+def default_experiment_name(settings: Settings, country: str, commodities: list[str]) -> str:
+    """Human-readable experiment name from stored metadata, e.g. 'Burkina Faso: Maize (white)'."""
+    import pyarrow.parquet as pq
+
+    store = store_for(settings)
+    names: list[str] = []
+    country_name = country.upper()
+    latest = store.latest("prices")
+    if latest:
+        t = pq.read_table(
+            store.path("prices", latest.snapshot_id), columns=["country_iso3", "commodity_code", "commodity_name"]
+        )
+        df = t.to_pandas().drop_duplicates()
+        df = df[df["country_iso3"] == country.upper()]
+        for c in commodities:
+            hit = df.loc[df["commodity_code"].astype(str) == str(c), "commodity_name"]
+            names.append(str(hit.iloc[0]) if len(hit) else str(c))
+    cl = store.latest("countries")
+    if cl:
+        cdf = store.read("countries", cl.snapshot_id)
+        hit = cdf.loc[cdf["iso3"] == country.upper(), "name"] if "iso3" in cdf else pd.Series(dtype=str)
+        if len(hit):
+            country_name = str(hit.iloc[0])
+    return f"{country_name}: {', '.join(names or commodities)}"
+
+
+def load_datasets(store: DatasetStore) -> tuple[dict[str, pd.DataFrame], dict[str, dict[str, Any]]]:
+    data, snaps = {}, {}
+    for ds in DATASETS:
+        latest = store.latest(ds)
+        data[ds] = store.read(ds, latest.snapshot_id if latest else None)
+        if latest:
+            snaps[ds] = {
+                "snapshot_id": latest.snapshot_id,
+                "row_count": latest.row_count,
+                "content_hash": latest.content_hash,
+                "providers": latest.providers,
+                "retrieved_at_min": latest.retrieved_at_min,
+                "retrieved_at_max": latest.retrieved_at_max,
+                "synthetic": latest.synthetic,
+            }
+    return data, snaps
+
+
+def _write_and_register(
+    settings: Settings,
+    store: DatasetStore,
+    dataset: str,
+    df: pd.DataFrame,
+    providers: list[str],
+    params: dict[str, Any],
+    warnings: list[str],
+    merge: bool = True,
+    synthetic: bool = False,
+    replace_keys_for: dict[str, list[Any]] | None = None,
+) -> SnapshotManifest:
+    man = store.write(
+        dataset,
+        df,
+        providers=providers,
+        params=params,
+        merge_with_latest=merge,
+        warnings=warnings,
+        synthetic=synthetic,
+        replace_keys_for=replace_keys_for,
+    )
+    with session_scope(settings.database_url) as s:
+        repo.register_snapshot(s, man)
+    return man
+
+
+def sync_sources(settings: Settings) -> None:
+    providers = build_providers(settings)
+    with session_scope(settings.database_url) as s:
+        repo.upsert_sources(s, providers)
+
+
+async def check_health(settings: Settings, provider_ids: list[str] | None = None) -> list[HealthResult]:
+    providers = build_providers(settings)
+    ids = provider_ids or list(providers)
+    results = await asyncio.gather(*(providers[i].health_check() for i in ids))
+    with session_scope(settings.database_url) as s:
+        repo.upsert_sources(s, providers)
+        for r in results:
+            repo.record_health(s, r)
+        repo.backfill_live_success(s)
+    return list(results)
+
+
+@dataclass
+class JobOutcome:
+    job_id: str
+    status: str
+    rows: int | None
+    snapshot_id: str | None
+    warnings: list[str]
+    error: str | None = None
+
+
+async def _run_job(settings: Settings, provider: str, dataset: str, params: dict[str, Any], fn: Any) -> JobOutcome:
+    job_id = f"job_{datetime.now(UTC):%Y%m%d%H%M%S}_{uuid.uuid4().hex[:6]}"
+    mode = settings.shocktrace_mode.value
+    with session_scope(settings.database_url) as s:
+        repo.start_job(s, job_id, mode, provider, dataset, params)
+    try:
+        rows, snap, warnings, nreq = await fn()
+        status, err = "succeeded", None
+    except (ProviderError, ValueError, KeyError, OSError) as exc:
+        rows, snap, warnings, nreq = None, None, [], None
+        status, err = "failed", f"{type(exc).__name__}: {exc}"
+        log_event(log, "ingestion job failed", job_id=job_id, provider=provider, error=err)
+    except Exception as exc:  # provider HTTP errors and unexpected failures are isolated per job
+        rows, snap, warnings, nreq = None, None, [], None
+        status, err = "failed", f"{type(exc).__name__}: {exc}"
+        log_event(log, "ingestion job failed", job_id=job_id, provider=provider, error=err)
+    with session_scope(settings.database_url) as s:
+        job = s.get(m.IngestionJob, job_id)
+        assert job is not None
+        repo.finish_job(
+            s, job, status=status, rows=rows, snapshot_id=snap, warnings=warnings, error=err, requests_made=nreq
+        )
+    return JobOutcome(job_id, status, rows, snap, warnings, err)
+
+
+def _require_live(settings: Settings) -> None:
+    if settings.shocktrace_mode != RunMode.LIVE:
+        raise ValueError("ingestion of external data requires SHOCKTRACE_MODE=live (demo mode uses synthetic data)")
+
+
+async def ingest_prices(
+    settings: Settings,
+    country_iso3: str,
+    commodity_codes: list[str] | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    price_type: str | None = None,
+) -> list[JobOutcome]:
+    _require_live(settings)
+    providers = build_providers(settings)
+    hdx = providers["hdx_hapi"]
+    store = store_for(settings)
+    outcomes = []
+    for code in commodity_codes or [None]:  # type: ignore[list-item]
+        params = {
+            "country_iso3": country_iso3,
+            "commodity_code": code,
+            "start_date": start_date,
+            "end_date": end_date,
+            "price_type": price_type,
+        }
+
+        async def run(params: dict[str, Any] = params) -> tuple[int, str, list[str], int]:
+            res = await hdx.fetch("food_prices", **params)
+            man = _write_and_register(settings, store, "prices", res.frame, ["hdx_hapi"], params, res.warnings)
+            return len(res.frame), man.snapshot_id, res.warnings, res.requests_made
+
+        outcomes.append(await _run_job(settings, "hdx_hapi", "food_prices", params, run))
+    _refresh_registry(settings)
+    return outcomes
+
+
+def _refresh_registry(settings: Settings) -> None:
+    store = store_for(settings)
+    prices = store.read("prices")
+    countries = store.read("countries")
+    with session_scope(settings.database_url) as s:
+        repo.refresh_reference_entities(s, settings.shocktrace_mode.value, prices, countries)
+
+
+async def ingest_weather(
+    settings: Settings,
+    country_iso3: str | None = None,
+    series_ids: list[str] | None = None,
+    start: date | None = None,
+    end: date | None = None,
+) -> JobOutcome:
+    _require_live(settings)
+    store = store_for(settings)
+    prices = store.read("prices")
+    if country_iso3:
+        prices = prices[prices["country_iso3"] == country_iso3]
+    if series_ids:
+        prices = prices[prices["series_id"].isin(series_ids)]
+    coords = prices.dropna(subset=["lat", "lon"]).drop_duplicates(["lat", "lon"])[["lat", "lon"]]
+    cells: dict[str, tuple[float, float]] = {}
+    for r in coords.itertuples():
+        cells.setdefault(weather_location_id(r.lat, r.lon), (float(r.lat), float(r.lon)))
+    providers = build_providers(settings)
+    power = providers["nasa_power"]
+    params = {"country_iso3": country_iso3, "cells": len(cells), "start": str(start), "end": str(end)}
+
+    async def run() -> tuple[int, str, list[str], int]:
+        if not cells:
+            raise ValueError("no market coordinates available; ingest prices first")
+        results = await asyncio.gather(
+            *(power.fetch("weather_monthly", lat=lat, lon=lon, start=start, end=end) for lat, lon in cells.values()),
+            return_exceptions=True,
+        )
+        frames, warnings, nreq = [], [], 0
+        for (loc, _), res in zip(cells.items(), results, strict=True):
+            if isinstance(res, BaseException):
+                warnings.append(f"{loc}: {type(res).__name__}: {res}")
+                continue
+            frames.append(res.frame)
+            nreq += res.requests_made
+            warnings.extend(f"{loc}: {w}" for w in res.warnings)
+        if not frames:
+            raise ValueError("all weather requests failed: " + "; ".join(warnings[:3]))
+        df = pd.concat(frames, ignore_index=True)
+        man = _write_and_register(settings, store, "weather_monthly", df, ["nasa_power"], params, warnings)
+        return len(df), man.snapshot_id, warnings, nreq
+
+    return await _run_job(settings, "nasa_power", "weather_monthly", params, run)
+
+
+async def ingest_macro(settings: Settings, country_iso3: str, start_period: str = "2005-01") -> list[JobOutcome]:
+    _require_live(settings)
+    store = store_for(settings)
+    providers = build_providers(settings)
+    out = []
+
+    async def imf_run() -> tuple[int, str, list[str], int]:
+        res = await providers["imf"].fetch("macro_monthly", country_iso3=country_iso3, start_period=start_period)
+        if res.frame.empty:
+            raise ProviderError("IMF returned no observations for the requested series: " + "; ".join(res.warnings))
+        man = _write_and_register(
+            settings,
+            store,
+            "macro",
+            res.frame,
+            ["imf"],
+            {
+                "country_iso3": country_iso3,
+                "series": [s.code for s in IMF_SERIES],
+                "series_status": res.extra.get("series_status"),
+            },
+            res.warnings,
+        )
+        return len(res.frame), man.snapshot_id, res.warnings, res.requests_made
+
+    out.append(await _run_job(settings, "imf", "macro_monthly", {"country_iso3": country_iso3}, imf_run))
+
+    async def wb_run() -> tuple[int, str, list[str], int]:
+        res = await providers["world_bank"].fetch(
+            "indicators", country_iso3=country_iso3, start_year=int(start_period[:4])
+        )
+        man = _write_and_register(
+            settings,
+            store,
+            "macro",
+            res.frame,
+            ["world_bank"],
+            {"country_iso3": country_iso3, "indicators": [i.code for i in WB_INDICATORS]},
+            res.warnings,
+        )
+        cres = await providers["world_bank"].fetch("countries", country_iso3=country_iso3)
+        _write_and_register(
+            settings, store, "countries", cres.frame, ["world_bank"], {"country_iso3": country_iso3}, []
+        )
+        return len(res.frame), man.snapshot_id, res.warnings, res.requests_made + cres.requests_made
+
+    out.append(await _run_job(settings, "world_bank", "indicators", {"country_iso3": country_iso3}, wb_run))
+    _refresh_registry(settings)
+    return out
+
+
+async def ingest_agriculture(
+    settings: Settings,
+    country_iso3: str,
+    item_codes: list[str] | None = None,
+    start_year: int = 2000,
+    use_bulk: bool | None = None,
+) -> list[JobOutcome]:
+    _require_live(settings)
+    store = store_for(settings)
+    providers = build_providers(settings)
+    fao = providers["faostat"]
+    if item_codes is None:
+        names = store.read("prices").query("country_iso3 == @country_iso3")["commodity_name"].unique()
+        item_codes = sorted({i[0] for n in names if (i := fao_item_for_commodity(str(n)))})
+    if use_bulk is None:
+        use_bulk = not fao.is_configured()
+    dataset = "crop_production_bulk" if use_bulk else "crop_production"
+    out = []
+    for item in item_codes:
+        params = {"country_iso3": country_iso3, "item_code": item, "start_year": start_year, "access": dataset}
+
+        async def run(item: str = item, params: dict[str, Any] = params) -> tuple[int, str, list[str], int]:
+            res = await fao.fetch(dataset, country_iso3=country_iso3, item_code=item, start_year=start_year)
+            man = _write_and_register(settings, store, "agriculture", res.frame, ["faostat"], params, res.warnings)
+            return len(res.frame), man.snapshot_id, res.warnings, res.requests_made
+
+        out.append(await _run_job(settings, "faostat", dataset, params, run))
+    return out
+
+
+def run_quality(settings: Settings) -> dict[str, Any]:
+    store = store_for(settings)
+    data, snaps = load_datasets(store)
+    report = build_quality_report(data)
+    report["snapshots"] = snaps
+    report["mode"] = settings.shocktrace_mode.value
+    report["generated_at"] = datetime.now(UTC).isoformat()
+    rid = f"dq_{datetime.now(UTC):%Y%m%d%H%M%S}_{uuid.uuid4().hex[:4]}"
+    report["id"] = rid
+    with session_scope(settings.database_url) as s:
+        repo.save_quality_report(s, rid, settings.shocktrace_mode.value, snaps, report)
+    return report
+
+
+def run_and_register(settings: Settings, cfg: ExperimentConfig, experiment_id: str | None = None) -> ExperimentOutput:
+    store = store_for(settings)
+    data, snaps = load_datasets(store)
+    synthetic = settings.shocktrace_mode == RunMode.DEMO
+    out = run_experiment(
+        data,
+        cfg,
+        mode=settings.shocktrace_mode.value,
+        snapshots=snaps,
+        synthetic=synthetic,
+        experiment_id=experiment_id,
+    )
+    d = save_experiment(out, settings.experiments_dir)
+    with session_scope(settings.database_url) as s:
+        repo.register_experiment(s, out, str(d))
+    return out
+
+
+DEMO_EXPERIMENTS = (
+    ExperimentConfig(
+        name="Demoland maize: does local weather help? (SYNTHETIC)", country_iso3="XDM", commodity_codes=["DM-MAIZE"]
+    ),
+    ExperimentConfig(
+        name="Demoland imported rice: negative control (SYNTHETIC)", country_iso3="XDM", commodity_codes=["DM-RICE"]
+    ),
+)
+
+
+def seed_demo(settings: Settings, run_experiments: bool = True) -> dict[str, Any]:
+    if settings.shocktrace_mode != RunMode.DEMO:
+        raise ValueError("demo-seed requires SHOCKTRACE_MODE=demo so synthetic data never enters the live lake")
+    init_db(settings) if settings.database_url.startswith("sqlite") else None
+    sync_sources(settings)
+    store = store_for(settings)
+    data = generate_demo_datasets()
+    snaps = {}
+    for ds, df in data.items():
+        man = _write_and_register(
+            settings,
+            store,
+            ds,
+            df,
+            ["demo"],
+            {"generator": "shocktrace.data.demo", "seed": 20240501},
+            ["SYNTHETIC DEMO DATA"],
+            merge=False,
+            synthetic=True,
+        )
+        snaps[ds] = man.snapshot_id
+        store.prune(ds, keep=2)
+    _refresh_registry(settings)
+    report = run_quality(settings)
+    exps = []
+    if run_experiments:
+        for i, cfg in enumerate(DEMO_EXPERIMENTS):
+            out = run_and_register(settings, cfg, experiment_id=f"demo_{i + 1}_{cfg.commodity_codes[0].lower()}")
+            exps.append({"id": out.experiment_id, "verdict": out.results["conclusion"]["verdict"]})
+    return {"snapshots": snaps, "quality_report": report["id"], "experiments": exps}
+
+
+def discover_candidates(prices: pd.DataFrame, criteria: EligibilityCriteria | None = None) -> pd.DataFrame:
+    """Rank (country, commodity, unit, price type) groups by the evidence available for forecasting."""
+    quality, _ = assess_prices(prices, criteria)
+    if not quality:
+        return pd.DataFrame()
+    q = pd.DataFrame([x.to_dict() for x in quality])
+    meta = prices.drop_duplicates("series_id").set_index("series_id")["commodity_code"]
+    q["commodity_code"] = q["series_id"].map(meta)
+    g = q.groupby(["country_iso3", "commodity_code", "commodity_name", "unit", "price_type", "currency"])
+    out = g.agg(
+        series=("series_id", "count"),
+        eligible_series=("eligible", "sum"),
+        median_obs=("n_observations", "median"),
+        median_coverage=("coverage", "median"),
+        first=("first_period", "min"),
+        last=("last_period", "max"),
+    ).reset_index()
+    out["evidence_score"] = out["eligible_series"] * out["median_obs"] * out["median_coverage"]
+    return out.sort_values(["evidence_score", "eligible_series"], ascending=False).reset_index(drop=True)
+
+
+def experiment_ids(settings: Settings) -> list[str]:
+    with session_scope(settings.database_url) as s:
+        return list(s.scalars(select(m.Experiment.id).where(m.Experiment.mode == settings.shocktrace_mode.value)))
+
+
+def load_saved_config(settings: Settings, experiment_id: str) -> ExperimentConfig:
+    p = Path(settings.experiments_dir) / experiment_id / "config.json"
+    if not p.exists():
+        raise FileNotFoundError(f"no saved configuration for experiment {experiment_id}")
+    return ExperimentConfig.model_validate_json(p.read_text())
+
+
+_ = power_grid_cell

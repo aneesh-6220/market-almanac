@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+/* ShockTrace tokens. Semantic colours carry meaning across every chart:
+   rain = environmental signals, grain = prices, good/warn/neutral = verdicts. */
+:root {
+  --bg: #f3f5f7;
+  --surface: #ffffff;
+  --surface-2: #e9edf1;
+  --ink: #18233a;
+  --ink-2: #47546a;
+  --ink-3: #6f7d93;
+  --line: #d3dae3;
+  --rain: #2c78a8;
+  --rain-soft: rgba(44, 120, 168, 0.14);
+  --grain: #b97d12;
+  --grain-soft: rgba(201, 137, 26, 0.16);
+  --heat: #a8561b;
+  --good: #2f7d5b;
+  --warn: #a86d12;
+  --neutral: #6b7280;
+  --bad: #a23b3b;
+  --hatch: rgba(168, 109, 18, 0.18);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1620;
+    --surface: #15202c;
+    --surface-2: #1c2937;
+    --ink: #e5ecf3;
+    --ink-2: #b0bdcc;
+    --ink-3: #8293a8;
+    --line: #2a3a4c;
+    --rain: #64abd9;
+    --rain-soft: rgba(100, 171, 217, 0.18);
+    --grain: #e2ab40;
+    --grain-soft: rgba(226, 171, 64, 0.18);
+    --heat: #e08a4a;
+    --good: #55b68b;
+    --warn: #dcaa48;
+    --neutral: #98a3b3;
+    --bad: #e07a7a;
+    --hatch: rgba(220, 170, 72, 0.16);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e1620;
+  --surface: #15202c;
+  --surface-2: #1c2937;
+  --ink: #e5ecf3;
+  --ink-2: #b0bdcc;
+  --ink-3: #8293a8;
+  --line: #2a3a4c;
+  --rain: #64abd9;
+  --rain-soft: rgba(100, 171, 217, 0.18);
+  --grain: #e2ab40;
+  --grain-soft: rgba(226, 171, 64, 0.18);
+  --heat: #e08a4a;
+  --good: #55b68b;
+  --warn: #dcaa48;
+  --neutral: #98a3b3;
+  --bad: #e07a7a;
+  --hatch: rgba(220, 170, 72, 0.16);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-rain: var(--rain);
+  --color-grain: var(--grain);
+  --color-heat: var(--heat);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-neutral: var(--neutral);
+  --color-bad: var(--bad);
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, serif;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--rain);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.prose-st {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--ink-2);
+  max-width: 68ch;
+}
+.prose-st p + p {
+  margin-top: 1em;
+}
+.prose-st h2 {
+  font-family: var(--font-serif);
+  color: var(--ink);
+  font-size: 1.75rem;
+  line-height: 1.2;
+  margin: 2.2em 0 0.6em;
+}
+.prose-st h3 {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.8em 0 0.4em;
+}
+.prose-st ul {
+  list-style: disc;
+  padding-left: 1.3em;
+  margin: 0.8em 0;
+}
+.prose-st li + li {
+  margin-top: 0.35em;
+}
+.prose-st code,
+.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--surface-2);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+.code-block {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  white-space: pre;
+}
+.formula {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  color: var(--ink);
+  background: var(--surface);
+  border-left: 3px solid var(--rain);
+  padding: 0.8rem 1.1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+.formula i {
+  font-style: italic;
+}
+
+/* Synthetic-data stripe: hatched so it can never be mistaken for decoration. */
+.synthetic-band {
+  background-image: repeating-linear-gradient(-45deg, var(--hatch) 0 8px, transparent 8px 16px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 11px;
+}
