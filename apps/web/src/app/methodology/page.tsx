@@ -1,25 +1,33 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Research and methodology" };
+export const metadata: Metadata = {
+  title: "Methodology",
+  description: "How ShockTrace measures unusual price movements, compares markets, builds weather features and evaluates forecasts, with formulas and limits.",
+};
 
 const SECTIONS = [
-  ["question", "The question"],
   ["data", "Data and units"],
+  ["unusual", "Unusual movements"],
+  ["compare", "Comparing markets"],
   ["timing", "What was known when"],
   ["targets", "Forecast targets"],
   ["features", "Features"],
-  ["models", "Models"],
-  ["backtest", "Rolling-origin backtest"],
-  ["metrics", "Scoring"],
-  ["inference", "Is the difference real?"],
-  ["verdicts", "From tests to verdicts"],
-  ["forecasts", "Forward forecasts"],
+  ["qc", "Weather quality control"],
+  ["backtest", "Models and backtest"],
+  ["inference", "Is a difference real?"],
+  ["influence", "Does it depend on a few months?"],
+  ["study", "The pre-registered study"],
+  ["forecasts", "When a forecast is shown"],
   ["limits", "What this does not show"],
 ] as const;
 
 function F({ children }: { children: React.ReactNode }) {
-  return <div className="formula" role="math">{children}</div>;
+  return (
+    <div className="formula" role="math">
+      {children}
+    </div>
+  );
 }
 
 function Example({ title, children }: { title: string; children: React.ReactNode }) {
@@ -46,220 +54,184 @@ export default function Methodology() {
         </ol>
       </nav>
       <article className="prose-st">
-        <h1 className="font-serif text-4xl leading-tight text-ink md:text-5xl">Research and methodology</h1>
+        <h1 className="font-serif text-4xl leading-tight text-ink md:text-5xl">Methodology</h1>
         <p className="mt-4 text-xl">
-          How ShockTrace turns five public datasets into a falsifiable answer, and the rules that keep it from fooling
-          itself. The full technical write-up, with references, is in <code>docs/METHODOLOGY.md</code>.
-        </p>
-
-        <h2 id="question">The question</h2>
-        <p>
-          Do observed weather anomalies improve <em>out-of-sample</em> prediction of future food-price changes and price
-          spikes, beyond what conventional price, seasonal and macroeconomic predictors already provide?
-        </p>
-        <p>
-          This is a predictive question, not a causal one. A &ldquo;yes&rdquo; means that a model given weather
-          information made smaller errors on months it had never seen. It does not mean that weather caused those prices,
-          and a &ldquo;no&rdquo; does not mean weather is irrelevant to food markets: it may already be reflected in prices,
-          or the market-local proxy may be too coarse.
+          The rules behind every number on this site: how movements are judged unusual, when markets may be compared, what a forecast was allowed to know, and how models are
+          scored. The full write-up is in <code>docs/METHODOLOGY.md</code>; the study protocol is in <code>docs/research/RESEARCH_PROTOCOL.md</code>.
         </p>
 
         <h2 id="data">Data and units</h2>
         <p>
-          The unit of analysis is one <strong>comparable price series</strong>: a single market, commodity, unit, price
-          type (retail or wholesale) and currency from the WFP food-price records served by HDX HAPI. Series that differ in
-          any of these are never merged, and no price is converted between units or currencies.
+          Prices are monthly market reports collected by the World Food Programme and partners, obtained through HDX HAPI. A <em>series</em> is one market, commodity, unit,
+          price type and currency; series that differ in any of these are never merged. Each price carries the month it describes. That month is not the date the price was
+          published, which the source does not provide.
         </p>
-        <ul>
-          <li>Weather: NASA POWER daily rainfall and temperature for the ~0.5° grid cell containing the market, aggregated to calendar months. Months with less than 90% of days are flagged incomplete.</li>
-          <li>Macro: IMF monthly consumer prices (all items and food) and the national exchange rate per US dollar.</li>
-          <li>Agriculture: FAOSTAT annual national production, yield and harvested area for the crop related to the commodity.</li>
-          <li>Context: World Bank annual development indicators, used descriptively and never interpolated to months.</li>
-        </ul>
         <p>
-          Extreme price moves are flagged with a robust z-score and classified, but never removed. A spike that is genuine
-          is exactly what the spike model must learn to anticipate.
+          Months with no valid observation stay empty. Nothing is interpolated, and conflicting duplicate records are excluded and counted. Weather is NASA POWER daily data on a
+          0.5° × 0.625° grid, aggregated to months only when at least 90% of days are present.
+        </p>
+
+        <h2 id="unusual">Unusual movements</h2>
+        <p>For one series, the change ending in month T over k months is</p>
+        <F>
+          r<sub>T</sub>(k) = ln P<sub>T</sub> − ln P<sub>T−k</sub>
+        </F>
+        <p>
+          with k = 1 when the previous month was observed, and otherwise the distance to the last observed month. It is compared only with earlier changes of the same span in
+          the same series. Two statistics are reported: the share of earlier changes that were smaller in absolute size, and a robust z-score
+        </p>
+        <F>
+          z = (r<sub>T</sub> − median) / (1.4826 × MAD)
+        </F>
+        <p>
+          The label follows the first: below 80% typical, 80–95% larger than usual, 95–99% unusual, 99% or more exceptional. At least 24 earlier changes are required, and fewer
+          than 48 is marked as a short history. A second comparison uses only changes that ended in the same calendar month.
+        </p>
+        <Example title="a one-month rise">
+          <p>A series has 30 earlier monthly changes, alternating +1% and −1%, and then rises 10%.</p>
+          <p>
+            All 30 earlier changes are smaller in size, so the percentile is 100%. The median is 0 and the MAD is 0.01, so z = 0.10 / (1.4826 × 0.01) = 6.7. The label is
+            &ldquo;exceptional&rdquo;, marked as a short history because there are fewer than 48 reference changes.
+          </p>
+        </Example>
+        <p>
+          The page also reports how many other markets for the same commodity and country moved the same way that month. A movement that no other market shared and that reversed
+          the next month can be a reporting anomaly. None of these labels is a finding of a shortage or a crisis, and none says why a price moved.
+        </p>
+
+        <h2 id="compare">Comparing markets</h2>
+        <p>
+          Price levels are compared only between series with the same commodity, price type, unit and currency. Series in different currencies are compared only as indices, each
+          divided by its own value in the first month when all selected series were observed:
+        </p>
+        <F>
+          I<sub>t</sub> = 100 × P<sub>t</sub> / P<sub>base</sub>
+        </F>
+        <p>
+          An index compares movements. It does not compare living costs, and ShockTrace applies no currency conversion: it holds no verified, date-matched exchange rates for
+          every pair, and a nominal conversion would not make prices comparable in purchasing-power terms. Series that differ in commodity, unit or price type are refused.
         </p>
 
         <h2 id="timing">What was known when</h2>
         <p>
-          Every feature at forecast origin month <i>t</i> must have been publicly available by the end of <i>t</i>.
-          ShockTrace distinguishes the period a value describes, its publication date, its retrieval date and the forecast
-          information cut-off. Where a publication date is unknown, it applies a conservative release lag rather than
-          assuming instant availability, and it never infers publication from the retrieval date.
+          A forecast made at the end of month <i>t</i> may use only information available then. The price sources do not publish release dates, and the newest WFP month typically
+          appears one to two months late. ShockTrace therefore states an explicit assumption, the price release lag L, and evaluates three scenarios: L = 0, 1 and 2 months. At
+          origin <i>t</i> the last price a model may use is P<sub>t−L</sub>. Weather is used through the complete month <i>t</i>.
         </p>
-        <Example title="the information set for June 2020">
-          <p>For an origin of June 2020, the model may use:</p>
-          <ul className="list-disc pl-5">
-            <li>Prices through June 2020 (lag 0).</li>
-            <li>Weather through June 2020 (complete months only).</li>
-            <li>IMF consumer prices through April 2020 (two-month release lag).</li>
-            <li>The IMF exchange rate through May 2020 (one-month lag).</li>
-            <li>FAOSTAT production for 2018 but not 2019: an annual value for year Y is treated as available only from December of Y+1.</li>
-          </ul>
-        </Example>
         <p>
-          One limit remains: providers revise data, and ShockTrace sees today&rsquo;s vintage, not what was published at
-          the time. The release lags reduce but do not remove this look-ahead.
+          These are assumed scenarios, and the data are today&rsquo;s vintage (later revisions are included). The evaluations are retrospective backtests under stated lag
+          assumptions. They are not verified point-in-time forecasts.
         </p>
 
         <h2 id="targets">Forecast targets</h2>
-        <p>For a price series <i>P</i> and origin <i>t</i>, two targets are fixed before any model is fitted:</p>
         <F>
-          <i>y</i><sub>t</sub>(<i>h</i>) = ln <i>P</i><sub>t+h</sub> − ln <i>P</i><sub>t</sub>
-          <span className="ml-6 text-base text-ink-3">log price change over horizon h = 1, 3 months</span>
+          y<sub>t</sub>(h) = ln P<sub>t+h</sub> − ln P<sub>t−L</sub>
         </F>
-        <F>
-          <i>s</i><sub>t</sub>(<i>h</i>) = 1[ <i>P</i><sub>t+h</sub> / <i>P</i><sub>t</sub> − 1 ≥ <i>c</i> ]
-          <span className="ml-6 text-base text-ink-3">spike event, c = 10% by default</span>
-        </F>
-        <Example title="computing a target">
+        <p>
+          The change is measured from the last price assumed published, so no target depends on a reference price the forecaster could not have seen. The spike event is
+          P<sub>t+h</sub> / P<sub>t−L</sub> − 1 ≥ 10%. If either price is missing, the target is missing.
+        </p>
+        <Example title="origin March, one month ahead, lag 1">
+          <p>Prices: January 100, February 110, March 121, April 133.1.</p>
           <p>
-            Maize costs 120 per kg in March and 133.20 in April. The one-month log change is ln(133.20 / 120) = ln(1.11) ≈
-            0.104, and the rise of 11% exceeds the 10% threshold, so <i>s</i> = 1.
-          </p>
-          <p>
-            If the June price is missing, the three-month target for March is <em>missing</em>. It is not recorded as
-            &ldquo;no spike&rdquo;, which would silently bias the event rate downward.
+            With L = 1 the last published price at the end of March is February&rsquo;s. The target is ln 133.1 − ln 110 = 0.191, a 21% rise over two months, and the features may
+            use prices up to February only. With L = 0 the target would be ln 133.1 − ln 121 = 0.095.
           </p>
         </Example>
         <p>
-          The 10% threshold is pre-specified. Results at 5%, 15% and 20% are reported as sensitivity analyses, never used to
-          choose the headline.
+          A model is trained at a refit date <i>c</i> only on rows whose target price was already published: origin + h + L ≤ c. Tests alter every later price and check that
+          features and training sets do not change.
         </p>
 
         <h2 id="features">Features</h2>
-        <p>Features come in nested families, so each comparison adds exactly one kind of information:</p>
-        <ul>
-          <li><strong>A, price only:</strong> recent log changes (1, 3, 12 months), deviation from the 12-month mean, recent volatility, calendar month, and the average same-season change in the three previous years.</li>
-          <li><strong>B, A plus weather:</strong> rainfall anomalies over 1, 3 and 6 months (and lagged), temperature and maximum-temperature anomalies, and counts of days at or above 35 °C.</li>
-          <li><strong>C, B plus macro:</strong> consumer-price inflation, food inflation and exchange-rate depreciation, with release lags.</li>
-          <li><strong>D, C plus agriculture:</strong> changes in national production, yield and harvested area.</li>
-        </ul>
-        <p>A weather anomaly is a standardised departure from the climatology of the same calendar month:</p>
+        <h3>A: price history</h3>
+        <p>
+          Log changes over 1, 3 and 12 months, the previous month&rsquo;s change, deviation from the 12-month mean, six-month volatility, calendar terms, and the average change
+          over the same span in the three previous years. All use prices up to <i>t</i>−L.
+        </p>
+        <h3>B: weather near the market</h3>
+        <p>Nine anomaly features from the grid cell containing the market. An anomaly compares a month with the same calendar month in earlier years only:</p>
         <F>
-          <i>z</i><sub>t</sub> = (<i>x</i><sub>t</sub> − μ<sub>m</sub>) / σ<sub>m</sub>
+          z<sub>t</sub> = (x<sub>t</sub> − μ<sub>m, earlier years</sub>) / σ<sub>m, earlier years</sub>, clipped to ±4
+        </F>
+        <h3>P: weather where the crop is grown</h3>
+        <p>Grid cells are weighted by the crop&rsquo;s harvested area from IFPRI MapSPAM 2010:</p>
+        <F>
+          W(c, t) = Σ<sub>i</sub> w(c, i) × X(i, t), &nbsp; w ≥ 0, &nbsp; Σ<sub>i</sub> w(c, i) = 1
         </F>
         <p>
-          By default μ and σ are computed only from the same calendar month in <em>earlier years</em>, with at least ten
-          years required. A fixed reference period is allowed only if it ends before the first test origin; otherwise the
-          run stops with a leakage error.
+          The crop calendar (World Bank / JRC) gives the growing season. Rainfall and heat days are accumulated over the season to date and compared with the same stage of earlier
+          seasons, so an unfinished season is never compared with completed ones. Six features result: season-to-date rainfall anomaly, the previous season&rsquo;s anomaly,
+          season heat anomaly, onset rainfall anomaly, an in-season indicator and months since harvest.
         </p>
-        <Example title="a rainfall anomaly">
-          <p>
-            March 2018 rainfall at a market&rsquo;s grid cell is 42 mm. Over the previous Marches (2008–2017) the mean is
-            60 mm with a standard deviation of 12 mm. The anomaly is (42 − 60) / 12 = −1.5, a dry month. March 2018 itself
-            plays no part in its own reference.
-          </p>
-        </Example>
-
-        <h2 id="models">Models</h2>
         <p>
-          Each family is fitted with the same model type so that the only difference between, say, A and B is the
-          weather information:
-        </p>
-        <ul>
-          <li>Baselines: no change (naive), seasonal naive, and the historical event rate for spikes.</li>
-          <li>Ridge regression for price changes and L2-regularised logistic regression for spikes (primary models).</li>
-          <li>Elastic net and gradient-boosted trees as specification checks.</li>
-        </ul>
-        <p>
-          Every model is a pipeline of median imputation, standardisation and the estimator, fitted on training rows only.
-          Regularisation strength is chosen on the last 24 months of each training window, with a purge gap so that no
-          validation target was known when the inner training rows were fitted. For spikes, the alert threshold that
-          maximises F1 is also chosen there, never on test data.
+          The weights show where a crop was grown around 2010 across the country. They do not identify the farms that supply a given market, and they ignore imports and stocks.
         </p>
 
-        <h2 id="backtest">Rolling-origin backtest</h2>
+        <h2 id="qc">Weather quality control</h2>
         <p>
-          The test period begins once 48 months of training origins exist. Models are refitted every 12 months on all rows
-          whose <em>target</em> was observed by the refit date, then used for the next 12 origins without peeking.
-        </p>
-        <Example title="the first two folds of a three-month horizon">
-          <p>
-            Refit date January 2016: training origins run to October 2015, because the three-month target of an October
-            2015 origin is January 2016, the last month observed. Test origins are January to December 2016.
-          </p>
-          <p>
-            Refit date January 2017: training origins now run to October 2016, and the model predicts the 2017 origins.
-            No row is ever scored by a model that saw its outcome.
-          </p>
-        </Example>
-
-        <h2 id="metrics">Scoring</h2>
-        <p>
-          Price changes are scored with mean absolute error, root mean squared error, bias, error relative to the naive
-          forecast, directional accuracy and the empirical coverage of 80% and 95% intervals. Spike probabilities are scored
-          with the Brier score, Brier skill against the base rate, precision–recall AUC, precision, recall, F1, calibration
-          by probability bin, and the confusion matrix.
+          NASA POWER reports 276.5 mm of rain on 2 December 2025 for a cell in south-west Burkina Faso, in the dry season, with similar values in eight neighbouring cells. The
+          IMERG satellite product reports 1.6 mm for that day and CHIRPS under 4 mm. Because neighbours agree with each other, a spatial check cannot catch this. The screen is
+          climatological and per cell.
         </p>
         <p>
-          A metric is suppressed, not reported as zero, when there are fewer than 24 test origin months or fewer than 10
-          spike events. Calibration bins with too few rows are hidden.
+          A daily value is flagged when it is at least 50 mm and more than twice the largest unflagged value the same cell recorded in the surrounding three calendar months of
+          earlier years. Flagged days are treated as missing. The raw monthly total is kept beside the screened one, the flag count is stored, and experiments can be re-run on raw
+          data. The screen will also flag a genuine record-breaking storm, which is why raw values are never deleted.
         </p>
 
-        <h2 id="inference">Is the difference real?</h2>
+        <h2 id="backtest">Models and backtest</h2>
         <p>
-          Forecast errors for different markets in the same month are correlated, and multi-month targets overlap. So
-          ShockTrace first averages the loss differential across series within each origin month,
-        </p>
-        <F>
-          <i>d</i><sub>t</sub> = mean over series of [ <i>L</i>(A)<sub>it</sub> − <i>L</i>(B)<sub>it</sub> ]
-        </F>
-        <p>
-          and then applies the Diebold–Mariano test with a Newey–West variance using max(<i>h</i> − 1, ⌊4(<i>T</i>/100)<sup>2/9</sup>⌋)
-          lags and the Harvey–Leybourne–Newbold small-sample correction, compared against a <i>t</i> distribution. A 95%
-          interval for the loss ratio B/A comes from a moving-block bootstrap over origin months, with block length
-          max(<i>h</i>, <i>T</i><sup>1/3</sup>).
-        </p>
-        <Example title="the synthetic Demoland maize experiment">
-          <p>
-            For one-month price changes, the price-only ridge model had mean squared error 0.00459 and the weather-enhanced
-            model 0.00348, a loss ratio of 0.76. Over 118 origin months with 4 HAC lags, the Diebold–Mariano statistic was
-            2.67, one-sided p = 0.004, and the bootstrap interval for the ratio was 0.56 to 0.86. The loss differential
-            favoured the weather model in both halves of the test period, so this comparison is &ldquo;improved&rdquo;.
-          </p>
-          <p>
-            These numbers describe synthetic data built so that weather matters; they say nothing about any real market.
-            The same run&rsquo;s one-month spike comparison was not significant, so the experiment as a whole is
-            &ldquo;inconsistent&rdquo;.
-          </p>
-        </Example>
-
-        <h2 id="verdicts">From tests to verdicts</h2>
-        <p>Each primary comparison (B against A, for every task and horizon) gets one verdict:</p>
-        <ul>
-          <li><strong>Improved:</strong> B has lower loss, the one-sided test rejects at 5%, and the differential favours B in both halves of the test period.</li>
-          <li><strong>Inconsistent:</strong> significant overall, but not in both halves.</li>
-          <li><strong>Not improved:</strong> no significant difference, or B is significantly worse.</li>
-          <li><strong>Insufficient evidence:</strong> too few test months or events to test.</li>
-        </ul>
-        <p>
-          The experiment is &ldquo;improved&rdquo; only if every primary comparison with sufficient data is improved, and
-          &ldquo;not improved&rdquo; only if none is improved or inconsistent. Anything in between is reported as
-          inconsistent. Several primary comparisons are tested without a multiplicity correction, which is why the
-          stability and sensitivity checks are shown alongside each verdict.
+          Ridge regression for price changes and L2-regularised logistic regression for spikes, with median imputation and scaling fitted inside each training window. The
+          penalty is chosen on a later slice of the training window. Models are refitted every 12 months on an expanding window and scored on the following year. Benchmarks are
+          the no-change forecast, the seasonal naive forecast and the historical spike rate. Models in a comparison are scored on exactly the same rows.
         </p>
 
-        <h2 id="forecasts">Forward forecasts</h2>
+        <h2 id="inference">Is a difference real?</h2>
         <p>
-          After the backtest, the primary models are refitted on all available rows and produce a forecast from the latest
-          origin. Intervals are empirical quantiles of the model&rsquo;s own out-of-sample residuals. Each forecast carries
-          a validation status that says whether the model beat its baseline in the backtest, and a forecast is withheld
-          when the latest price is more than two months old.
+          Forecast errors in the same month are correlated across markets, and multi-month forecasts overlap. Loss differences are therefore averaged across markets within each
+          month, and the resulting monthly series is tested with the Diebold–Mariano statistic using a Newey–West variance and the Harvey–Leybourne–Newbold correction. The
+          effective sample is the number of months, about 65, not the thousands of individual forecasts.
+        </p>
+        <p>
+          Intervals come from a moving-block bootstrap over months of the ratio of monthly mean losses, the same quantity the test examines. Families of pre-specified tests are
+          adjusted with Holm&rsquo;s procedure.
+        </p>
+
+        <h2 id="influence">Does it depend on a few months?</h2>
+        <p>
+          Each comparison reports the loss ratio after leaving out each month, each market and each weather cell, the ratio without the three most influential months, and the
+          ratio without rows whose weather was quality-flagged. A comparison is marked as depending on few observations when any of these moves the ratio by more than 0.02 and
+          more than half of the apparent effect. Nothing is removed from the primary result.
+        </p>
+
+        <h2 id="study">The pre-registered study</h2>
+        <p>
+          Burkina Faso&rsquo;s test period was examined while the method was being developed, so its results are exploratory. The confirmatory test uses Mali and Niger, on which
+          no model had been run when the protocol was frozen and tagged in the repository. Eight tests were fixed in advance: two countries, two horizons, and the
+          production-region model against price history and against market-local weather, pooled over each country&rsquo;s crops.
+        </p>
+        <p>
+          An improvement counts as established only if it survives the Holm adjustment, favours the weather model in both halves of the test period, beats a placebo built from
+          weather five years earlier, and does not depend on a few observations. A result that is not significant is reported as no established improvement. It is not evidence
+          that weather has no effect. Results are in the <Link href="/lab">Research Lab</Link>.
+        </p>
+
+        <h2 id="forecasts">When a forecast is shown</h2>
+        <p>
+          A forecast appears only for a series covered by a current out-of-sample evaluation with at least 24 test months. It is labelled as having beaten its benchmark or as
+          having no demonstrated skill, and it states its origin, the last price it used and its target month. Intervals are empirical quantiles of past out-of-sample errors.
+          Series that are stale or too short have their forecast withheld, with the reason.
         </p>
 
         <h2 id="limits">What this does not show</h2>
         <ul>
-          <li>Causation. All results are predictive comparisons.</li>
-          <li>Production-area exposure. Weather is measured near the market, not where the crop was grown or imported from.</li>
-          <li>Real-time performance. Inputs are a current data vintage with conservative lags.</li>
-          <li>Generalisation. A result for one country and commodity says nothing about others.</li>
+          <li>Causes. Prices respond to transport, trade policy, conflict, currency, storage and demand as well as weather. Nothing here separates them.</li>
+          <li>Real-time performance. Timing rests on assumed publication lags and today&rsquo;s data vintage.</li>
+          <li>Supply origins. Neither market-cell nor production-region weather identifies where a market&rsquo;s supply comes from.</li>
+          <li>Small effects. With about 65 monthly observations, improvements of a few percent in forecast loss cannot be detected.</li>
+          <li>Other places. The study covers three Sahelian countries and four staples.</li>
         </ul>
-        <p>
-          See the <Link href="/lab">Model laboratory</Link> for the full evidence behind any experiment, and{" "}
-          <code>docs/RESEARCH_LIMITATIONS.md</code> for a longer discussion.
-        </p>
       </article>
     </div>
   );

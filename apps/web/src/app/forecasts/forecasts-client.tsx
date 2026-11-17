@@ -168,6 +168,7 @@ export function ForecastsClient() {
             </div>
             <p className="mt-1 text-sm text-ink-3">
               Information cut-off {month(mine[0].information_cutoff)} · last observed price {fmt(head.last_price as number, 4)} {String(head.currency)}/{String(head.unit)}
+              {prices.data?.items.length ? ` (observed for ${month(prices.data.items.at(-1)!.period)})` : ""}
               {exp?.synthetic && <span className="synthetic-band ml-2 rounded px-1.5 text-ink">synthetic</span>}
             </p>
             <div className="mt-5 grid gap-5 md:grid-cols-2">
@@ -182,6 +183,12 @@ export function ForecastsClient() {
                       <div className="text-sm tabular-nums text-ink-2">
                         80%: {fmt(f.payload.lower80 as number, 4)}–{fmt(f.payload.upper80 as number, 4)} · 95%: {fmt(f.payload.lower95 as number, 4)}–{fmt(f.payload.upper95 as number, 4)}
                       </div>
+                      {typeof head.last_price === "number" && (
+                        <div className="mt-1 text-sm tabular-nums text-ink-2" data-testid="naive-benchmark">
+                          No-change benchmark: {fmt(head.last_price, 4)}
+                          {f.validation_status !== "validated_outperforms_baseline" && " (this model has not shown it does better)"}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="mt-1 text-ink-2">Withheld: {f.reason}</div>
@@ -231,7 +238,7 @@ export function ForecastsClient() {
             </Panel>
             <div className="grid grid-cols-2 gap-5 rounded-md border border-line bg-surface p-5 md:grid-cols-4">
               <Stat label="Forecast origin" value={month(mine[0].origin_period)} />
-              <Stat label="Experiment" value={<span className="text-sm">{expId}</span>} />
+              <Stat label="Experiment" value={<span className="block break-all font-mono text-xs">{expId}</span>} />
               <Stat label="Interval method" value={<span className="text-sm">Empirical residual quantiles</span>} />
               <Stat label="Mode" value={exp?.mode ?? "—"} hint={exp?.synthetic ? "synthetic demo data" : "observed data"} />
             </div>
