@@ -451,3 +451,28 @@ def sync_db(mode: ModeOpt = None) -> None:
     typer.echo(f"database: {s.redacted_database_url()}")
     typer.echo(f"snapshots registered: {res['snapshots']} | experiments registered: {len(res['experiments'])}")
     typer.echo(f"superseded: {len(res['superseded'])} | lineage entries skipped: {len(res['lineage_skipped'])}")
+
+
+@app.command("bundle-export")
+def bundle_export(
+    mode: ModeOpt = None,
+    out: Annotated[Path, typer.Option(help="output directory")] = Path("dist"),
+) -> None:
+    """Package lake snapshots, the public catalog and experiment results into a verified data bundle."""
+    from shocktrace.data.public_bundle import build_bundle
+
+    s = _settings(mode)
+    _echo_json(build_bundle(s.data_dir, s.shocktrace_mode.value, out))
+
+
+@app.command("bundle-install")
+def bundle_install(
+    source: Annotated[str, typer.Argument(help="local path or https:// URL of a .tar.gz data bundle")],
+    sha256: Annotated[str | None, typer.Option(help="expected SHA-256 of the archive")] = None,
+    mode: ModeOpt = None,
+) -> None:
+    """Verify and install a data bundle into DATA_DIR (never overwrites differing files). Run sync-db after."""
+    from shocktrace.data.public_bundle import install_bundle
+
+    s = _settings(mode)
+    _echo_json(install_bundle(source, s.data_dir, sha256))

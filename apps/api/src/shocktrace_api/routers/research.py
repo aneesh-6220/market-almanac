@@ -30,6 +30,20 @@ def _exp(db: Session, settings: Settings, eid: str) -> m.Experiment:
     return e
 
 
+def _artifacts(settings: Settings, e: m.Experiment) -> str:
+    """Directory holding an experiment's artefacts on *this* server.
+
+    The database records the path where the run was registered, which may be relative to another
+    working directory or another machine (a shared database synced from a workstation, or a data
+    bundle installed into a container). Artefact directories are named by experiment id, so fall
+    back to ``<experiments_dir>/<id>`` when the recorded path does not exist here.
+    """
+    recorded = FsPath(e.artifact_dir)
+    if (recorded / "results.json").exists():
+        return str(recorded)
+    return str(FsPath(settings.experiments_dir) / e.id)
+
+
 def _summary(e: m.Experiment) -> ExperimentSummary:
     return ExperimentSummary(
         id=e.id,
@@ -98,7 +112,7 @@ def experiment(
     experiment_id: EID, db: Session = Depends(db_dep), settings: Settings = Depends(settings_dep)
 ) -> dict[str, Any]:
     e = _exp(db, settings, experiment_id)
-    res = cache.results(e.artifact_dir)
+    res = cache.results(_artifacts(settings, e))
     return {"summary": _summary(e).model_dump(mode="json"), "results": res}
 
 
@@ -145,7 +159,7 @@ def predictions(
     settings: Settings = Depends(settings_dep),
 ) -> Page[PredictionPoint]:
     e = _exp(db, settings, experiment_id)
-    p = FsPath(e.artifact_dir) / "predictions.parquet"
+    p = FsPath(_artifacts(settings, e)) / "predictions.parquet"
     if not p.exists():
         raise HTTPException(404, "no predictions stored for this experiment")
     df = pd.read_parquet(p)
@@ -247,7 +261,9 @@ def report(
     experiment_id: EID, db: Session = Depends(db_dep), settings: Settings = Depends(settings_dep)
 ) -> PlainTextResponse:
     e = _exp(db, settings, experiment_id)
-    return PlainTextResponse(markdown_report(cache.results(e.artifact_dir)), media_type="text/markdown; charset=utf-8")
+    return PlainTextResponse(
+        markdown_report(cache.results(_artifacts(settings, e))), media_type="text/markdown; charset=utf-8"
+    )
 
 
 @router.get("/exports/{experiment_id}", tags=["output"])
@@ -258,7 +274,7 @@ def export(
     settings: Settings = Depends(settings_dep),
 ) -> Response:
     e = _exp(db, settings, experiment_id)
-    d = FsPath(e.artifact_dir)
+    d = FsPath(_artifacts(settings, e))
     tag = "SYNTHETIC_" if e.synthetic else ""
     if format == "zip":
         return Response(
@@ -268,7 +284,7 @@ def export(
         )
     if format == "json":
         return Response(
-            json.dumps(cache.results(e.artifact_dir)),
+            json.dumps(cache.results(_artifacts(settings, e))),
             media_type="application/json",
             headers={"Content-Disposition": f'attachment; filename="shocktrace_{tag}{e.id}.json"'},
         )
