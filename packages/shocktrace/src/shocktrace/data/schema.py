@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
 
 
 @dataclass(frozen=True)
@@ -93,6 +93,10 @@ WEATHER_MONTHLY = FrameSchema(
         "days_observed": "int",
         "days_in_month": "int",
         "complete": "bool",
+        # Precipitation QC (schema 1.1.0): raw total kept next to the QC'd ``precip_total_mm``.
+        "precip_total_mm_raw": "float",
+        "precip_qc_flagged_days": "int",
+        "precip_qc_max_flagged_mm": "float",
         "time_standard": "str",
         "spatial_basis": "str",
         "retrieved_at": "datetime",

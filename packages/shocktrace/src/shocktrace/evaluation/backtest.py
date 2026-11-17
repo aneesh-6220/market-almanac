@@ -2,8 +2,10 @@
 
 For horizon h and refit date c (a month):
 
-* training rows: origins s with s + h <= c  (the target was *realised* by c — this removes
-  the overlap leakage that a naive "s < c" split would introduce for h > 1);
+* training rows: origins s with s + h + L <= c, where L is the assumed price release lag. The
+  target price P_{s+h} must be *realised and published* by c; "s < c" alone would leak
+  overlapping targets for h > 1, and "s + h <= c" alone would train on prices that the lag
+  assumption says were not yet available;
 * test rows:     origins t with c <= t < c + refit_every.
 
 There is no shuffling; preprocessing and hyper-parameter selection happen inside each fit on
@@ -35,6 +37,7 @@ class BacktestConfig:
     refit_every: int = 12
     min_train_rows: int = 60
     seed: int = 42
+    price_release_lag: int = 0  # months after month m before P_m is assumed published
 
 
 @dataclass
@@ -63,6 +66,7 @@ def run_backtest(panel: pd.DataFrame, specs: list[ModelSpec], cfg: BacktestConfi
         raise KeyError(cfg.target)
     data = panel[panel[cfg.target].notna() & panel["log_price"].notna()].copy()
     data["target_period"] = data["origin"] + pd.DateOffset(months=cfg.h)
+    lag = pd.DateOffset(months=cfg.price_release_lag)
     schedule = refit_schedule(data["origin"], cfg)
     if not schedule:
         raise InsufficientDataError(
@@ -71,14 +75,14 @@ def run_backtest(panel: pd.DataFrame, specs: list[ModelSpec], cfg: BacktestConfi
     preds, folds, coefs, notes = [], [], [], []
     for k, c in enumerate(schedule):
         c_next = schedule[k + 1] if k + 1 < len(schedule) else data["origin"].max() + pd.DateOffset(months=1)
-        train = data[data["target_period"] <= c]
+        train = data[data["target_period"] + lag <= c]
         test = data[(data["origin"] >= c) & (data["origin"] < c_next)]
         if test.empty:
             continue
         if len(train) < cfg.min_train_rows:
             notes.append(f"fold {c:%Y-%m}: skipped, {len(train)} training rows < {cfg.min_train_rows}")
             continue
-        assert train["target_period"].max() <= c, "leakage guard: training target realised after cutoff"
+        assert (train["target_period"] + lag).max() <= c, "leakage guard: training target not published by cutoff"
         assert test["origin"].min() >= c
         folds.append(
             {
@@ -93,7 +97,7 @@ def run_backtest(panel: pd.DataFrame, specs: list[ModelSpec], cfg: BacktestConfi
             }
         )
         for spec in specs:
-            m = FittedModel(spec, cfg.h, cfg.seed).fit(train, cfg.target)
+            m = FittedModel(spec, cfg.h, cfg.seed, cfg.price_release_lag).fit(train, cfg.target)
             p = m.predict(test)
             preds.append(
                 pd.DataFrame(
@@ -130,7 +134,7 @@ def run_backtest(panel: pd.DataFrame, specs: list[ModelSpec], cfg: BacktestConfi
     # final models on all realised data (used for forward forecasts and interpretation)
     final: dict[str, FittedModel] = {}
     for spec in specs:
-        final[spec.name] = FittedModel(spec, cfg.h, cfg.seed).fit(data, cfg.target)
+        final[spec.name] = FittedModel(spec, cfg.h, cfg.seed, cfg.price_release_lag).fit(data, cfg.target)
     return BacktestResult(cfg, pred_df, folds, coefs, final, notes)
 
 
@@ -146,16 +150,21 @@ def common_sample(preds: pd.DataFrame, models: list[str]) -> pd.DataFrame:
 
 
 def sequential_interval_coverage(
-    preds: pd.DataFrame, h: int, levels: tuple[float, ...] = (0.8, 0.95), min_resid: int = 30
+    preds: pd.DataFrame,
+    h: int,
+    levels: tuple[float, ...] = (0.8, 0.95),
+    min_resid: int = 30,
+    price_release_lag: int = 0,
 ) -> dict[str, Any]:
     """Empirical coverage of residual-quantile intervals built only from earlier realised errors.
 
     For each prediction at origin t, the interval uses residuals of predictions whose targets
-    were realised by t (origin_j + h <= t). This mimics what a forecaster could have known.
+    were realised and published by t (origin_j + h + L <= t). This mimics what a forecaster
+    could have known.
     """
     p = preds.sort_values("origin").reset_index(drop=True)
     resid = (p["y"] - p["pred"]).to_numpy()
-    realised = (p["origin"] + pd.DateOffset(months=h)).to_numpy()
+    realised = (p["origin"] + pd.DateOffset(months=h + price_release_lag)).to_numpy()
     origins = p["origin"].to_numpy()
     hits: dict[float, list[bool]] = {lv: [] for lv in levels}
     for i in range(len(p)):

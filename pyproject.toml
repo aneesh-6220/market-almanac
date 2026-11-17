@@ -25,6 +25,7 @@ dependencies = [
   "threadpoolctl>=3.5",
   "typer>=0.12",
   "python-dotenv>=1.0",
+  "pyyaml>=6.0.3",
 ]
 
 [project.scripts]
@@ -37,6 +38,9 @@ dev = [
   "ruff>=0.6",
   "mypy>=1.11",
   "types-python-dateutil",
+]
+geo = [
+    "rasterio>=1.5.2",
 ]
 
 [build-system]

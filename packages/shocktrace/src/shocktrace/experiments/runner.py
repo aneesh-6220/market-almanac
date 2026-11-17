@@ -25,6 +25,7 @@ from threadpoolctl import threadpool_limits
 
 import shocktrace
 from shocktrace.data.quality import EligibilityCriteria, assess_prices
+from shocktrace.data.weather import PRECIP_QC_VERSION
 from shocktrace.evaluation.backtest import (
     BacktestConfig,
     BacktestResult,
@@ -33,10 +34,19 @@ from shocktrace.evaluation.backtest import (
     run_backtest,
     sequential_interval_coverage,
 )
-from shocktrace.evaluation.inference import diebold_mariano, moving_block_bootstrap_ratio
+from shocktrace.evaluation.inference import diebold_mariano, holm_adjust, moving_block_bootstrap_ratio
+from shocktrace.evaluation.influence import influence_report
 from shocktrace.evaluation.metrics import calibration_table, classification_metrics, regression_metrics
 from shocktrace.experiments.config import ExperimentConfig
-from shocktrace.features.builder import AGRI_FEATURES, MACRO_FEATURES, FeatureBuildResult, build_panel
+from shocktrace.features.builder import (
+    AGRI_FEATURES,
+    FEATURE_TRANSFORM_VERSION,
+    MACRO_FEATURES,
+    PRODUCTION_FEATURES,
+    FeatureBuildResult,
+    build_panel,
+    timing_statement,
+)
 from shocktrace.features.weather import ClimatologyConfig, check_fixed_climatology
 from shocktrace.forecasting.models import FittedModel, ModelSpec, default_specs
 
@@ -46,12 +56,25 @@ CAUSAL_DISCLAIMER = (
 )
 
 # Bumped whenever a change alters numerical results for an unchanged config (see docs/audits).
-METHOD_REVISION = "audit-2026-11-16: weather anomalies clipped to +/-4"
-TIMING_DISCLOSURE = (
-    "Timing classification: lag-assumption-based retrospective backtest. WFP prices for month t are assumed "
-    "known at origin t (lag 0), but true publication dates are not available and observed HDX publication "
-    "lags are at least 1-2 months; point-in-time availability was not independently established."
+METHOD_REVISION = (
+    "v1.0-2026-11: precipitation QC (precip-qc-1), price-release-lag scenarios, training targets must be "
+    "published by the refit date, month-weighted bootstrap, Holm adjustment, influence diagnostics"
 )
+# Roles whose comparisons form the pre-specified family for the Holm adjustment.
+PRIMARY_ROLES = ("primary", "primary_production", "production_vs_local")
+PRODUCTION_PROXY_NOTE = (
+    "Production-region weather weights NASA POWER cells by MapSPAM 2010 harvested area for the crop. It shows "
+    "where the crop is grown nationally, not which farms supply a given market, and ignores imports and stocks."
+)
+
+
+def timing_disclosure(price_lag: int, weather_lag: int = 0) -> str:
+    return "Timing classification: lag-assumption-based retrospective backtest. " + timing_statement(
+        price_lag, weather_lag
+    )
+
+
+TIMING_DISCLOSURE = timing_disclosure(0)
 VERDICTS = ("improved", "not_improved", "inconsistent", "insufficient_evidence")
 
 
@@ -115,11 +138,11 @@ def _permutation(
     data = panel[panel[cfg.target].notna() & panel["log_price"].notna()].copy()
     data["target_period"] = data["origin"] + pd.DateOffset(months=cfg.h)
     c = pd.Timestamp(last["refit_date"])
-    train = data[data["target_period"] <= c]
+    train = data[data["target_period"] + pd.DateOffset(months=cfg.price_release_lag) <= c]
     test = data[data["origin"] >= c]
     if len(test) < 20:
         return []
-    m = FittedModel(spec, cfg.h, seed).fit(train, cfg.target)
+    m = FittedModel(spec, cfg.h, seed, cfg.price_release_lag).fit(train, cfg.target)
     if m.estimator is None:
         return []
     y = test[cfg.target].to_numpy(dtype=float)
@@ -134,7 +157,14 @@ def _permutation(
 
 
 def _compare(
-    sample: pd.DataFrame, a: str, b: str, task: str, h: int, cfg: ExperimentConfig, role: str
+    sample: pd.DataFrame,
+    a: str,
+    b: str,
+    task: str,
+    h: int,
+    cfg: ExperimentConfig,
+    role: str,
+    row_meta: pd.DataFrame | None = None,
 ) -> dict[str, Any]:
     wide = sample.pivot_table(index=["series_id", "origin"], columns="model", values="pred", aggfunc="first")
     y = sample.drop_duplicates(["series_id", "origin"]).set_index(["series_id", "origin"])["y"].reindex(wide.index)
@@ -142,8 +172,33 @@ def _compare(
     lb = (wide[b] - y) ** 2
     dates = pd.Series(wide.index.get_level_values("origin"))
     dm = diebold_mariano(la.reset_index(drop=True), lb.reset_index(drop=True), dates, h, cfg.min_test_periods)
-    boot = moving_block_bootstrap_ratio(
-        la.reset_index(drop=True), lb.reset_index(drop=True), dates, h, cfg.bootstrap_reps, cfg.seed
+    la_r, lb_r = la.reset_index(drop=True), lb.reset_index(drop=True)
+    boot = moving_block_bootstrap_ratio(la_r, lb_r, dates, h, cfg.bootstrap_reps, cfg.seed, weighting="months")
+    boot_rows = moving_block_bootstrap_ratio(la_r, lb_r, dates, h, cfg.bootstrap_reps, cfg.seed, weighting="rows")
+    infl_rows = pd.DataFrame(
+        {
+            "series_id": wide.index.get_level_values("series_id"),
+            "origin": wide.index.get_level_values("origin"),
+            "la": la.to_numpy(),
+            "lb": lb.to_numpy(),
+        }
+    )
+    if row_meta is not None:
+        meta = row_meta.reindex(wide.index)
+        infl_rows["location_id"] = meta["location_id"].to_numpy()
+        infl_rows["qc_flag"] = meta["w_qc_flag"].to_numpy()
+    influence = influence_report(infl_rows)
+    pb = wide[b].to_numpy(dtype=float)
+    yv = y.to_numpy(dtype=float)
+    extremes = (
+        {
+            "max_abs_pred_a": float(np.max(np.abs(wide[a]))),
+            "max_abs_pred_b": float(np.max(np.abs(pb))),
+            "max_abs_actual": float(np.max(np.abs(yv))),
+            "n_pred_b_beyond_actual_range": int(np.sum(np.abs(pb) > np.max(np.abs(yv)))),
+        }
+        if task == "regression"
+        else None
     )
     # sub-period stability: sign of mean loss differential in each half of the test period
     ud = np.sort(dates.unique())
@@ -199,6 +254,9 @@ def _compare(
         "positives": positives,
         "dm": dm.to_dict(),
         "bootstrap_loss_ratio": boot,
+        "bootstrap_loss_ratio_row_weighted": boot_rows,
+        "influence": influence,
+        "prediction_extremes": extremes,
         "subperiods": halves,
         "verdict": verdict,
         "reason": reason,
@@ -235,6 +293,12 @@ def _task_block(
 ) -> tuple[dict[str, Any], pd.DataFrame]:
     names = [s.name for s in specs]
     sample = common_sample(bt.predictions, names)
+    meta_cols = ["series_id", "origin", "location_id", "w_qc_flag"]
+    row_meta = (
+        panel.drop_duplicates(["series_id", "origin"]).set_index(["series_id", "origin"])[meta_cols[2:]]
+        if all(c in panel.columns for c in meta_cols)
+        else None
+    )
     block: dict[str, Any] = {
         "task": task,
         "horizon": h,
@@ -265,7 +329,9 @@ def _task_block(
         y, p = r["y"].to_numpy(dtype=float), r["pred"].to_numpy(dtype=float)
         if task == "regression":
             met = regression_metrics(y, p, ref_mae, ref_rmse, is_naive=s.name == "naive")
-            met["interval_coverage"] = sequential_interval_coverage(r, h)
+            met["interval_coverage"] = sequential_interval_coverage(
+                r, h, price_release_lag=cfg.price_release_lag_months
+            )
         else:
             met = classification_metrics(
                 y, p, r["decision_threshold"].to_numpy(dtype=float), ref_brier, cfg.min_test_events
@@ -303,7 +369,15 @@ def _task_block(
     fams = sorted({s.family for s in specs if s.family})
     est = "ridge" if task == "regression" else "logit"
     if "A" in fams and "B" in fams:
-        block["comparisons"].append(_compare(sample, f"{est}_A", f"{est}_B", task, h, cfg, "primary"))
+        block["comparisons"].append(_compare(sample, f"{est}_A", f"{est}_B", task, h, cfg, "primary", row_meta))
+    if "A" in fams and "P" in fams:
+        block["comparisons"].append(
+            _compare(sample, f"{est}_A", f"{est}_P", task, h, cfg, "primary_production", row_meta)
+        )
+    if "B" in fams and "P" in fams:
+        block["comparisons"].append(
+            _compare(sample, f"{est}_B", f"{est}_P", task, h, cfg, "production_vs_local", row_meta)
+        )
     for x, y_ in (("B", "C"), ("C", "D")):
         if x in fams and y_ in fams:
             block["comparisons"].append(_compare(sample, f"{est}_{x}", f"{est}_{y_}", task, h, cfg, "secondary"))
@@ -312,12 +386,12 @@ def _task_block(
         block["comparisons"].append(_compare(sample, f"{tree}_A", f"{tree}_B", task, h, cfg, "specification"))
     if task == "regression" and "enet_A" in names and "enet_B" in names:
         block["comparisons"].append(_compare(sample, "enet_A", "enet_B", task, h, cfg, "specification"))
-    for m in (f"{est}_A", f"{est}_B"):
+    for m in (f"{est}_A", f"{est}_B", f"{est}_P"):
         if m in names:
             block["comparisons"].append(_compare(sample, ref, m, task, h, cfg, "vs_baseline"))
     if task == "regression":
         block["residual_diagnostics"] = {
-            m: _residual_diagnostics(sample, m, h) for m in ("ridge_A", "ridge_B") if m in names
+            m: _residual_diagnostics(sample, m, h) for m in ("ridge_A", "ridge_B", "ridge_P") if m in names
         }
         scoring = "neg_mean_absolute_error"
     else:
@@ -333,8 +407,10 @@ def _task_block(
     return block, sample
 
 
-def overall_conclusion(comparisons: list[dict[str, Any]]) -> dict[str, Any]:
-    prim = [c for c in comparisons if c["role"] == "primary"]
+def overall_conclusion(
+    comparisons: list[dict[str, Any]], role: str = "primary", subject: str = "Environmental features"
+) -> dict[str, Any]:
+    prim = [c for c in comparisons if c["role"] == role]
     suff = [c for c in prim if c["verdict"] != "insufficient_evidence"]
     if not suff:
         verdict = "insufficient_evidence"
@@ -345,15 +421,12 @@ def overall_conclusion(comparisons: list[dict[str, Any]]) -> dict[str, Any]:
     else:
         verdict = "inconsistent"
     statements = {
-        "improved": (
-            "Environmental features improved out-of-sample prediction in every pre-specified primary comparison."
-        ),
+        "improved": (f"{subject} improved out-of-sample prediction in every pre-specified primary comparison."),
         "not_improved": (
-            "Environmental features did not materially improve out-of-sample prediction "
-            "in the pre-specified primary comparisons."
+            f"{subject} did not materially improve out-of-sample prediction in the pre-specified primary comparisons."
         ),
         "inconsistent": (
-            "Evidence is mixed: environmental features improved prediction in some primary comparisons "
+            f"Evidence is mixed: {subject.lower()} improved prediction in some primary comparisons "
             "or sub-periods but not others."
         ),
         "insufficient_evidence": "The available data cannot support a reliable comparison; no conclusion is drawn.",
@@ -362,9 +435,16 @@ def overall_conclusion(comparisons: list[dict[str, Any]]) -> dict[str, Any]:
         "verdict": verdict,
         "statement": statements[verdict],
         "primary_comparisons": [
-            {k: c[k] for k in ("task", "horizon", "model_a", "model_b", "verdict", "reason", "relative_loss_b_vs_a")}
+            {
+                **{
+                    k: c[k]
+                    for k in ("task", "horizon", "model_a", "model_b", "verdict", "reason", "relative_loss_b_vs_a")
+                },
+                "fragile": bool((c.get("influence") or {}).get("fragile", False)),
+            }
             for c in prim
         ],
+        "n_fragile": sum(bool((c.get("influence") or {}).get("fragile", False)) for c in prim),
         "n_primary": len(prim),
         "n_sufficient": len(suff),
         "decision_rule": (
@@ -408,9 +488,11 @@ def _forward_forecasts(
     out: list[dict[str, Any]] = []
     last_month = panel.loc[panel["log_price"].notna(), "origin"].max()
     meta = fb.series_meta.set_index("series_id")
+    lag = cfg.price_release_lag_months
     for sid, g in panel[panel["log_price"].notna()].groupby("series_id"):
         row = g.sort_values("origin").iloc[[-1]]
         origin = row["origin"].iloc[0]
+        ref_period = pd.Timestamp(row["price_ref_period"].iloc[0])
         stale = origin < last_month - pd.DateOffset(months=2)
         m = meta.loc[sid]
         for h in cfg.horizons:
@@ -427,6 +509,8 @@ def _forward_forecasts(
                     "origin_period": origin.date().isoformat(),
                     "target_period": (origin + pd.DateOffset(months=h)).date().isoformat(),
                     "information_cutoff": origin.date().isoformat(),
+                    "last_price_period": ref_period.date().isoformat(),
+                    "price_release_lag_months": lag,
                     "market_name": str(m["market_name"]),
                     "commodity_name": str(m["commodity_name"]),
                     "unit": str(m["unit"]),
@@ -443,7 +527,8 @@ def _forward_forecasts(
                             **base,
                             "status": "withheld",
                             "validation_status": vstatus,
-                            "reason": f"series last observed {origin:%Y-%m}; more than 2 months before the latest data",
+                            "reason": f"series last observed {ref_period:%Y-%m}; "
+                            "more than 2 months before the latest data",
                         }
                     )
                     continue
@@ -525,6 +610,16 @@ def _run_experiment(
     results["manifest"] = {
         "software_version": shocktrace.__version__,
         "method_revision": METHOD_REVISION,
+        "feature_transform_version": FEATURE_TRANSFORM_VERSION,
+        "precip_qc_version": PRECIP_QC_VERSION,
+        "evidence_class": cfg.evidence_class,
+        "study": cfg.study,
+        "timing": {
+            "price_release_lag_months": cfg.price_release_lag_months,
+            "weather_release_lag_months": cfg.weather_release_lag_months,
+            "statement": timing_statement(cfg.price_release_lag_months, cfg.weather_release_lag_months),
+            "verified_point_in_time": False,
+        },
         "python": platform.python_version(),
         "numpy": np.__version__,
         "pandas": pd.__version__,
@@ -554,7 +649,17 @@ def _run_experiment(
         cfg.climatology_fixed_end_year,
         cfg.climatology_min_years,
     )
-    fb = build_panel(datasets, eligible, tuple(cfg.horizons), tuple(cfg.sensitivity_thresholds), clim)
+    prod = datasets.get("production_features")
+    fb = build_panel(
+        datasets,
+        eligible,
+        tuple(cfg.horizons),
+        tuple(cfg.sensitivity_thresholds),
+        clim,
+        price_release_lag=cfg.price_release_lag_months,
+        weather_release_lag=cfg.weather_release_lag_months,
+        production_features=prod,
+    )
     warnings.extend(fb.warnings)
     results["feature_availability"] = fb.availability
     panel = fb.panel
@@ -584,7 +689,7 @@ def _run_experiment(
         ],
     }
     families = list(cfg.families)
-    for fam, cols in (("C", MACRO_FEATURES), ("D", AGRI_FEATURES)):
+    for fam, cols in (("C", MACRO_FEATURES), ("D", AGRI_FEATURES), ("P", PRODUCTION_FEATURES)):
         if fam in families and panel[list(cols)].isna().all().all():
             families = [f for f in families if f != fam and not (fam == "C" and f == "D")]
             warnings.append(f"feature family {fam} skipped: none of its features are available for the selected series")
@@ -607,6 +712,7 @@ def _run_experiment(
                 min_train_months=cfg.min_train_months,
                 refit_every=cfg.refit_every,
                 seed=cfg.seed,
+                price_release_lag=cfg.price_release_lag_months,
             )
             try:
                 bt = run_backtest(panel, task_specs, bcfg)
@@ -636,7 +742,15 @@ def _run_experiment(
                 bt = run_backtest(
                     panel,
                     sens_specs,
-                    BacktestConfig(h, target, "classification", cfg.min_train_months, cfg.refit_every, seed=cfg.seed),
+                    BacktestConfig(
+                        h,
+                        target,
+                        "classification",
+                        cfg.min_train_months,
+                        cfg.refit_every,
+                        seed=cfg.seed,
+                        price_release_lag=cfg.price_release_lag_months,
+                    ),
                 )
             except InsufficientDataError as exc:
                 results["sensitivity"].append(
@@ -669,16 +783,44 @@ def _run_experiment(
                 }
             )
     comparisons = [c for t in results["tasks"] for c in t.get("comparisons", [])]
+    family = [c for c in comparisons if c["role"] in PRIMARY_ROLES]
+    adjusted = holm_adjust([c["dm"]["p_value_b_better"] for c in family])
+    for c, p_adj in zip(family, adjusted, strict=True):
+        c["dm"]["p_value_b_better_holm"] = p_adj
+    results["multiplicity"] = {
+        "method": "Holm step-down",
+        "family": "all pre-specified comparisons in this experiment (roles: " + ", ".join(PRIMARY_ROLES) + ")",
+        "n_tests": sum(p is not None for p in adjusted),
+        "min_adjusted_p": min((p for p in adjusted if p is not None), default=None),
+        "note": "Verdicts use unadjusted one-sided p-values; a result is only called confirmed if it also "
+        "survives the Holm adjustment across the experiment's pre-specified family.",
+    }
     results["conclusion"] = overall_conclusion(comparisons)
+    if "P" in families:
+        results["production_conclusion"] = overall_conclusion(
+            comparisons, "primary_production", "Production-region crop-season weather features"
+        )
+        results["production_vs_local_conclusion"] = overall_conclusion(
+            comparisons, "production_vs_local", "Production-region features (relative to market-local weather)"
+        )
+    results["evidence_class"] = cfg.evidence_class
     results["forecasts"] = _forward_forecasts(fb, reg_store, clf_store, cfg, experiment_id)
     results["status"] = "completed"
     results["limitations"] = [
         CAUSAL_DISCLAIMER,
-        "Weather is measured at the market's POWER grid cell (~50 km), not where the commodity was produced.",
+        "Market-local weather is measured at the market's POWER grid cell (~50 km), "
+        "not where the commodity was produced.",
         results["manifest"]["retrospective_note"],
-        TIMING_DISCLOSURE,
+        timing_disclosure(cfg.price_release_lag_months, cfg.weather_release_lag_months),
         "Pooled models assume comparable dynamics across the selected series.",
     ]
+    if "P" in families:
+        results["limitations"].append(PRODUCTION_PROXY_NOTE)
+    if cfg.evidence_class == "exploratory":
+        results["limitations"].append(
+            "Exploratory evidence: this evaluation period was examined while the method was being developed, "
+            "so its results cannot confirm a hypothesis."
+        )
     if synthetic:
         results["limitations"].insert(
             0, "SYNTHETIC DEMO DATA: results describe the demo data-generating process, not any real market."

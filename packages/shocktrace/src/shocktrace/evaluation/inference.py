@@ -8,7 +8,9 @@ autocorrelated, and different markets share common shocks in the same month. We 
 2. test E[d_t] = 0 with the Diebold–Mariano statistic using a Newey–West (Bartlett) HAC
    variance with at least h-1 lags, plus the Harvey–Leybourne–Newbold small-sample
    correction and Student-t reference distribution;
-3. form confidence intervals with a moving-block bootstrap over origin months.
+3. form confidence intervals with a moving-block bootstrap over origin months, on the same
+   equally weighted monthly-mean estimand the test uses;
+4. adjust families of pre-specified tests with Holm's step-down procedure.
 """
 
 from __future__ import annotations
@@ -83,15 +85,26 @@ def moving_block_bootstrap_ratio(
     reps: int = 1000,
     seed: int = 42,
     alpha: float = 0.05,
-) -> dict[str, float | int | None]:
-    """CI for the ratio sum(loss_b)/sum(loss_a) resampling blocks of origin months."""
+    weighting: str = "months",
+) -> dict[str, float | int | str | None]:
+    """Percentile CI for a loss ratio B/A, resampling moving blocks of origin months.
+
+    ``weighting="months"`` (default): ratio of the *equally weighted monthly mean* losses,
+    mean_t(mean_i loss_b) / mean_t(mean_i loss_a). This is the estimand whose difference the
+    Diebold-Mariano test examines, so interval and test refer to the same quantity.
+
+    ``weighting="rows"``: ratio of row-summed losses, sum(loss_b) / sum(loss_a), which gives
+    months with more reporting markets more weight (the v0.1 definition; kept for comparison).
+    """
+    if weighting not in ("months", "rows"):
+        raise ValueError("weighting must be 'months' or 'rows'")
     df = pd.DataFrame({"a": np.asarray(loss_a), "b": np.asarray(loss_b), "date": np.asarray(dates)})
-    g = df.groupby("date")[["a", "b"]].agg(["sum", "count"]).sort_index()
-    sa = g[("a", "sum")].to_numpy()
-    sb = g[("b", "sum")].to_numpy()
+    g = df.groupby("date")[["a", "b"]].agg("mean" if weighting == "months" else "sum").sort_index()
+    sa = g["a"].to_numpy()
+    sb = g["b"].to_numpy()
     T = len(sa)
     if T < 12 or sa.sum() == 0:
-        return {"ratio": None, "ci_low": None, "ci_high": None, "block_length": None, "reps": 0}
+        return {"ratio": None, "ci_low": None, "ci_high": None, "block_length": None, "reps": 0, "weighting": weighting}
     L = max(h, round(T ** (1 / 3)))
     rng = np.random.default_rng(seed)
     nblocks = math.ceil(T / L)
@@ -102,12 +115,31 @@ def moving_block_bootstrap_ratio(
         denom = sa[idx].sum()
         ratios[r] = sb[idx].sum() / denom if denom > 0 else np.nan
     ratios = ratios[np.isfinite(ratios)]
+    point = float(sb.sum() / sa.sum())
     if len(ratios) < reps // 2:
-        return {"ratio": float(sb.sum() / sa.sum()), "ci_low": None, "ci_high": None, "block_length": L, "reps": 0}
+        return {"ratio": point, "ci_low": None, "ci_high": None, "block_length": L, "reps": 0, "weighting": weighting}
     return {
-        "ratio": float(sb.sum() / sa.sum()),
+        "ratio": point,
         "ci_low": float(np.quantile(ratios, alpha / 2)),
         "ci_high": float(np.quantile(ratios, 1 - alpha / 2)),
         "block_length": L,
         "reps": len(ratios),
+        "weighting": weighting,
     }
+
+
+def holm_adjust(p_values: list[float | None]) -> list[float | None]:
+    """Holm (1979) step-down adjusted p-values controlling the family-wise error rate.
+
+    Sort p_(1) <= ... <= p_(m); adjusted p_(i) = max_{j<=i} min(1, (m - j + 1) * p_(j)).
+    ``None`` entries (tests that could not be computed) are excluded from the family and
+    returned as ``None``.
+    """
+    idx = [i for i, p in enumerate(p_values) if p is not None and np.isfinite(p)]
+    out: list[float | None] = [None] * len(p_values)
+    m = len(idx)
+    running = 0.0
+    for rank, i in enumerate(sorted(idx, key=lambda k: p_values[k])):  # type: ignore[arg-type, return-value]
+        running = max(running, min(1.0, (m - rank) * float(p_values[i])))  # type: ignore[arg-type]
+        out[i] = running
+    return out

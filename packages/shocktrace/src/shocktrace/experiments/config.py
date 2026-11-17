@@ -20,6 +20,15 @@ class ExperimentConfig(BaseModel):
     spike_threshold: float = Field(0.10, gt=0, lt=2)
     sensitivity_thresholds: list[float] = [0.05, 0.10, 0.15, 0.20]
 
+    # Information-availability scenario (months). See shocktrace.forecasting.targets.
+    price_release_lag_months: int = Field(0, ge=0, le=2)
+    weather_release_lag_months: int = Field(0, ge=0, le=3)
+    # "exploratory": the evaluation period influenced model development; "confirmatory": the
+    # design was frozen (docs/research/RESEARCH_PROTOCOL.md) before this evaluation sample was used.
+    evidence_class: str = "exploratory"
+    # Optional label tying the run to a frozen protocol / study (free text, recorded in the manifest).
+    study: str | None = Field(None, max_length=80)
+
     families: list[str] = ["A", "B", "C", "D"]
     include_trees: bool = True
     primary_regression_model: str = "ridge_B"
@@ -49,9 +58,16 @@ class ExperimentConfig(BaseModel):
     @field_validator("families")
     @classmethod
     def _fam(cls, v: list[str]) -> list[str]:
-        if not set(v) <= {"A", "B", "C", "D"} or "A" not in v:
-            raise ValueError("families must be a subset of A-D and include the baseline family A")
+        if not set(v) <= {"A", "B", "C", "D", "P"} or "A" not in v:
+            raise ValueError("families must be a subset of A-D and P, and include the baseline family A")
         return sorted(set(v))
+
+    @field_validator("evidence_class")
+    @classmethod
+    def _evidence(cls, v: str) -> str:
+        if v not in ("exploratory", "confirmatory"):
+            raise ValueError("evidence_class must be 'exploratory' or 'confirmatory'")
+        return v
 
     @field_validator("climatology_mode")
     @classmethod
@@ -64,7 +80,26 @@ class ExperimentConfig(BaseModel):
     def _primary(self) -> ExperimentConfig:
         if self.spike_threshold not in self.sensitivity_thresholds:
             self.sensitivity_thresholds = sorted({*self.sensitivity_thresholds, self.spike_threshold})
+        if max(self.horizons) + self.price_release_lag_months > 12:
+            raise ValueError("horizon plus price release lag may not exceed 12 months")
         return self
 
     def config_hash(self) -> str:
-        return hashlib.sha256(json.dumps(self.model_dump(), sort_keys=True).encode()).hexdigest()[:12]
+        """Stable hash of the configuration.
+
+        Fields added after v0.1.0 are left out while they hold their default, so configurations
+        written by earlier versions keep the hash recorded in their manifests.
+        """
+        d = self.model_dump()
+        for k, default in _LATER_FIELD_DEFAULTS.items():
+            if d.get(k) == default:
+                d.pop(k, None)
+        return hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()[:12]
+
+
+_LATER_FIELD_DEFAULTS: dict[str, object] = {
+    "price_release_lag_months": 0,
+    "weather_release_lag_months": 0,
+    "evidence_class": "exploratory",
+    "study": None,
+}

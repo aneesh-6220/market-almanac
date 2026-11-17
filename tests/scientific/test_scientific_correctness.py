@@ -301,4 +301,11 @@ def test_results_disclose_lag_assumption_timing(demo_data):
     )
     out = run_experiment(demo_data, cfg, mode="demo")
     assert TIMING_DISCLOSURE in out.results["limitations"]
-    assert out.results["manifest"]["method_revision"].startswith("audit-")
+    man = out.results["manifest"]
+    assert "precip-qc-1" in man["method_revision"] and man["feature_transform_version"]
+    assert man["timing"] == {
+        "price_release_lag_months": 0,
+        "weather_release_lag_months": 0,
+        "statement": man["timing"]["statement"],
+        "verified_point_in_time": False,
+    }

@@ -32,7 +32,7 @@ class ModelSpec:
     name: str
     task: str  # regression | classification
     kind: str  # baseline | linear | tree
-    family: str | None  # A|B|C|D for learned models
+    family: str | None  # A|B|C|D|P for learned models
     estimator: str  # naive | seasonal_naive | climatology | ridge | enet | logit | gbr | gbc
     description: str
     grid: list[dict[str, Any]] = field(default_factory=list)
@@ -68,6 +68,8 @@ def default_specs(families: tuple[str, ...], include_trees: bool = True) -> list
     alphas = [{"alpha": a} for a in (0.1, 1.0, 10.0, 100.0, 1000.0)]
     cs = [{"C": c} for c in (0.01, 0.1, 1.0, 10.0)]
     for fam in families:
+        if fam == "P":
+            continue  # production-region family is added below, next to its A/B comparators
         specs.append(
             ModelSpec(
                 f"ridge_{fam}", "regression", "linear", fam, "ridge", f"Ridge regression, feature family {fam}", alphas
@@ -81,6 +83,29 @@ def default_specs(families: tuple[str, ...], include_trees: bool = True) -> list
                 fam,
                 "logit",
                 f"L2 logistic regression, feature family {fam}",
+                cs,
+            )
+        )
+    if "P" in families:
+        specs.append(
+            ModelSpec(
+                "ridge_P",
+                "regression",
+                "linear",
+                "P",
+                "ridge",
+                "Ridge regression, price history + production-region crop-season weather",
+                alphas,
+            )
+        )
+        specs.append(
+            ModelSpec(
+                "logit_P",
+                "classification",
+                "linear",
+                "P",
+                "logit",
+                "L2 logistic regression, price history + production-region crop-season weather",
                 cs,
             )
         )
@@ -179,10 +204,12 @@ def best_f1_threshold(y: np.ndarray, p: np.ndarray) -> float:
 class FittedModel:
     """A model fit on one training window."""
 
-    def __init__(self, spec: ModelSpec, h: int, seed: int = 42) -> None:
+    def __init__(self, spec: ModelSpec, h: int, seed: int = 42, availability_lag: int = 0) -> None:
         self.spec = spec
         self.h = h
         self.seed = seed
+        # months after the target month before the realised price is assumed published
+        self.availability_lag = availability_lag
         self.features: list[str] = []
         self.dropped_features: list[str] = []
         self.params: dict[str, Any] = {}
@@ -224,7 +251,8 @@ class FittedModel:
         grid = self.spec.grid or [{}]
         origins = train["origin"]
         val_start = origins.max() - pd.DateOffset(months=INNER_VALIDATION_MONTHS - 1)
-        inner_tr = (origins + pd.DateOffset(months=self.h)) <= val_start  # purge: targets realised
+        # purge: inner-training targets must be realised AND published before validation starts
+        inner_tr = (origins + pd.DateOffset(months=self.h + self.availability_lag)) <= val_start
         inner_va = origins >= val_start
         empty = np.array([])
         if inner_tr.sum() < 30 or inner_va.sum() < 10 or len(grid) == 1:
