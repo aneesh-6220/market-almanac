@@ -14,12 +14,15 @@ export function trackPageErrors(page: Page): string[] {
   return errors;
 }
 
-/** Select the first option of a <select> whose visible text matches ``pattern``. */
+/** Select the first option of a <select> whose visible text matches ``pattern`` (waits for options to load). */
 export async function selectByText(page: Page, selector: string, pattern: RegExp) {
-  const value = await page.locator(`${selector} option`).evaluateAll(
-    (opts, src) => (opts as HTMLOptionElement[]).find((o) => new RegExp(src).test(o.textContent ?? ""))?.value ?? null,
-    pattern.source,
-  );
-  expect(value, `no option matching ${pattern} in ${selector}`).not.toBeNull();
-  await page.locator(selector).selectOption(value!);
+  const find = () =>
+    page
+      .locator(`${selector} option`)
+      .evaluateAll(
+        (opts, src) => (opts as HTMLOptionElement[]).find((o) => new RegExp(src).test(o.textContent ?? ""))?.value ?? null,
+        pattern.source,
+      );
+  await expect.poll(find, { message: `no option matching ${pattern} in ${selector}` }).not.toBeNull();
+  await page.locator(selector).selectOption((await find())!);
 }
