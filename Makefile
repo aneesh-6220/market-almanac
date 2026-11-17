@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 WEB := apps/web
 
-.PHONY: help setup demo api web dev test test-live test-web e2e lint format typecheck build docker-up docker-down doctor clean
+.PHONY: help setup demo api web dev test test-live test-web e2e e2e-live bundle lint format typecheck build docker-up docker-down doctor clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -36,8 +36,14 @@ test-live: ## Opt-in tests against the real provider APIs (needs network and cre
 test-web: ## Web component tests (Vitest)
 	npm --prefix $(WEB) test
 
-e2e: ## End-to-end tests (Playwright; seeds nothing, run `make demo` first)
+e2e: ## End-to-end tests on the synthetic demo (Playwright; run `make demo` first)
 	npm --prefix $(WEB) run test:e2e
+
+e2e-live: ## End-to-end tests on real data (install the public data bundle first, see README)
+	E2E_MODE=live npm --prefix $(WEB) run test:e2e
+
+bundle: ## Package live lake snapshots, catalog and experiment results into dist/ (verified archive)
+	SHOCKTRACE_MODE=live uv run shocktrace bundle-export --out dist
 
 lint: ## Ruff, mypy, ESLint and TypeScript
 	uv run ruff check .
