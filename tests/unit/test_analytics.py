@@ -290,3 +290,12 @@ def test_brief_states_what_is_missing_instead_of_guessing():
     assert "No forecast is shown for this series: only 9 test periods." in withheld["text"]
     empty = build_brief(META, series_summary(pd.Series(dtype=float)), {"status": "insufficient_history"})
     assert "no valid price observations" in empty["text"]
+
+
+def test_brief_describes_an_unchanged_price_without_percentile_wording():
+    p = _series(80, 3)
+    p.iloc[-1] = p.iloc[-2]
+    mov = assess_movement(p)
+    assert mov["direction"] == "flat"
+    text = build_brief(META, series_summary(p, p.index[-1]), mov)["text"]
+    assert "The price did not change" in text and "larger than 0%" not in text

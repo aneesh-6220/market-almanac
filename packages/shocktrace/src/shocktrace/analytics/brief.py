@@ -101,7 +101,13 @@ def build_brief(
     # is it unusual
     label = movement.get("label", "insufficient_history")
     ov = movement.get("overall") or {}
-    if label in LABEL_TEXT and ov.get("percentile_of_size") is not None:
+    if label in LABEL_TEXT and movement.get("direction") == "flat":
+        say(
+            "unusualness",
+            f"The price did not change, which is {LABEL_TEXT[label]} "
+            f"({ov.get('n_reference', 0)} earlier comparable changes).",
+        )
+    elif label in LABEL_TEXT and ov.get("percentile_of_size") is not None:
         say(
             "unusualness",
             f"The latest movement is {LABEL_TEXT[label]}: it is larger than "
