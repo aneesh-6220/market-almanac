@@ -94,7 +94,7 @@ def seasonal_profile(price: pd.Series) -> dict[str, Any]:
         }
     full["index"] = full["p"] / full.groupby("year")["p"].transform("mean")
     g = full.groupby("month")["index"]
-    months = [
+    months: list[dict[str, Any]] = [
         {
             "month": int(m),
             "name": MONTH_NAMES[int(m) - 1],
@@ -105,8 +105,9 @@ def seasonal_profile(price: pd.Series) -> dict[str, Any]:
         }
         for m, v in g
     ]
-    med = {x["month"]: x["median_index"] for x in months}
-    hi, lo = max(med, key=med.get), min(med, key=med.get)  # type: ignore[arg-type]
+    med: dict[int, float] = {int(m): float(v.median()) for m, v in g}
+    hi = max(med, key=lambda k: med[k])
+    lo = min(med, key=lambda k: med[k])
     t = p.index[-1]
     same = p[(p.index.month == t.month) & (p.index < t)]
     return {
