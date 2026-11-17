@@ -10,7 +10,7 @@ from __future__ import annotations
 import csv
 import io
 import json
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import numpy as np
 import pandas as pd
@@ -269,6 +269,14 @@ def catalog_coverage(db: Session = Depends(db_dep), settings: Settings = Depends
     """
     cat, meta, sid = cache.catalog()
     mode = settings.shocktrace_mode.value
+    # derived from the snapshot and registered experiments, which change only on ingest or sync-db
+    return cast(
+        dict[str, Any],
+        cache.memo(("coverage", mode, sid), 300, lambda: _coverage(db, settings, cat, meta, sid, mode)),
+    )
+
+
+def _coverage(db: Session, settings: Settings, cat: pd.DataFrame, meta: Any, sid: str | None, mode: str) -> Any:
     names = {c.iso3: c.name for c in db.scalars(select(m.Country).where(m.Country.mode == mode))}
     evaluated = set(
         db.scalars(

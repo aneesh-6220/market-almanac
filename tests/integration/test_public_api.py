@@ -176,3 +176,25 @@ def test_openapi_documents_the_public_endpoints(client):
         assert path in spec["paths"] and list(spec["paths"][path]) == ["get"]
         assert spec["paths"][path]["get"].get("description") or spec["paths"][path]["get"].get("summary")
     assert all(set(v) <= {"get"} for v in spec["paths"].values())  # the public API is read-only
+
+
+def test_peer_panel_matches_per_series_definition(client, series):  # type: ignore[no-untyped-def]
+    """The vectorised, cached peer panel equals one column per comparable series built one by one."""
+    import pandas as pd
+
+    from shocktrace_api.deps import cache
+
+    cat, _, _ = cache.catalog()
+    sid = series[0]["series_id"]
+    m = cat.loc[sid]
+    same = cat[
+        (cat["country_iso3"] == m["country_iso3"])
+        & (cat["commodity_code"] == m["commodity_code"])
+        & (cat["unit"] == m["unit"])
+        & (cat["price_type"] == m["price_type"])
+        & (cat["currency"] == m["currency"])
+    ]
+    expected = pd.DataFrame({s: cache.series_monthly(s) for s in same.index}).sort_index()
+    panel = cache.peer_panel(cat, sid)
+    pd.testing.assert_frame_equal(expected, panel, check_names=False, check_freq=False)
+    assert cache.peer_panel(cat, sid) is panel  # cached per comparable group

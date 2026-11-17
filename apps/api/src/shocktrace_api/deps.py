@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 import threading
-from collections.abc import Iterator
+import time
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, sessionmaker
@@ -43,6 +45,8 @@ class DataCache:
         self._quality: dict[str, tuple[str, dict[str, Any]]] = {}
         self._catalog: dict[str, Any] = {}
         self._prod: dict[Any, Any] = {}
+        self._peers: dict[tuple[Any, ...], pd.DataFrame] = {}
+        self._memo: dict[tuple[Any, ...], tuple[float, Any]] = {}
 
     def store(self) -> DatasetStore:
         s = get_settings()
@@ -106,20 +110,62 @@ class DataCache:
             self._catalog["index"] = (sid, idx)
         return prices, idx
 
+    def memo(self, key: tuple[Any, ...], ttl_seconds: float, compute: Callable[[], Any]) -> Any:
+        """Cache a derived response for ``ttl_seconds`` (keys should include the snapshot id)."""
+        now = time.monotonic()
+        with self._lock:
+            hit = self._memo.get(key)
+            if hit and now - hit[0] < ttl_seconds:
+                return hit[1]
+        value = compute()
+        with self._lock:
+            if len(self._memo) >= 256:
+                self._memo.pop(next(iter(self._memo)))
+            self._memo[key] = (now, value)
+        return value
+
     def series_rows(self, series_id: str) -> pd.DataFrame:
         """All raw price records of one series (empty frame if unknown)."""
         prices, idx = self._series_index()
         pos = idx.get(series_id)
         return prices.iloc[0:0] if pos is None else prices.iloc[pos]
 
+    def _clean_rows(self) -> tuple[pd.DataFrame, dict[str, Any]]:
+        """Valid price records only (series, period, price), positionally aligned with the series index.
+
+        Invalid and conflicting records are dropped once per snapshot; slicing this narrow frame is
+        much cheaper than slicing the full observation table for every request.
+        """
+        prices, idx = self._series_index()
+        _, sid = self.frame("prices")
+        with self._lock:
+            hit = self._catalog.get("clean")
+            if hit and hit[0] == sid:
+                return hit[1], idx
+        flags = prices["quality_flags"].fillna("")
+        ok = ~(flags.str.contains("invalid_price") | flags.str.contains("duplicate_conflict")) & (prices["price"] > 0)
+        narrow = pd.DataFrame(
+            {
+                "series_id": prices["series_id"].to_numpy(),
+                "period": prices["period"].to_numpy(),
+                "price": prices["price"].astype("float64").where(ok).to_numpy(),
+            }
+        )
+        with self._lock:
+            self._catalog["clean"] = (sid, narrow)
+            self._peers.clear()
+        return narrow, idx
+
     def series_monthly(self, series_id: str) -> pd.Series:
         """Cleaned monthly prices of one series: invalid and conflicting records removed, one value per month."""
-        rows = self.series_rows(series_id)
+        narrow, idx = self._clean_rows()
+        pos = idx.get(series_id)
+        if pos is None:
+            return pd.Series(dtype="float64")
+        rows = narrow.iloc[pos].dropna(subset=["price"])
         if rows.empty:
             return pd.Series(dtype="float64")
-        flags = rows["quality_flags"].fillna("")
-        ok = ~(flags.str.contains("invalid_price") | flags.str.contains("duplicate_conflict")) & (rows["price"] > 0)
-        return rows.loc[ok].groupby("period")["price"].first().sort_index().astype("float64")
+        return rows.groupby("period")["price"].first().sort_index().astype("float64")
 
     def peer_panel(self, cat: pd.DataFrame, series_id: str) -> pd.DataFrame:
         """Monthly prices of every series sharing country, commodity, unit, price type and currency."""
@@ -133,7 +179,23 @@ class DataCache:
             & (cat["price_type"] == m["price_type"])
             & (cat["currency"] == m["currency"])
         ]
-        return pd.DataFrame({sid: self.series_monthly(sid) for sid in same.index[:400]})
+        key = (m["country_iso3"], m["commodity_code"], m["unit"], m["price_type"], m["currency"])
+        with self._lock:
+            hit = self._peers.get(key)
+        if hit is not None:
+            return hit
+        narrow, idx = self._clean_rows()
+        ids = [s for s in same.index[:400] if s in idx]
+        if not ids:
+            return pd.DataFrame()
+        rows = narrow.iloc[np.concatenate([idx[s] for s in ids])].dropna(subset=["price"])
+        panel = rows.groupby(["period", "series_id"])["price"].first().unstack("series_id").sort_index()
+        panel = panel.reindex(columns=ids).astype("float64")
+        with self._lock:
+            if len(self._peers) >= 512:
+                self._peers.pop(next(iter(self._peers)))
+            self._peers[key] = panel
+        return panel
 
     def production_features(self, country: str, commodity_code: str, commodity_name: str) -> tuple[pd.DataFrame, Any]:
         from shocktrace.features.production_weather import build_production_features
