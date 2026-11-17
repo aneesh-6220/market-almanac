@@ -1,0 +1,61 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api-demo",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "uvicorn",
+        "shocktrace_api.main:app",
+        "--port",
+        "8000"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "api-live",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "SHOCKTRACE_MODE=live",
+        "uv",
+        "run",
+        "uvicorn",
+        "shocktrace_api.main:app",
+        "--port",
+        "8000"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "api-live-local",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "SHOCKTRACE_MODE=live",
+        "DATABASE_URL=sqlite:///./data/live_local.db",
+        "API_RATE_LIMIT_PER_MINUTE=6000",
+        "uv",
+        "run",
+        "uvicorn",
+        "shocktrace_api.main:app",
+        "--port",
+        "8000"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "apps/web",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3000"
+      ],
+      "port": 3000
+    }
+  ]
+}

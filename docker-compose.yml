@@ -1,0 +1,58 @@
+# Local stack: PostgreSQL, API and web. Demo mode by default (synthetic data, no credentials).
+#   docker compose up --build
+# Live mode: set SHOCKTRACE_MODE=live and provider credentials in .env, then run ingestion with
+#   docker compose exec api shocktrace ingest --source prices --country BFA
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: shocktrace
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shocktrace}
+      POSTGRES_DB: shocktrace
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shocktrace -d shocktrace"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/api.Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      SHOCKTRACE_MODE: ${SHOCKTRACE_MODE:-demo}
+      DATABASE_URL: postgresql://shocktrace:${POSTGRES_PASSWORD:-shocktrace}@postgres:5432/shocktrace
+      DATA_DIR: /app/data
+      CACHE_DIR: /app/data/cache
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    volumes:
+      - shocktrace-data:/app/data
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/web.Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  shocktrace-data:

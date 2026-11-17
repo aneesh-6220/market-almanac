@@ -1,0 +1,245 @@
+iso3,fao_area_code,m49_code,name
+AFG,2,004,Afghanistan
+ALB,3,008,Albania
+DZA,4,012,Algeria
+AGO,7,024,Angola
+ATG,8,028,Antigua and Barbuda
+ARG,9,032,Argentina
+ARM,1,051,Armenia
+AUS,10,036,Australia
+AUT,11,040,Austria
+AZE,52,031,Azerbaijan
+BHS,12,044,Bahamas
+BHR,13,048,Bahrain
+BGD,16,050,Bangladesh
+BRB,14,052,Barbados
+BLR,57,112,Belarus
+BEL,255,056,Belgium
+F15,15,058,Belgium-Luxembourg
+BLZ,23,084,Belize
+BEN,53,204,Benin
+BTN,18,064,Bhutan
+BOL,19,068,Bolivia (Plurinational State of)
+BIH,80,070,Bosnia and Herzegovina
+BWA,20,072,Botswana
+BRA,21,076,Brazil
+BRN,26,096,Brunei Darussalam
+BGR,27,100,Bulgaria
+BFA,233,854,Burkina Faso
+BDI,29,108,Burundi
+CPV,35,132,Cabo Verde
+KHM,115,116,Cambodia
+CMR,32,120,Cameroon
+CAN,33,124,Canada
+CAF,37,140,Central African Republic
+TCD,39,148,Chad
+CHL,40,152,Chile
+F351,351,159,China
+HKG,96,344,"China, Hong Kong SAR"
+MAC,128,446,"China, Macao SAR"
+CHN,41,156,"China, mainland"
+TWN,214,158,"China, Taiwan Province of"
+COL,44,170,Colombia
+COM,45,174,Comoros
+COG,46,178,Congo
+COK,47,184,Cook Islands
+CRI,48,188,Costa Rica
+CIV,107,384,Côte d'Ivoire
+HRV,98,191,Croatia
+CUB,49,192,Cuba
+CYP,50,196,Cyprus
+CZE,167,203,Czechia
+F51,51,200,Czechoslovakia
+PRK,116,408,Democratic People's Republic of Korea
+COD,250,180,Democratic Republic of the Congo
+DNK,54,208,Denmark
+DJI,72,262,Djibouti
+DMA,55,212,Dominica
+DOM,56,214,Dominican Republic
+ECU,58,218,Ecuador
+EGY,59,818,Egypt
+SLV,60,222,El Salvador
+GNQ,61,226,Equatorial Guinea
+ERI,178,232,Eritrea
+EST,63,233,Estonia
+SWZ,209,748,Eswatini
+ETH,238,231,Ethiopia
+F62,62,230,Ethiopia PDR
+FRO,64,234,Faroe Islands
+FJI,66,242,Fiji
+FIN,67,246,Finland
+FRA,68,250,France
+GUF,69,254,French Guiana
+PYF,70,258,French Polynesia
+GAB,74,266,Gabon
+GMB,75,270,Gambia
+GEO,73,268,Georgia
+DEU,79,276,Germany
+GHA,81,288,Ghana
+GRC,84,300,Greece
+GRD,86,308,Grenada
+GLP,87,312,Guadeloupe
+GTM,89,320,Guatemala
+GIN,90,324,Guinea
+GNB,175,624,Guinea-Bissau
+GUY,91,328,Guyana
+HTI,93,332,Haiti
+HND,95,340,Honduras
+HUN,97,348,Hungary
+ISL,99,352,Iceland
+IND,100,356,India
+IDN,101,360,Indonesia
+IRN,102,364,Iran (Islamic Republic of)
+IRQ,103,368,Iraq
+IRL,104,372,Ireland
+ISR,105,376,Israel
+ITA,106,380,Italy
+JAM,109,388,Jamaica
+JPN,110,392,Japan
+JOR,112,400,Jordan
+KAZ,108,398,Kazakhstan
+KEN,114,404,Kenya
+KIR,83,296,Kiribati
+KWT,118,414,Kuwait
+KGZ,113,417,Kyrgyzstan
+LAO,120,418,Lao People's Democratic Republic
+LVA,119,428,Latvia
+LBN,121,422,Lebanon
+LSO,122,426,Lesotho
+LBR,123,430,Liberia
+LBY,124,434,Libya
+LTU,126,440,Lithuania
+LUX,256,442,Luxembourg
+MDG,129,450,Madagascar
+MWI,130,454,Malawi
+MYS,131,458,Malaysia
+MDV,132,462,Maldives
+MLI,133,466,Mali
+MLT,134,470,Malta
+MHL,127,584,Marshall Islands
+MTQ,135,474,Martinique
+MRT,136,478,Mauritania
+MUS,137,480,Mauritius
+MEX,138,484,Mexico
+FSM,145,583,Micronesia (Federated States of)
+MNG,141,496,Mongolia
+MNE,273,499,Montenegro
+MAR,143,504,Morocco
+MOZ,144,508,Mozambique
+MMR,28,104,Myanmar
+NAM,147,516,Namibia
+NRU,148,520,Naoero
+NPL,149,524,Nepal
+NLD,150,528,Netherlands (Kingdom of the)
+NCL,153,540,New Caledonia
+NZL,156,554,New Zealand
+NIC,157,558,Nicaragua
+NER,158,562,Niger
+NGA,159,566,Nigeria
+NIU,160,570,Niue
+MKD,154,807,North Macedonia
+NOR,162,578,Norway
+OMN,221,512,Oman
+PAK,165,586,Pakistan
+PSE,299,275,Palestine
+PAN,166,591,Panama
+PNG,168,598,Papua New Guinea
+PRY,169,600,Paraguay
+PER,170,604,Peru
+PHL,171,608,Philippines
+POL,173,616,Poland
+PRT,174,620,Portugal
+PRI,177,630,Puerto Rico
+QAT,179,634,Qatar
+KOR,117,410,Republic of Korea
+MDA,146,498,Republic of Moldova
+REU,182,638,Réunion
+ROU,183,642,Romania
+RUS,185,643,Russian Federation
+RWA,184,646,Rwanda
+KNA,188,659,Saint Kitts and Nevis
+LCA,189,662,Saint Lucia
+VCT,191,670,Saint Vincent and the Grenadines
+WSM,244,882,Samoa
+STP,193,678,Sao Tome and Principe
+SAU,194,682,Saudi Arabia
+SEN,195,686,Senegal
+SRB,272,688,Serbia
+SCG,186,891,Serbia and Montenegro
+SYC,196,690,Seychelles
+SLE,197,694,Sierra Leone
+SGP,200,702,Singapore
+SVK,199,703,Slovakia
+SVN,198,705,Slovenia
+SLB,25,090,Solomon Islands
+SOM,201,706,Somalia
+ZAF,202,710,South Africa
+SSD,277,728,South Sudan
+ESP,203,724,Spain
+LKA,38,144,Sri Lanka
+SDN,276,729,Sudan
+F206,206,736,Sudan (former)
+SUR,207,740,Suriname
+SWE,210,752,Sweden
+CHE,211,756,Switzerland
+SYR,212,760,Syrian Arab Republic
+TJK,208,762,Tajikistan
+THA,216,764,Thailand
+TLS,176,626,Timor-Leste
+TGO,217,768,Togo
+TON,219,776,Tonga
+TTO,220,780,Trinidad and Tobago
+TUN,222,788,Tunisia
+TUR,223,792,Türkiye
+TKM,213,795,Turkmenistan
+TUV,227,798,Tuvalu
+UGA,226,800,Uganda
+UKR,230,804,Ukraine
+ARE,225,784,United Arab Emirates
+GBR,229,826,United Kingdom of Great Britain and Northern Ireland
+TZA,215,834,United Republic of Tanzania
+USA,231,840,United States of America
+URY,234,858,Uruguay
+F228,228,810,USSR
+UZB,235,860,Uzbekistan
+VUT,155,548,Vanuatu
+VEN,236,862,Venezuela (Bolivarian Republic of)
+VNM,237,704,Viet Nam
+YEM,249,887,Yemen
+F248,248,890,Yugoslav SFR
+ZMB,251,894,Zambia
+ZWE,181,716,Zimbabwe
+X01,5000,001,World
+X06,5100,002,Africa
+F5101,5101,014,Eastern Africa
+F5102,5102,017,Middle Africa
+F5103,5103,015,Northern Africa
+F5104,5104,018,Southern Africa
+F5105,5105,011,Western Africa
+X21,5200,019,Americas
+F5203,5203,021,Northern America
+F5204,5204,013,Central America
+F5206,5206,029,Caribbean
+F5207,5207,005,South America
+F5300,5300,142,Asia
+F5301,5301,143,Central Asia
+F5302,5302,030,Eastern Asia
+F5303,5303,034,Southern Asia
+F5304,5304,035,South-eastern Asia
+F5305,5305,145,Western Asia
+F5400,5400,150,Europe
+F5401,5401,151,Eastern Europe
+F5402,5402,154,Northern Europe
+F5403,5403,039,Southern Europe
+F5404,5404,155,Western Europe
+F5500,5500,009,Oceania
+F5501,5501,053,Australia and New Zealand
+F5502,5502,054,Melanesia
+F5503,5503,057,Micronesia
+F5504,5504,061,Polynesia
+F5707,5707,097,European Union (27)
+F5801,5801,199,Least Developed Countries (LDCs)
+F5802,5802,432,Land Locked Developing Countries (LLDCs)
+F5803,5803,722,Small Island Developing States (SIDS)
+F5815,5815,901,Low Income Food Deficit Countries (LIFDCs)
+F5817,5817,902,Net Food Importing Developing Countries (NFIDCs)
