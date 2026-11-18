@@ -76,7 +76,7 @@ Carlo, (4) baselines, (5) fresh-clone reproducibility, (6) production and public
 
 | Where | Claim | Status |
 |---|---|---|
-| README | "runs pre-registered, reproducible forecasting studies" | Unsupported for the Atlas until the reproducibility package (§8) is public. Annotated. |
+| README | "runs pre-registered, reproducible forecasting studies" | Unsupported for the Atlas before this audit. Supported since the package was published (§8). Annotated. |
 | RESULTS.md | placebo gain "consistent with noise or with extra regressors acting as regularised noise" | Incomplete. The mechanism is one penalty choice in one Gaza group (C2). Annotated. |
 | RESULTS.md | "Ridge A clearly beats the seasonal no-change forecast" | Overstated (C7). Annotated. |
 | RESULTS.md / README | "An independent script recomputes the headline numbers" | True, but it re-derived only inference from stored predictions, which were not public. This audit adds an independent source-to-prediction trace. |
@@ -309,7 +309,7 @@ The seasonal-naive comparisons drop the forecasts without a same-season value a 
 | Pipeline re-execution, bitwise | cannot run | identical (SYR_52, HTI_339 × primary/permuted, fresh clone) |
 | Re-download from providers | possible with an HDX app identifier, but **not byte-for-byte**: providers revise history; new snapshots get new hashes | n/a |
 
-**Package built, not published.** The reproducibility package
+**Package built and published.** The reproducibility package
 `dist/forecastability-atlas-v1-repro-b60ad9dc1515.tar.gz` (242 MB, SHA-256 `b47161d7b1f1a9515fcfce67c5ef731d9ee0313e123140f32e1b274343119ee3`)
 is deterministic: two builds are byte-identical. It is built by `scripts/audit/build_atlas_package.py`.
 
@@ -317,9 +317,11 @@ is deterministic: two builds are byte-identical. It is built by `scripts/audit/b
 `cc-by-igo`, so redistribution with attribution is permitted. NASA POWER is public with citation.
 The package manifest carries the attribution and modification notices.
 
-**Not yet public.** Publishing it, for example as a GitHub release `atlas-v1-repro`, is an outward
-publication and awaits the maintainer's approval. Until then, the public status of Atlas v1 is
-**"reproducible from the maintainer's archive, not from public artefacts."**
+**Published 2026-11-18** with the maintainer's approval, as the GitHub release
+[`atlas-v1-repro`](https://github.com/aneesh-6220/market-almanac/releases/tag/atlas-v1-repro). Public-path check: in a fresh clone of `56c9985`, the downloaded archive
+had the SHA-256 above. `verify` passed for all 3,011 files, `recompute_atlas.py` matched to
+1.55 × 10⁻¹⁵, and `independent_trace.py` passed. The public status of Atlas v1 is now
+**"reproducible from public artefacts"**, with the exceptions listed below.
 
 **Still not reproducible byte-for-byte even with the package:**
 
@@ -336,7 +338,7 @@ publication and awaits the maintainer's approval. Until then, the public status 
 
 | Rank | Action | Status |
 |---|---|---|
-| A1 (high) | Publish the Atlas v1 reproducibility package. Until then, do not call the Atlas "reproducible" without qualification. | Package built and verified; **publication awaits approval**. README and REPRODUCIBILITY.md annotated. |
+| A1 (high) | Publish the Atlas v1 reproducibility package. Until then, do not call the Atlas "reproducible" without qualification. | Done: published as release [`atlas-v1-repro`](https://github.com/aneesh-6220/market-almanac/releases/tag/atlas-v1-repro) and verified from the public download. |
 | A2 (high) | Correct the interpretation of the placebo and baseline claims: PSE concentration, the α-selection mechanism, the weak seasonal-naive benchmark, and the dirty-tree execution. | Done as dated audit annotations in RESULTS.md and README. Frozen and generated files untouched. |
 | A3 (medium) | Refuse confirmatory `execute` from an uncommitted tree, as `freeze` already does. | Done: `workbench/execute.py` with a regression test in `tests/scientific/test_workbench.py`. Note that the atlas tree became dirty *during* the run (108 clean, then dirty), so a start-of-run check is necessary but not sufficient. v2 should also fail the analysis if any experiment manifest is dirty. |
 | A4 (medium) | v2 design. Pre-specify a robust co-primary estimand (country-standardised or log-ratio losses, or a winsorised loss) and nested-model α sharing (B uses A's α, or one fixed grid). Use HLN with *h* + *L*, read the weather `complete` flag, use a seasonally matched permutation, and report CGM or two-way-bootstrap inference for claims about a population of countries. Run a power analysis from §4. | Recommendation only; v1 is not altered. No correction to v1's published numbers is proposed, because no implementation defect affecting them was found. |
@@ -375,5 +377,5 @@ publication and awaits the maintainer's approval. Until then, the public status 
   does not beat naive on the pre-specified estimand. Any advantage depends on a post-hoc country
   exclusion. Beating seasonal-naive is uninformative.
 * **Reproducibility was the weakest part.** Until this audit, nothing an outside researcher could
-  download reproduced the Atlas. A verified, licence-compliant package now exists and only needs
-  publishing. The dirty-tree execution is now blocked for future confirmatory runs.
+  download reproduced the Atlas. A verified, licence-compliant package is now public, and its
+  public download reproduces the headline results. The dirty-tree execution is now blocked for future confirmatory runs.

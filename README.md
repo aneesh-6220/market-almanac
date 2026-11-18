@@ -60,8 +60,8 @@ statements:
 
 * the 1-month figures and the placebo are dominated by Gaza (PSE) and one penalty choice;
 * beating seasonal-naive is not evidence of skill;
-* the Atlas is reproducible from the maintainers' archive and a verified package, but not yet from
-  public artefacts alone.
+* before the audit, the Atlas could not be reproduced from public artefacts. It now can, from the
+  [reproducibility package](https://github.com/aneesh-6220/market-almanac/releases/tag/atlas-v1-repro) published on 2026-11-18.
 
 ### Sahel production-weather study (Mali and Niger, confirmatory)
 

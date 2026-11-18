@@ -82,7 +82,8 @@ uv run python scripts/audit/build_atlas_package.py verify dist/forecastability-a
 
 Verified in a fresh clone of `d802167`: `recompute_atlas.py` matches to 1.55 × 10⁻¹⁵, the
 independent trace passes, and the pipeline re-execution is bitwise identical. The package is
-**not yet published**. Until it is, the Atlas is reproducible only from the maintainers' archive.
+published as the GitHub release [`atlas-v1-repro`](https://github.com/aneesh-6220/market-almanac/releases/tag/atlas-v1-repro) (2026-11-18). A fresh clone of `56c9985`
+reproduced the headline results from the downloaded archive.
 See [the audit](audits/ATLAS_V1_INDEPENDENT_AUDIT.md), section 8.
 
 ## Checking the study without trusting the pipeline
