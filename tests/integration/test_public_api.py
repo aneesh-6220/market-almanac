@@ -235,3 +235,28 @@ def test_environment_payload_is_the_same_with_the_lean_weather_table(client, ser
     with_full = payloads()
     assert with_lean == with_full
     assert any('"status": "ok"' in v for v in with_lean.values())
+
+
+def test_status_never_reads_the_large_quality_report_column(client):
+    """/status runs on every page load; a live quality report is ~20 MB of JSON and must not be decoded for it."""
+    from sqlalchemy import event
+
+    from market_almanac.config import get_settings
+    from market_almanac.db.session import get_engine
+
+    engine = get_engine(get_settings().database_url)
+    statements: list[str] = []
+
+    def record(conn, cursor, statement, parameters, context, executemany):  # type: ignore[no-untyped-def]
+        statements.append(statement)
+
+    event.listen(engine, "before_cursor_execute", record)
+    try:
+        body = client.get("/api/v1/status").json()
+    finally:
+        event.remove(engine, "before_cursor_execute", record)
+    quality = [s for s in statements if "data_quality_reports" in s]
+    assert quality, "status should still report the latest quality report"
+    assert not any("data_quality_reports.report" in s for s in quality), quality
+    lq = body["latest_quality_report"]
+    assert lq and lq["id"] and lq["created_at"] and isinstance(lq["summary"], dict)

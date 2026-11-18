@@ -20,7 +20,11 @@ All notable changes to this project are documented here. The format follows
   - the first market page opened loaded the whole weather table, with its long metadata strings, into the
     process for good (about 60-90 MB): the environment and production-region features now read a
     column-projected copy (same values, checked identical on real data and by a test).
-  Measured on real data with a real server (12-18 parallel page loads): peak 392 MB to 340 MB.
+  - `/api/v1/status`, which every page load calls, decoded the whole latest data-quality report (a 20.9 MB
+    JSON column on the live deployment) to return its 227-character summary, a 100+ MB transient per call;
+    it now selects only the three columns it returns, pinned by a test that records the SQL.
+  Measured on real data with a real server (12-18 parallel page loads): peak 392 MB to 340 MB before the
+  `/status` fix. The API now logs `memory high` (resident and peak MB, requests in flight) above 380 MB.
   `benchmark_global_prices.py` gained `--concurrency`. The CI memory guard was recalibrated on the Linux
   runner (410 MB measured).
 

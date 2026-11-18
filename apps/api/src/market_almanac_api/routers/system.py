@@ -119,8 +119,10 @@ def status(db: Session = Depends(db_dep), settings: Settings = Depends(settings_
         "countries": db.scalar(select(func.count()).select_from(m.Country).where(m.Country.mode == mode)) or 0,
         "experiments": db.scalar(select(func.count()).select_from(m.Experiment).where(m.Experiment.mode == mode)) or 0,
     }
-    dq = db.scalars(
-        select(m.DataQualityReport)
+    # Only the three columns that are returned: the `report` column of a live deployment is a ~20 MB JSON document,
+    # and decoding it on every page load (this endpoint is called by all of them) pushed a 512 MiB host over its limit.
+    dq = db.execute(
+        select(m.DataQualityReport.id, m.DataQualityReport.created_at, m.DataQualityReport.summary)
         .where(m.DataQualityReport.mode == mode)
         .order_by(desc(m.DataQualityReport.created_at))
         .limit(1)
