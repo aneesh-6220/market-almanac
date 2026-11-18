@@ -203,10 +203,11 @@ def build_registry(
     }
 
 
-def write_registry(reg: dict[str, Any], path: Path) -> Path:
+def write_registry(reg: dict[str, Any], path: Path, compact: bool = False) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(reg, indent=1, default=str))
+    text = json.dumps(reg, separators=(",", ":"), default=str) if compact else json.dumps(reg, indent=1, default=str)
+    tmp.write_text(text)
     os.replace(tmp, path)
     return path
 
@@ -326,3 +327,48 @@ def load_registry(settings: Any) -> dict[str, Any] | None:
     if settings.market_almanac_mode.value == "live" and PACKAGED_REGISTRY.exists():
         return json.loads(PACKAGED_REGISTRY.read_text())
     return None
+
+
+PACKAGED_MARKETS = Path(__file__).with_name("coverage_markets.json")
+
+
+def build_market_index(settings: Any) -> dict[str, Any]:
+    """Every stored market with coordinates: compact rows for the coverage map (metadata only)."""
+    import pandas as pd
+
+    from market_almanac.globaldata.partitions import PartitionStore
+
+    ps = PartitionStore(settings.lake_dir, settings.market_almanac_mode.value)
+    rows: list[list[Any]] = []
+    for c in ps.countries("prices"):
+        m = ps.latest("prices", c)
+        if m is None:
+            continue
+        cols = ["market_code", "market_name", "lat", "lon", "series_id", "period"]
+        df = pd.read_parquet(ps.path("prices", c, m.snapshot_id), columns=cols)
+        g = df.groupby("market_code").agg(
+            name=("market_name", "last"),
+            lat=("lat", "median"),
+            lon=("lon", "median"),
+            series=("series_id", "nunique"),
+            last=("period", "max"),
+        )
+        g = g.dropna(subset=["lat", "lon"])
+        g = g[~((g["lat"] == 0) & (g["lon"] == 0))]
+        for code, r in g.iterrows():
+            rows.append(
+                [
+                    c,
+                    str(code),
+                    str(r["name"]),
+                    round(float(r["lat"]), 4),
+                    round(float(r["lon"]), 4),
+                    int(r["series"]),
+                    pd.Timestamp(r["last"]).strftime("%Y-%m"),
+                ]
+            )
+    return {
+        "columns": ["country_iso3", "market_code", "name", "lat", "lon", "series", "last_period"],
+        "rows": rows,
+        "source": "WFP market metadata via HDX HAPI (stored partitions); coordinates as reported by WFP",
+    }

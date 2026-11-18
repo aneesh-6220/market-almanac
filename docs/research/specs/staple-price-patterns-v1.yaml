@@ -1,0 +1,35 @@
+# Exploratory, descriptive: how staple prices trended, varied and cycled across WFP-reporting countries.
+spec_version: ma-research-spec/1
+id: staple-price-patterns-v1
+title: Staple price patterns across WFP-reporting countries, 2017-2026
+question: >-
+  How did retail cereal and tuber prices trend, how volatile were they month to month, how strong
+  was their seasonal cycle and how closely did markets move together, country by country?
+hypothesis: >-
+  None tested. A descriptive inventory to show where seasonality and volatility are large enough
+  for forecasting questions to matter.
+estimand: >-
+  Per commodity group: median across series of the log-linear trend (% per year), the standard
+  deviation of month-on-month log changes between consecutive observed months, the seasonal
+  amplitude of detrended log prices, and the mean pairwise correlation of monthly log changes.
+study_type: descriptive
+evidence_class: exploratory
+population:
+  countries: [AFG, AGO, ARG, ARM, BDI, BEN, BFA, BGD, BLR, BOL, BTN, CAF, CHN, CIV, CMR, COD, COG, COL, CPV, DJI, DOM, DZA, ECU, EGY, ETH, FJI, GAB, GHA, GIN, GMB, GNB, GTM, HND, HTI, IDN, IND, IRN, IRQ, JOR, JPN, KAZ, KEN, KGZ, KHM, LAO, LBN, LBR, LBY, LKA, LSO, MDA, MDG, MEX, MLI, MMR, MNG, MOZ, MRT, MWI, NAM, NER, NGA, NIC, NPL, PAK, PAN, PER, PHL, PRY, PSE, RUS, RWA, SDN, SEN, SLE, SLV, SOM, SSD, SWZ, SYR, TCD, TGO, THA, TJK, TLS, TUR, TZA, UGA, UKR, VEN, VNM, YEM, ZAF, ZMB, ZWE]
+  price_types: [Retail]
+  commodity_categories: [cereals and tubers]
+  min_observations: 36
+  min_coverage: 0.7
+  max_gap_months: 6
+  require_coordinates: false
+  min_eligible_series_per_group: 3
+  max_groups_per_country: 2
+descriptive:
+  statistics: [trend, seasonality, volatility, dispersion, comovement]
+inference:
+  bootstrap: none
+seed: 20261118
+limitations:
+  - Nominal local-currency prices; trends include general inflation and currency depreciation, so they are not comparable across countries as real price changes.
+  - Seasonal amplitude needs at least 36 observed months per series; shorter series contribute trend and volatility only.
+  - Group medians summarise markets with different reporting intensity; they are not national averages.

@@ -573,9 +573,14 @@ def global_registry(
     reg = build_registry(**collect_inputs(s))
     p = write_registry(reg, registry_path(s))
     typer.echo(f"wrote {p}")
+    from market_almanac.globaldata.registry import PACKAGED_MARKETS, build_market_index
+
+    markets = build_market_index(s)
+    write_registry(markets, p.with_name("coverage_markets.json"), compact=True)
     if package:
         write_registry(reg, PACKAGED_REGISTRY)
-        typer.echo(f"wrote {PACKAGED_REGISTRY}")
+        write_registry(markets, PACKAGED_MARKETS, compact=True)
+        typer.echo(f"wrote {PACKAGED_REGISTRY} and {PACKAGED_MARKETS.name}")
     _echo_json({"counts": reg["counts"], "totals": reg["totals"]})
 
 
@@ -625,6 +630,9 @@ SpecArg = Annotated[Path, typer.Argument(help="research specification (YAML or J
 def _load_spec_or_exit(path: Path):  # type: ignore[no-untyped-def]
     from market_almanac.workbench.spec import SpecError, load_spec
 
+    if not path.is_file():
+        typer.echo(f"no such specification file: {path}", err=True)
+        raise typer.Exit(2)
     try:
         return load_spec(path)
     except SpecError as exc:
@@ -724,3 +732,23 @@ def research_export(
     if not (root / "SHA256SUMS").exists():
         raise typer.BadParameter(f"no packaged study {spec_id}")
     typer.echo(str(export_package(root, out)))
+
+
+@research_app.command("publish")
+def research_publish(
+    spec_path: SpecArg,
+    package: Annotated[
+        bool, typer.Option(help="also write the summary shipped with the code (for deployment)")
+    ] = False,
+    mode: ModeOpt = None,
+) -> None:
+    """Write the public summary of an executed study (derived statistics only; no observations)."""
+    from market_almanac.workbench.execute import studies_dir
+    from market_almanac.workbench.publish import publish
+
+    s = _settings(mode)
+    spec = _load_spec_or_exit(spec_path)
+    root = studies_dir(s) / spec.id
+    if not (root / "results.json").exists():
+        raise typer.BadParameter(f"{spec.id} has not been run")
+    typer.echo(str(publish(root, spec, package)))

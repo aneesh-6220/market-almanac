@@ -107,3 +107,24 @@ def registry_country(
         if r["country_iso3"] == iso3:
             return {**r, "registry_generated_at": doc["generated_at"], "source": source}
     raise HTTPException(404, f"{iso3} is not in the coverage registry")
+
+
+_markets_cache = _RegistryCache()
+
+
+@router.get("/markets")
+def markets(s: Annotated[Settings, Depends(settings_dep)]) -> dict[str, Any]:
+    """Every stored market with coordinates (country, code, name, lat, lon, series, last month)."""
+    from market_almanac.globaldata.registry import PACKAGED_MARKETS
+
+    p = registry_path(s).with_name("coverage_markets.json")
+    if not p.exists():
+        if s.market_almanac_mode.value != "live" or not PACKAGED_MARKETS.exists():
+            raise HTTPException(404, "No market index has been built for this deployment.")
+        p = FsPath(PACKAGED_MARKETS)
+    key = (str(p), p.stat().st_mtime)
+    with _markets_cache._lock:
+        if _markets_cache._key != key:
+            _markets_cache._doc, _markets_cache._key = json.loads(p.read_text()), key
+        assert _markets_cache._doc is not None
+        return _markets_cache._doc

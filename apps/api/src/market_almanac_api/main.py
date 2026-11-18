@@ -22,7 +22,7 @@ from market_almanac import __version__
 from market_almanac.config import Settings, get_settings
 from market_almanac.logging import configure_logging, get_logger, log_event
 from market_almanac_api.deps import DataUnavailableError
-from market_almanac_api.routers import coverage, data, markets, research, system
+from market_almanac_api.routers import coverage, data, markets, research, system, workbench
 
 log = get_logger("api")
 
@@ -190,7 +190,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
-        allow_methods=["GET"],
+        allow_methods=["GET", "POST"],  # POST only for specification validation (no execution)
         allow_headers=["*"],
         expose_headers=["Content-Disposition", "x-request-id"],
     )
@@ -219,6 +219,7 @@ def create_app() -> FastAPI:
     app.include_router(research.router)
     app.include_router(markets.router)
     app.include_router(coverage.router)
+    app.include_router(workbench.router)
     return app
 
 
