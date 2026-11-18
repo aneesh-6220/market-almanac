@@ -478,3 +478,249 @@ def bundle_install(
 
     s = _settings(mode)
     _echo_json(install_bundle(source, s.data_dir, sha256))
+
+
+global_app = typer.Typer(
+    help="Global discovery, partitioned ingestion and the coverage registry.", no_args_is_help=True
+)
+app.add_typer(global_app, name="global")
+
+
+@global_app.command("discover")
+def global_discover(mode: ModeOpt = None) -> None:
+    """Record which countries HDX HAPI reports WFP price coverage for (metadata only)."""
+    from market_almanac.globaldata import global_dir
+    from market_almanac.globaldata.discovery import discover_hdx, save_discovery
+
+    s = _settings(mode)
+    rec = asyncio.run(discover_hdx(s))
+    p = save_discovery(global_dir(s), rec)
+    typer.echo(f"{len(rec['countries'])} countries with WFP price availability; saved {p}")
+
+
+@global_app.command("ingest")
+def global_ingest(
+    countries: Annotated[str | None, typer.Option(help="comma-separated ISO3 codes (default: all discovered)")] = None,
+    resume: Annotated[str | None, typer.Option(help="run id to resume")] = None,
+    exclude: Annotated[str | None, typer.Option(help="comma-separated ISO3 codes to skip")] = None,
+    concurrency: Annotated[int, typer.Option(help="countries fetched at once (max 3)")] = 2,
+    mode: ModeOpt = None,
+) -> None:
+    """Fetch WFP prices into per-country immutable snapshots; resumable and idempotent."""
+    from market_almanac.globaldata import global_dir
+    from market_almanac.globaldata.discovery import latest_discovery
+    from market_almanac.globaldata.ingest import RunLog, execute_run, hdx_price_fetcher, new_run
+    from market_almanac.globaldata.partitions import PartitionStore
+
+    s = _settings(mode)
+    if s.market_almanac_mode != RunMode.LIVE:
+        raise typer.BadParameter("global ingestion requires --mode live")
+    gdir = global_dir(s)
+    runlog = RunLog(gdir)
+    if resume:
+        state = runlog.load(resume)
+    else:
+        if countries:
+            codes = [c.strip().upper() for c in countries.split(",") if c.strip()]
+        else:
+            disc = latest_discovery(gdir)
+            if disc is None:
+                raise typer.BadParameter("no discovery record; run `market-almanac global discover` first")
+            codes = sorted(disc["countries"])
+        skip = {c.strip().upper() for c in (exclude or "").split(",") if c.strip()}
+        state = new_run([c for c in codes if c not in skip], source="hdx_hapi food-prices-market-monitor")
+    typer.echo(f"run {state.run_id}: {len(state.countries)} countries")
+    store = PartitionStore(s.lake_dir, s.market_almanac_mode.value)
+    state = asyncio.run(execute_run(state, store, runlog, hdx_price_fetcher(s), concurrency=concurrency))
+    typer.echo(json.dumps(state.summary()))
+    failed = {k: v.error for k, v in state.countries.items() if v.status == "failed"}
+    if failed:
+        typer.echo("failed: " + json.dumps(failed, indent=1))
+
+
+@global_app.command("status")
+def global_status(run_id: Annotated[str | None, typer.Argument()] = None, mode: ModeOpt = None) -> None:
+    """Show a run's per-country outcomes (latest run when no id is given)."""
+    from market_almanac.globaldata import global_dir
+    from market_almanac.globaldata.ingest import RunLog
+
+    runlog = RunLog(global_dir(_settings(mode)))
+    ids = runlog.list()
+    if not ids:
+        typer.echo("no runs recorded")
+        raise typer.Exit(1)
+    st = runlog.load(run_id or ids[-1])
+    typer.echo(f"{st.run_id}: {json.dumps(st.summary())}")
+    for c in st.countries.values():
+        typer.echo(f"  {c.country_iso3} {c.status:9} rows={c.rows} attempts={c.attempts} {c.error or ''}")
+
+
+@global_app.command("registry")
+def global_registry(
+    package: Annotated[bool, typer.Option(help="also write the copy shipped with the code (for deployment)")] = False,
+    mode: ModeOpt = None,
+) -> None:
+    """Build the coverage registry from discovery, stored partitions, run logs and evaluations."""
+    from market_almanac.globaldata.registry import (
+        PACKAGED_REGISTRY,
+        build_registry,
+        collect_inputs,
+        registry_path,
+        write_registry,
+    )
+
+    s = _settings(mode)
+    reg = build_registry(**collect_inputs(s))
+    p = write_registry(reg, registry_path(s))
+    typer.echo(f"wrote {p}")
+    if package:
+        write_registry(reg, PACKAGED_REGISTRY)
+        typer.echo(f"wrote {PACKAGED_REGISTRY}")
+    _echo_json({"counts": reg["counts"], "totals": reg["totals"]})
+
+
+@global_app.command("weather")
+def global_weather(
+    spec_path: Annotated[Path, typer.Option("--spec", help="research specification whose markets need weather")],
+    concurrency: Annotated[int, typer.Option(help="countries at once (each fetches its cells in parallel)")] = 1,
+    resume: Annotated[str | None, typer.Option(help="run id to resume")] = None,
+    mode: ModeOpt = None,
+) -> None:
+    """Fetch NASA POWER weather for the market cells of a specification's eligible groups (resumable)."""
+    from market_almanac.globaldata import global_dir
+    from market_almanac.globaldata.ingest import RunLog, execute_run, new_run
+    from market_almanac.globaldata.partitions import PartitionStore
+    from market_almanac.globaldata.weather import cells_for_markets, power_fetcher
+    from market_almanac.workbench.data import GROUP_KEYS, eligibility_table, load_prices, select_groups
+    from market_almanac.workbench.spec import load_spec
+
+    s = _settings(mode)
+    spec = load_spec(spec_path)
+    countries = [c for c in spec.population.countries if c not in spec.population.exclude_countries]
+    pop = load_prices(s, countries)
+    elig = eligibility_table(pop.prices, spec)
+    groups = select_groups(elig, spec)
+    ok = elig[elig["eligible"]].merge(groups[GROUP_KEYS], on=GROUP_KEYS)
+    mk = pop.prices[pop.prices["series_id"].isin(ok["series_id"])].drop_duplicates(["country_iso3", "market_code"])
+    wanted = {c: cells_for_markets(g) for c, g in mk.groupby("country_iso3")}
+    typer.echo(f"{sum(len(v) for v in wanted.values())} grid cells in {len(wanted)} countries")
+    runlog = RunLog(global_dir(s))
+    state = (
+        runlog.load(resume)
+        if resume
+        else new_run(sorted(wanted), dataset="weather_monthly", provider="nasa_power", spec=spec.id)
+    )
+    store = PartitionStore(s.lake_dir, s.market_almanac_mode.value)
+    state = asyncio.run(execute_run(state, store, runlog, power_fetcher(s, wanted), concurrency=concurrency, qc=False))
+    typer.echo(f"{state.run_id}: {json.dumps(state.summary())}")
+
+
+research_app = typer.Typer(
+    help="Research workbench: validate, preview, freeze, run, verify, export.", no_args_is_help=True
+)
+app.add_typer(research_app, name="research")
+SpecArg = Annotated[Path, typer.Argument(help="research specification (YAML or JSON)")]
+
+
+def _load_spec_or_exit(path: Path):  # type: ignore[no-untyped-def]
+    from market_almanac.workbench.spec import SpecError, load_spec
+
+    try:
+        return load_spec(path)
+    except SpecError as exc:
+        typer.echo(f"invalid specification {path}:\n{exc}", err=True)
+        raise typer.Exit(2) from exc
+
+
+@research_app.command("validate")
+def research_validate(spec_path: SpecArg) -> None:
+    """Check a specification for errors and scientific contradictions (no data access)."""
+    from market_almanac.workbench.spec import spec_summary
+
+    _echo_json({"valid": True, **spec_summary(_load_spec_or_exit(spec_path))})
+
+
+@research_app.command("preview")
+def research_preview(spec_path: SpecArg, mode: ModeOpt = None) -> None:
+    """Show the population a specification selects (metadata only; nothing is estimated)."""
+    from market_almanac.workbench.data import preview
+
+    pv = preview(_settings(mode), _load_spec_or_exit(spec_path))
+    groups = pv.pop("groups")
+    _echo_json({k: v for k, v in pv.items() if k != "snapshots"})
+    for g in groups[:60]:
+        typer.echo(
+            f"  {g['country_iso3']} {g['commodity_name'][:40]:40} {g['unit']:>8} {g['price_type']:9} "
+            f"{g['eligible_series']:4} eligible"
+        )
+
+
+@research_app.command("freeze")
+def research_freeze(spec_path: SpecArg, mode: ModeOpt = None) -> None:
+    """Freeze a specification: hash, git revision, data snapshots and analysis groups, before any estimation."""
+    import subprocess
+
+    from market_almanac.workbench.execute import freeze
+
+    spec = _load_spec_or_exit(spec_path)
+    if spec.evidence_class == "confirmatory":
+        tracked = subprocess.run(["git", "ls-files", "--error-unmatch", str(spec_path)], capture_output=True)
+        if tracked.returncode != 0:
+            typer.echo("a confirmatory specification must be committed to git before it is frozen", err=True)
+            raise typer.Exit(2)
+    rec = freeze(_settings(mode), spec)
+    typer.echo(
+        f"frozen {rec['spec_id']} hash={rec['spec_hash'][:16]} groups={len(rec['groups'])} "
+        f"commit={rec['code'].get('git_commit')}"
+    )
+
+
+@research_app.command("run")
+def research_run(
+    spec_path: SpecArg,
+    workers: Annotated[int, typer.Option(help="parallel experiment processes")] = 4,
+    mode: ModeOpt = None,
+) -> None:
+    """Execute a specification (confirmatory specifications must be frozen); resumable."""
+    from market_almanac.workbench.execute import FreezeError, execute
+
+    try:
+        res = execute(_settings(mode), _load_spec_or_exit(spec_path), workers=workers)
+    except FreezeError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2) from exc
+    for h in res.get("hypotheses", []):
+        r = h["result"]
+        typer.echo(
+            f"{h['hypothesis']['id']}: ratio={r.get('loss_ratio')} p_adj={h.get('p_adjusted')} "
+            f"-> {h['evidence']['class']}"
+        )
+    typer.echo(json.dumps(res.get("execution", {}), default=str))
+
+
+@research_app.command("verify")
+def research_verify(package_dir: Annotated[Path, typer.Argument()]) -> None:
+    """Recompute every checksum of a research package."""
+    from market_almanac.workbench.package import verify_package
+
+    out = verify_package(package_dir)
+    _echo_json(out)
+    if not out["ok"]:
+        raise typer.Exit(1)
+
+
+@research_app.command("export")
+def research_export(
+    spec_id: Annotated[str, typer.Argument()],
+    out: Annotated[Path, typer.Option(help="output .tar.gz")] = Path("dist/study.tar.gz"),
+    mode: ModeOpt = None,
+) -> None:
+    """Export a study directory (results, predictions, RO-Crate metadata, checksums) as a tarball."""
+    from market_almanac.workbench.execute import studies_dir
+    from market_almanac.workbench.package import export_package
+
+    s = _settings(mode)
+    root = studies_dir(s) / spec_id
+    if not (root / "SHA256SUMS").exists():
+        raise typer.BadParameter(f"no packaged study {spec_id}")
+    typer.echo(str(export_package(root, out)))

@@ -70,6 +70,8 @@ ignore = ["B008", "RUF001", "RUF002", "RUF012", "SIM108"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["B011"]
+# Markdown table templates in the research report are clearer on one line each.
+"packages/market-almanac/src/market_almanac/workbench/package.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"

@@ -139,9 +139,14 @@ class HdxHapiProvider(Provider):
 
     async def _paginate(self, path: str, params: dict[str, Any], use_cache: bool = True) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
+        previous: list[dict[str, Any]] | None = None
         for page in range(MAX_PAGES):
             batch = await self._get(path, {**params, "limit": PAGE_LIMIT, "offset": page * PAGE_LIMIT}, use_cache)
+            if batch and previous is not None and batch == previous:
+                # offset ignored or data shifting under us: refuse rather than double-count
+                raise ProviderSchemaError(f"hdx_hapi: page {page} repeated the previous page; retrieval aborted")
             rows.extend(batch)
+            previous = batch
             if len(batch) < PAGE_LIMIT:
                 return rows
         raise ProviderSchemaError(f"hdx_hapi: exceeded {MAX_PAGES} pages; narrow the query")
@@ -221,8 +226,10 @@ def normalize_food_prices(raw: list[dict[str, Any]], retrieved_at: Any) -> tuple
         from market_almanac.data.schema import empty_frame
 
         return empty_frame(PRICES), 0, ["no records returned"]
-    for r in raw[:5]:
-        require_fields(r, FOOD_PRICE_FIELDS, "hdx_hapi")
+    required = set(FOOD_PRICE_FIELDS)
+    for r in raw:  # schema drift anywhere in the response fails loudly, not just in the first rows
+        if not required <= r.keys():
+            require_fields(r, FOOD_PRICE_FIELDS, "hdx_hapi")
     df = pd.DataFrame(raw)
     out = pd.DataFrame(
         {

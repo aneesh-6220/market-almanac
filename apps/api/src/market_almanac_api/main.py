@@ -22,7 +22,7 @@ from market_almanac import __version__
 from market_almanac.config import Settings, get_settings
 from market_almanac.logging import configure_logging, get_logger, log_event
 from market_almanac_api.deps import DataUnavailableError
-from market_almanac_api.routers import data, markets, research, system
+from market_almanac_api.routers import coverage, data, markets, research, system
 
 log = get_logger("api")
 
@@ -218,6 +218,7 @@ def create_app() -> FastAPI:
     app.include_router(data.router)
     app.include_router(research.router)
     app.include_router(markets.router)
+    app.include_router(coverage.router)
     return app
 
 
