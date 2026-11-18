@@ -2,6 +2,13 @@
 
 Ordered by research value.
 
+## Done in 1.1 (global expansion)
+
+- Global WFP price ingestion for every country HDX HAPI lists, with a coverage registry.
+- Research workbench (versioned specifications, freeze, resumable runs, packages, publication).
+- Multi-country pre-registered study: the Forecastability Atlas v1 (49 countries).
+- Experiment builder in the web app that writes a specification for the CLI (no server-side execution).
+
 ## Next
 
 - **Production-zone weather.** Aggregate rainfall over crop-growing areas (e.g. FAO GAUL admin
@@ -11,8 +18,12 @@ Ordered by research value.
   end of each season.
 - **Real-time vintages.** Use IMF vintage dataflows (e.g. `CPI_<year>_<month>_VINTAGE`) to
   reconstruct what was known at each origin, replacing conservative fixed lags.
-- **Multi-country experiments.** Run the eligible commodity groups in Niger, Mali and Ethiopia
-  and report all results, including nulls, with a pre-registered analysis plan.
+- **Atlas v2 with a second precipitation source.** Integrate CHIRPS v3 (raster pipeline) and
+  compare it with NASA POWER under a new frozen protocol.
+- **Import-parity family.** World Bank Pink Sheet world prices with exchange rates, for import-
+  dependent staples.
+- **Macro coverage for all countries.** Extend IMF CPI/FX and FAOSTAT ingestion to every
+  research-eligible country so families C and D can be tested globally.
 
 ## Methods
 
@@ -23,9 +34,8 @@ Ordered by research value.
 
 ## Platform
 
-- Scheduled ingestion with alerting on provider degradation.
-- Experiment builder in the web app that writes a configuration for the CLI (no server-side
-  execution from the browser).
+- Scheduled ingestion with alerting on provider degradation (the run log already records failures).
+- Cross-source reconciliation (FEWS NET, FAO FPMA) before any multi-source pooling.
 - Downloadable figures and a citable experiment page (DOI-ready metadata).
 - Internationalisation of the interface (French first, for Sahel users).
 

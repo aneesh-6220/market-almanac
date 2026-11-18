@@ -14,8 +14,12 @@ const NAV = [
   { href: "/explorer", label: "Explore" },
   { href: "/compare", label: "Compare" },
   { href: "/forecasts", label: "Forecasts" },
+  { href: "/atlas", label: "Global" },
+  { href: "/forecastability", label: "Forecastability" },
+  { href: "/studies", label: "Studies" },
+  { href: "/workbench", label: "Workbench" },
   { href: "/lab", label: "Research Lab" },
-  { href: "/data", label: "Data coverage" },
+  { href: "/data", label: "Data" },
   { href: "/methodology", label: "Methodology" },
   { href: "/about", label: "About" },
 ];
@@ -81,14 +85,14 @@ export function SiteHeader() {
     <header className="border-b border-line bg-surface/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
         <Wordmark />
-        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+        <nav aria-label="Main" className="hidden items-center gap-0.5 xl:flex">
           {NAV.map((n) => (
             <Link
               key={n.href}
               href={n.href}
               aria-current={path.startsWith(n.href) ? "page" : undefined}
               className={cn(
-                "rounded px-3 py-1.5 text-sm",
+                "rounded px-2.5 py-1.5 text-sm",
                 path.startsWith(n.href) ? "bg-surface-2 text-ink" : "text-ink-2 hover:text-ink",
               )}
             >
@@ -100,7 +104,7 @@ export function SiteHeader() {
           <ThemeToggle />
           <button
             type="button"
-            className="rounded px-2 py-1.5 text-sm text-ink-2 lg:hidden"
+            className="rounded px-2 py-1.5 text-sm text-ink-2 xl:hidden"
             aria-expanded={open}
             aria-controls="mobile-nav"
             onClick={() => setOpen((o) => !o)}
@@ -110,7 +114,7 @@ export function SiteHeader() {
         </div>
       </div>
       {open && (
-        <nav id="mobile-nav" aria-label="Main" className="border-t border-line px-4 py-2 lg:hidden">
+        <nav id="mobile-nav" aria-label="Main" className="border-t border-line px-4 py-2 xl:hidden">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className="block py-2 text-sm text-ink">
               {n.label}

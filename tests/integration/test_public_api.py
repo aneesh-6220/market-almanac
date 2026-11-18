@@ -172,10 +172,19 @@ def test_openapi_documents_the_public_endpoints(client):
         "/api/v1/compare",
         "/api/v1/movers",
         "/api/v1/studies/{study_id}",
+        "/api/v1/coverage/registry",
+        "/api/v1/coverage/registry/{iso3}",
+        "/api/v1/coverage/markets",
+        "/api/v1/workbench/studies",
+        "/api/v1/workbench/studies/{study_id}",
     ):
         assert path in spec["paths"] and list(spec["paths"][path]) == ["get"]
         assert spec["paths"][path]["get"].get("description") or spec["paths"][path]["get"].get("summary")
-    assert all(set(v) <= {"get"} for v in spec["paths"].values())  # the public API is read-only
+    # The public API is read-only. The single exception parses a submitted specification and returns
+    # problems; it stores nothing and executes nothing (docs/adr/0004-declarative-research-specs.md).
+    writes = {p for p, v in spec["paths"].items() if set(v) - {"get"}}
+    assert writes == {"/api/v1/workbench/validate"}
+    assert list(spec["paths"]["/api/v1/workbench/validate"]) == ["post"]
 
 
 def test_peer_panel_matches_per_series_definition(client, series):  # type: ignore[no-untyped-def]

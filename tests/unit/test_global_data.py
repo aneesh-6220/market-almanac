@@ -210,3 +210,23 @@ def test_registry_reports_gaps_rather_than_filling_them():
     assert by["FRA"]["status"] == "unsupported" and by["FRA"]["price_sources"] == []
     assert by["KEN"]["environment"]["chirps_v3_integrated"] is False
     assert reg["totals"]["countries_with_observations"] == 1
+
+
+def test_registry_counts_study_primaries_but_not_placebos(settings_factory):
+    """A workbench study's primary analysis marks its country evaluated; a placebo variant alone does not."""
+    import json
+
+    from market_almanac.globaldata.registry import collect_inputs
+
+    s = settings_factory(market_almanac_mode="live")
+    exp = Path(s.data_dir) / "studies" / "live" / "atlas" / "experiments"
+    for name, iso in (
+        ("atlas__ETH_67_KG_R_ETB__primary", "ETH"),
+        ("atlas__UGA_67_KG_R_UGX__weather_time_shift_60", "UGA"),
+    ):
+        (exp / name).mkdir(parents=True)
+        body = {"status": "completed", "experiment_id": name, "config": {"country_iso3": iso, "study": "atlas"}}
+        (exp / name / "results.json").write_text(json.dumps(body))
+    evals = collect_inputs(s)["evaluations"]
+    assert [e["id"] for e in evals["ETH"]] == ["atlas__ETH_67_KG_R_ETB__primary"]
+    assert "UGA" not in evals

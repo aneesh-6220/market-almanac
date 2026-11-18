@@ -92,6 +92,7 @@ def options() -> dict[str, Any]:
 
 @router.get("/studies")
 def studies(s: Annotated[Settings, Depends(settings_dep)]) -> list[dict[str, Any]]:
+    """Published workbench studies (summary fields only)."""
     out = []
     for _sid, p in sorted(_published(s).items()):
         d = json.loads(p.read_text())
@@ -104,6 +105,7 @@ def studies(s: Annotated[Settings, Depends(settings_dep)]) -> list[dict[str, Any
 def study(
     study_id: Annotated[str, Path(pattern=STUDY_ID)], s: Annotated[Settings, Depends(settings_dep)]
 ) -> dict[str, Any]:
+    """Full published summary of one study: specification, freeze record and derived results."""
     p = _published(s).get(study_id)
     if p is None or not re.fullmatch(STUDY_ID, study_id):
         raise HTTPException(404, f"no published study {study_id}")

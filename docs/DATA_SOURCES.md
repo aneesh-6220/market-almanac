@@ -71,6 +71,31 @@ raise `DatasetNotAvailable`. Annual values are context only and never interpolat
   (`providers/faostat_areas.csv`, 244 areas).
 - Annual values are usable from December of the following year.
 
+## Global coverage (November 2026)
+
+HDX HAPI is now ingested for **every country it lists** (95 on 2026-11-18), into country partitions
+(see [adr/0001](adr/0001-country-partitioned-lake.md)). NASA POWER weather was fetched for the
+markets of the research-eligible countries (711 additional grid cells in 39 countries, on top of the
+v1.0 countries). Status per country is in the coverage registry (`/atlas`, `GET /api/v1/coverage/registry`).
+
+### Sources investigated but not integrated
+
+These were evaluated as candidates for the global platform and deliberately **not** integrated in
+this release. Nothing from them is stored, served or redistributed. Their terms must be re-checked
+before any future integration.
+
+| Source | What it would add | Why not now |
+|---|---|---|
+| FAO FPMA (GIEWS Food Price Monitoring and Analysis) | National and capital-city retail and wholesale prices, some non-WFP countries | Mostly national or capital-city series, so it does not fit the market-level design; overlaps WFP for most low-income countries; needs a separate harmonisation of units and markets |
+| FEWS NET price data | Market prices in FEWS NET countries, some with longer histories | Largely overlaps WFP countries; access and terms need review; duplicate markets would need cross-source reconciliation before pooling |
+| World Bank Commodity Price Data (Pink Sheet) | Monthly world prices of maize, rice, wheat, etc. | A global covariate rather than a market series; useful for a future "import-parity" family; not needed to answer the atlas question |
+| CHIRPS v3 | Higher-resolution satellite-gauge rainfall, a second precipitation source | Gridded raster files; a raster pipeline and storage budget are needed. v1 uses NASA POWER only (stated as a limitation of the atlas) |
+| geoBoundaries | Administrative boundaries for every country | Markets already carry coordinates; boundaries would only be needed for area-weighted (production-zone) weather, a future study |
+
+IMF CPI/FX, World Bank WDI and FAOSTAT remain integrated as in v1.0 (context and families C and D);
+the global ingestion does not yet fetch them for all 95 countries, and the registry reports
+`macro_ingested` and `agriculture_ingested` per country accordingly.
+
 ## Redistribution (public data bundle)
 
 The public data bundle (`market-almanac bundle-export`) redistributes derived snapshots of these

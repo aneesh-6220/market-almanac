@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use Market Almanac or its published studies, please cite it as below."
+title: "Market Almanac: an open research platform for food-price forecastability"
+type: software
+authors:
+  - family-names: Mahatekar
+    given-names: Aneesh
+repository-code: "https://github.com/aneesh-6220/market-almanac"
+url: "https://market-almanac-app.vercel.app/"
+license: MIT
+version: "1.1.0"
+date-released: "2026-11-18"
+keywords:
+  - food prices
+  - forecasting
+  - weather
+  - WFP
+  - reproducible research
+  - pre-registration
+abstract: >-
+  Market Almanac ingests World Food Programme market prices for every country published through
+  HDX HAPI, tracks their quality and coverage, and runs pre-registered, versioned forecasting
+  studies with country-balanced inference, negative controls and independent audit scripts.
+  Data remain under their providers' licences (see docs/DATA_SOURCES.md).

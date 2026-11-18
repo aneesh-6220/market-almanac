@@ -30,6 +30,14 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run mypy
       - run: uv run pytest --cov=market_almanac --cov=market_almanac_api --cov-report=term
+      - name: Research specifications validate
+        run: for f in docs/research/specs/*.yaml; do uv run market-almanac research validate "$f"; done
+      - name: Packaged registry and study summaries are valid JSON
+        run: |
+          for f in packages/market-almanac/src/market_almanac/globaldata/*.json packages/market-almanac/src/market_almanac/research/published/*.json; do
+            [ -e "$f" ] || continue
+            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f"
+          done
 
   web:
     name: Web (lint, types, unit tests, build)
@@ -45,6 +53,8 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test

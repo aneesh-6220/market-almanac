@@ -268,7 +268,13 @@ def collect_inputs(settings: Any) -> dict[str, Any]:
     evaluations: dict[str, list[dict[str, Any]]] = {}
     exp_root = Path(settings.experiments_dir)
     superseded = _superseded_ids()
-    for d in sorted(exp_root.glob("*/results.json")) if exp_root.exists() else []:
+    # v1.0 experiments, plus the primary analysis of each workbench study (variants are robustness
+    # checks or placebos of the same evaluation, not evaluations of their own)
+    study_root = Path(settings.data_dir) / "studies" / settings.market_almanac_mode.value
+    result_files = sorted(exp_root.glob("*/results.json")) if exp_root.exists() else []
+    if study_root.exists():
+        result_files += sorted(study_root.glob("*/experiments/*__primary/results.json"))
+    for d in result_files:
         try:
             r = json.loads(d.read_text())
         except json.JSONDecodeError:
