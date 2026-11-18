@@ -1,0 +1,81 @@
+# Global Food-Price Forecastability Atlas, version 1: confirmatory specification.
+# Protocol and rationale: docs/research/FORECASTABILITY_ATLAS_PROTOCOL.md
+# Frozen with `market-almanac research freeze` and the git tag `protocol-atlas-v1` BEFORE any model
+# was estimated on these countries. Do not edit: a changed design needs a new id.
+spec_version: ma-research-spec/1
+id: forecastability-atlas-v1
+title: Global Food-Price Forecastability Atlas v1 - does market-local weather add predictive value?
+question: >-
+  Across the countries for which WFP publishes enough monthly retail food prices, do market-local
+  rainfall and temperature anomalies improve out-of-sample forecasts of staple-food price changes
+  beyond a model that uses price history alone?
+hypothesis: >-
+  Adding market-local weather anomalies (family B) to price history (family A) lowers the
+  country-balanced mean squared error of 1-month (H1) and 3-month (H2) log price-change forecasts
+  over the common evaluation window.
+estimand: >-
+  Ratio of country-balanced mean squared forecast errors, ridge family B over ridge family A, on
+  matched forecasts (same series, origin and target) with forecast origins from 2022-01, at
+  horizons of 1 and 3 months. Each country present in an origin month has equal weight.
+study_type: predictive
+evidence_class: confirmatory
+population:
+  # The 52 research-eligible countries of the coverage registry built 2026-11-18T02:08Z, minus
+  # Mali, Niger and Burkina Faso, whose test periods informed earlier model development.
+  countries: [ARM, BEN, BOL, CAF, CMR, COG, DJI, DOM, EGY, ETH, GIN, GMB, GNB, GTM, HTI, IND, JOR,
+              KGZ, LAO, LBN, LBY, LSO, MDA, MEX, MMR, MNG, MOZ, NAM, NGA, NPL, PAK, PAN, PHL, PSE,
+              RWA, SDN, SEN, SLE, SWZ, SYR, TCD, TGO, TLS, TUR, TZA, UGA, UKR, YEM, ZMB]
+  exclude_countries: []
+  price_types: [Retail]
+  commodity_categories: [cereals and tubers]
+  min_observations: 48
+  min_coverage: 0.8
+  max_gap_months: 6
+  require_coordinates: true
+  min_eligible_series_per_group: 5
+  max_groups_per_country: 3
+timing:
+  price_release_lag_months: 1
+  weather_release_lag_months: 0
+predictive:
+  target: log_change
+  horizons: [1, 3]
+  families: [A, B]
+  evaluation: rolling_origin
+  min_train_months: 48
+  refit_every: 12
+  test_start: 2022-01-01
+  include_tree_models: false
+  loss_aggregation: country_balanced
+  min_test_periods: 24
+  hypotheses:
+    - id: H1
+      statement: Family B (price history + market-local weather) has lower 1-month forecast loss than family A.
+      challenger: B
+      baseline: A
+      horizon: 1
+    - id: H2
+      statement: Family B (price history + market-local weather) has lower 3-month forecast loss than family A.
+      challenger: B
+      baseline: A
+      horizon: 3
+inference:
+  alpha: 0.05
+  multiplicity: holm
+  test: diebold_mariano_hac
+  bootstrap: two_way_country_month
+  bootstrap_reps: 1000
+robustness: [price_lag_0, weather_lag_1, leave_one_country_out, drop_top3_months]
+negative_controls: [weather_time_shift_60, weather_permuted_cells]
+seed: 20261118
+compute:
+  max_groups: 200
+  max_series: 20000
+  max_runtime_minutes: 480
+limitations:
+  - Market-local weather is NASA POWER reanalysis at the market's grid cell, a geographic proxy; it is not the weather where the traded crop was grown.
+  - Prices are nominal local-currency WFP retail prices; no deflation or currency conversion.
+  - Predictive, not causal. An improvement would show that weather information helps forecasts, not that weather causes price changes.
+  - The evaluation window (2022-2026) includes global commodity and currency shocks shared by many countries; the two-way bootstrap and month-level test account for shared shocks but cannot make a short window long.
+  - CHIRPS was not integrated, so no alternative precipitation source is compared in v1.
+authors: [Market Almanac maintainers]
