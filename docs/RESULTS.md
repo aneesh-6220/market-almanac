@@ -3,7 +3,63 @@
 This file records results produced by Market Almanac on **live** data. Demo-mode results describe
 synthetic data and are not reported here.
 
-## Current results (v1.0)
+## Forecastability Atlas v1 (confirmatory, 2026-11-18)
+
+**Question.** Across WFP-reporting countries, do market-local rainfall and temperature anomalies
+improve out-of-sample forecasts of staple-food price changes beyond price history alone?
+
+**Integrity.** Protocol and spec tagged `protocol-atlas-v1` (`5ab8f82`) before any atlas model was
+estimated; freeze recorded on a clean tree at `853d3d7` and committed as `abea5d2`. Between the tag
+and the results commit, no file in `experiments/`, `features/`, `forecasting/`, `evaluation/`,
+`econometrics/`, `data/` or the workbench execution, pooling, population or spec modules changed
+(`git diff protocol-atlas-v1` on those paths is empty; only `workbench/publish.py`, which formats
+finished results, and `globaldata/registry.py`, which reports coverage, were added or changed).
+565 experiments ran with 0 failures; `research verify` passed; the independent recomputation
+(`scripts/audit/recompute_atlas.py`, pandas/numpy/scipy only) matched the stored ratios and Holm
+p-values to 1.6 × 10⁻¹⁵.
+
+**Population.** 113 retail cereal and tuber groups, 39 countries, about 2,300 series, forecast
+origins January 2022 to September 2026 (57 months at h = 1, 55 at h = 3). Ten countries named in the
+spec had no qualifying group; that was determined from metadata and recorded in the freeze.
+
+| | h | Loss ratio B/A | 95% interval (two-way bootstrap) | p (Holm) | Evidence |
+|---|---|---|---|---|---|
+| H1 | 1 month | 0.981 | 0.928–1.039 | 0.504 | **not established** |
+| H2 | 3 months | 1.005 | 0.985–1.025 | 0.800 | **not established** |
+
+- **No improvement from market-local weather was established at either horizon.** The H1 point
+  estimate (−1.9% loss) rests on a few months: the three most influential months carry more than all
+  of the difference, and without them the ratio is 1.010. Weather made losses lower in only 12 of 39
+  countries at h = 1 and 17 of 39 at h = 3.
+- **A negative control did as well as real weather.** Weather from five years earlier gave a ratio
+  of 0.858 at h = 1 (p = 0.074), better than the real weather's 0.981; cell-permuted weather gave
+  0.972. Any small gain from adding weather features at h = 1 is therefore not attributable to the
+  weather itself; it is consistent with noise or with extra regressors acting as regularised noise.
+- **Robustness checks agree:** weather known one month late, 0.976 (h = 1) and 1.010 (h = 3); prices
+  known immediately, 1.012 and 0.894 (neither significant).
+- **Price history alone does not beat a no-change forecast on this estimand.** Ridge A versus
+  "next month's change equals zero": ratio 1.249 at h = 1 (interval 0.81–1.96) and 1.096 at h = 3.
+  The median country is at 1.001 and 0.996, so a few countries with large errors dominate the
+  balanced mean. Ridge A clearly beats the seasonal no-change forecast (0.744 and 0.668).
+- **Heterogeneity (exploratory):** no subgroup by macro-region, import label or volatility tercile
+  reached q < 0.5.
+
+**What this does not show.** It does not show that weather is irrelevant to food prices. Market-local
+NASA POWER reanalysis is a proxy for where crops grow; the window (2022–2026) is dominated by
+currency and global commodity shocks; with about 56 months, gains of a few percent are not
+detectable. A different weather measure (production-zone rainfall, CHIRPS) needs a new frozen
+protocol, not a re-analysis of this one.
+
+Full tables: [research/generated/forecastability_atlas_v1.md](research/generated/forecastability_atlas_v1.md)
+· web: `/forecastability`.
+
+### Exploratory: staple price patterns (descriptive)
+
+`staple-price-patterns-v1` summarises trend, volatility, seasonal amplitude and co-movement for 107
+cereal and tuber groups in 55 countries. Nominal local-currency prices; no hypothesis tested. Web:
+`/studies?id=staple-price-patterns-v1`.
+
+## Current results (v1.0, Sahel study)
 
 | Evidence | Where | Status |
 |---|---|---|

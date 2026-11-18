@@ -1,16 +1,24 @@
 # Market Almanac
 
-**Open-source food-price intelligence with honest forecast evaluation.** Market Almanac collects
-monthly market prices published by the World Food Programme, places them next to weather and
-crop data, and shows what prices did, whether a movement is unusual for that market, how markets
-compare, and what forecasting models can and cannot predict, with every number traceable to its
+**Open-source food-price research platform with honest forecast evaluation.** Market Almanac
+collects the monthly market prices the World Food Programme publishes for every country on HDX,
+tracks their quality and coverage country by country, places them next to weather and crop data,
+and runs pre-registered, reproducible forecasting studies, with every number traceable to its
 source.
 
 ![Market page: millet in Ansongo, Mali](docs/screenshots/market-millet-ansongo.png)
 
 ## What you can do with it
 
-- **Explore** 22,880 market–commodity series in 10 countries (959 markets, 502,883 monthly prices,
+- **See global coverage** (`/atlas`): 95 countries with stored WFP prices (3,801,021 monthly
+  observations, 125,202 series, 4,835 markets), each with a status (validated, research-eligible,
+  forecast-evaluated…), QC results, snapshot hashes and licence; the 149 areas with no integrated
+  price source are shown as gaps, not hidden.
+- **Read a multi-country study** (`/forecastability`): the pre-registered Forecastability Atlas
+  across 39 countries, with intervals, placebos, robustness checks and per-country tables.
+- **Design a study** (`/workbench`): build a versioned specification, validate it on the server,
+  then run it reproducibly with the CLI. Published studies are in `/studies`.
+- **Explore** (original 10-country market views) 22,880 market–commodity series in 10 countries (959 markets, 502,883 monthly prices,
   January 2017 to November 2026); 11,212 series have at least a year of prices. Filter by country,
   commodity and market, on a map or in an accessible table.
 - **Read a market**: latest observed price with its month, unit, currency and price type;
@@ -31,6 +39,22 @@ Screenshots: [home](docs/screenshots/home.png) · [explore](docs/screenshots/exp
 [phone](docs/screenshots/mobile-market.png). All are of the running app on real data.
 
 ## What the research found
+
+### Forecastability Atlas v1 (39 countries, confirmatory)
+
+Question: *across WFP-reporting countries, do market-local rainfall and temperature anomalies improve
+staple-price forecasts beyond price history?* Tagged `protocol-atlas-v1` before any model was
+estimated ([protocol](docs/research/FORECASTABILITY_ATLAS_PROTOCOL.md)).
+
+**Result: no improvement established.** Over 113 cereal and tuber groups in 39 countries (about
+2,300 series, 55–57 monthly origins from January 2022), the country-balanced loss ratio of weather +
+price history over price history was 0.981 at 1 month (95% interval 0.928–1.039, Holm p = 0.50) and
+1.005 at 3 months (0.985–1.025, p = 0.80). A placebo using weather from five years earlier did at
+least as well as real weather (0.858 at 1 month), and price history alone did not beat a no-change
+forecast on this estimand. [Tables](docs/research/generated/forecastability_atlas_v1.md) ·
+[results](docs/RESULTS.md). An independent script recomputes the headline numbers to 1.6 × 10⁻¹⁵.
+
+### Sahel production-weather study (Mali and Niger, confirmatory)
 
 Question: *does rainfall in the areas where a crop is grown help forecast staple prices, beyond
 price history and weather at the market itself?* The design, data and tests were written down and
@@ -87,6 +111,18 @@ uv run market-almanac ingest --source weather --country MLI
 uv run market-almanac materialize && uv run market-almanac sync-db
 ```
 
+**Global ingestion and a study** (see the [maintainer runbook](docs/MAINTAINER_RUNBOOK.md)):
+
+```bash
+export MARKET_ALMANAC_MODE=live
+uv run market-almanac global discover && uv run market-almanac global ingest   # resumable: --resume <run_id>
+uv run market-almanac global weather --spec docs/research/specs/forecastability-atlas-v1.yaml
+uv run market-almanac global registry
+uv run market-almanac research run docs/research/specs/forecastability-atlas-v1.yaml --workers 6
+uv run market-almanac research verify data/studies/live/forecastability-atlas-v1
+uv run python scripts/audit/recompute_atlas.py data/studies/live/forecastability-atlas-v1
+```
+
 ## Architecture
 
 ```
@@ -116,23 +152,27 @@ More in [Architecture](docs/ARCHITECTURE.md) and the
 ## Testing
 
 ```bash
-make test        # 172 Python tests: unit, API integration, scientific correctness (offline)
+make test        # Python tests: unit, API integration, scientific correctness (offline)
 make lint        # ruff, mypy, ESLint, tsc
 make test-web    # Vitest
-make e2e         # Playwright on the synthetic demo (8 tests, desktop + phone)
-make e2e-live    # Playwright on real ingested data (7 tests; needs the data bundle)
+make e2e         # Playwright on the synthetic demo (desktop + phone)
+make e2e-live    # Playwright on real ingested data (needs the data bundle)
 make test-live   # opt-in tests against the real provider APIs
 ```
 
 ## Limitations
 
-- Coverage is the 10 countries ingested here, not all WFP markets. Prices are nominal and in local
-  currency; nothing is converted or deflated.
+- Prices are nominal and in local currency; nothing is converted or deflated. Global coverage is
+  what HDX HAPI publishes (95 countries); IMF and FAOSTAT context is still limited to the original
+  countries, and CHIRPS, FEWS NET and FAO FPMA are not integrated.
+- Studies run on a maintainer machine (the atlas: 5.6 hours on 6 cores, 1.5 GB peak); the public site
+  validates specifications but never executes them.
 - Publication dates are not available from the sources, so "what was known when" is an assumption
   (primary: prices available one month after the month they describe).
 - Production-region weather is a national crop-area proxy (MapSPAM 2010), not the supply origin of a
   particular market.
-- No public deployment is running yet; see [Deployment](docs/DEPLOYMENT.md).
+- Live at https://market-almanac-app.vercel.app/ (API https://market-almanac.onrender.com/, Render
+  Free: the first request after idling can take about a minute). See [Deployment](docs/DEPLOYMENT.md).
 
 Full list: [Research limitations](docs/RESEARCH_LIMITATIONS.md).
 
@@ -143,6 +183,12 @@ Full list: [Research limitations](docs/RESEARCH_LIMITATIONS.md).
 [Results](docs/RESULTS.md) · [Reproducibility](docs/REPRODUCIBILITY.md) · [API](docs/API.md) ·
 [Deployment](docs/DEPLOYMENT.md) · [Development](docs/DEVELOPMENT.md) ·
 [Engineering report](docs/FINAL_ENGINEERING_REPORT.md) · [Changelog](CHANGELOG.md)
+
+Global platform: [Status ledger](docs/GLOBAL_EXPANSION_STATUS.md) ·
+[Systems walkthrough](docs/SYSTEMS_WALKTHROUGH.md) ·
+[Research design explained](docs/RESEARCH_DESIGN_EXPLAINED.md) · [ADRs](docs/adr/README.md) ·
+[Maintainer runbook](docs/MAINTAINER_RUNBOOK.md) · [Exercises](exercises/README.md) ·
+[Citation](CITATION.cff)
 
 ## Licence and data
 

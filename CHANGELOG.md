@@ -6,6 +6,48 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-18
+
+### Added
+
+- **Global data foundation.** Ingestion of WFP market prices for every country listed by HDX HAPI
+  (95 countries, 3,801,021 monthly observations, 125,202 series, 4,835 markets) into an immutable,
+  country-partitioned lake with content hashes, revision diffs and per-country QC. Runs are
+  resumable and idempotent (`market-almanac global discover | ingest | status | weather | registry`).
+- **Coverage registry** for 244 countries and territories with seven explicit statuses, served at
+  `GET /api/v1/coverage/registry`, `/registry/{iso3}` and `/markets`, and shown on the new
+  `/atlas` page (map with colour-blind-safe palette, filterable table, CSV export, country detail).
+- **Research workbench.** Versioned YAML specifications with scientific coherence checks;
+  `research validate | preview | freeze | run | verify | export | publish`; RO-Crate 1.2 packages
+  with checksums; `POST /api/v1/workbench/validate` (64 KB cap, safe YAML, nothing executed) and
+  read-only study endpoints; `/workbench` builder, `/studies` library.
+- **Forecastability Atlas v1**, a pre-registered confirmatory study across 49 countries (tag
+  `protocol-atlas-v1`), with country-balanced inference, a two-way bootstrap, Holm correction,
+  robustness checks, two negative controls and an independent audit script
+  (`scripts/audit/recompute_atlas.py`). Outcome: no improvement from market-local weather was
+  established (39 countries; loss ratio 0.981 at 1 month, 1.005 at 3 months; Holm p 0.50 and 0.80).
+  Results on `/forecastability` and in `docs/RESULTS.md`.
+- Exploratory descriptive study `staple-price-patterns-v1` (95 countries).
+- Docs: systems walkthrough with an annotated observation trace, research design explained, six
+  ADRs, maintainer runbook, exercises 6–10, `CITATION.cff`, issue and pull request templates.
+- CI validates every research specification, checks packaged JSON and audits production web
+  dependencies.
+
+### Changed
+
+- Navigation adds Global, Forecastability, Studies and Workbench; the desktop menu now appears from
+  the `xl` breakpoint.
+- HDX HAPI client refuses repeated pages and checks the schema of every row.
+- The coverage registry counts the primary analysis of workbench studies as evaluations (placebo
+  and robustness variants do not count).
+- The OpenAPI test documents the single non-GET endpoint (`POST /api/v1/workbench/validate`).
+
+### Unchanged by design
+
+- The `sahel-production-weather-v1` study, its tag, archived results and audit scripts, and the
+  v1.0 single-snapshot lake read by the existing pages.
+
+
 ### Security
 
 - Web dependencies upgraded to clear all `npm audit --omit=dev` advisories: `maplibre-gl` 6.18

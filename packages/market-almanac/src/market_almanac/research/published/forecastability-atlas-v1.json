@@ -1,0 +1,4543 @@
+{
+ "id": "forecastability-atlas-v1",
+ "title": "Global Food-Price Forecastability Atlas v1 - does market-local weather add predictive value?",
+ "study_type": "predictive",
+ "evidence_class": "confirmatory",
+ "question": "Across the countries for which WFP publishes enough monthly retail food prices, do market-local rainfall and temperature anomalies improve out-of-sample forecasts of staple-food price changes beyond a model that uses price history alone?",
+ "hypothesis": "Adding market-local weather anomalies (family B) to price history (family A) lowers the country-balanced mean squared error of 1-month (H1) and 3-month (H2) log price-change forecasts over the common evaluation window.",
+ "estimand": "Ratio of country-balanced mean squared forecast errors, ridge family B over ridge family A, on matched forecasts (same series, origin and target) with forecast origins from 2022-01, at horizons of 1 and 3 months. Each country present in an origin month has equal weight.",
+ "spec_hash": "ad09ac46d2afe269066cf6de5c2189c81a1a405000ab56d3f44c6b9ffd7dc4ab",
+ "spec": {
+  "spec_version": "ma-research-spec/1",
+  "id": "forecastability-atlas-v1",
+  "title": "Global Food-Price Forecastability Atlas v1 - does market-local weather add predictive value?",
+  "question": "Across the countries for which WFP publishes enough monthly retail food prices, do market-local rainfall and temperature anomalies improve out-of-sample forecasts of staple-food price changes beyond a model that uses price history alone?",
+  "hypothesis": "Adding market-local weather anomalies (family B) to price history (family A) lowers the country-balanced mean squared error of 1-month (H1) and 3-month (H2) log price-change forecasts over the common evaluation window.",
+  "estimand": "Ratio of country-balanced mean squared forecast errors, ridge family B over ridge family A, on matched forecasts (same series, origin and target) with forecast origins from 2022-01, at horizons of 1 and 3 months. Each country present in an origin month has equal weight.",
+  "study_type": "predictive",
+  "evidence_class": "confirmatory",
+  "population": {
+   "countries": [
+    "ARM",
+    "BEN",
+    "BOL",
+    "CAF",
+    "CMR",
+    "COG",
+    "DJI",
+    "DOM",
+    "EGY",
+    "ETH",
+    "GIN",
+    "GMB",
+    "GNB",
+    "GTM",
+    "HTI",
+    "IND",
+    "JOR",
+    "KGZ",
+    "LAO",
+    "LBN",
+    "LBY",
+    "LSO",
+    "MDA",
+    "MEX",
+    "MMR",
+    "MNG",
+    "MOZ",
+    "NAM",
+    "NGA",
+    "NPL",
+    "PAK",
+    "PAN",
+    "PHL",
+    "PSE",
+    "RWA",
+    "SDN",
+    "SEN",
+    "SLE",
+    "SWZ",
+    "SYR",
+    "TCD",
+    "TGO",
+    "TLS",
+    "TUR",
+    "TZA",
+    "UGA",
+    "UKR",
+    "YEM",
+    "ZMB"
+   ],
+   "exclude_countries": [],
+   "commodity_codes": null,
+   "commodity_name_contains": null,
+   "commodity_categories": [
+    "cereals and tubers"
+   ],
+   "price_types": [
+    "Retail"
+   ],
+   "min_observations": 48,
+   "min_coverage": 0.8,
+   "max_gap_months": 6,
+   "require_coordinates": true,
+   "min_eligible_series_per_group": 5,
+   "max_groups_per_country": 3,
+   "selection_rule": "per country, the commodity groups with the most eligible series (ties by commodity code); eligibility is computed from metadata only (counts, coverage, gaps), never from model performance"
+  },
+  "timing": {
+   "price_release_lag_months": 1,
+   "weather_release_lag_months": 0,
+   "vintage_statement": "Backtests use today's revised data; original publication dates are not available from the providers, so information timing is an explicitly assumed release lag, not an observed real-time vintage."
+  },
+  "predictive": {
+   "target": "log_change",
+   "horizons": [
+    1,
+    3
+   ],
+   "families": [
+    "A",
+    "B"
+   ],
+   "evaluation": "rolling_origin",
+   "min_train_months": 48,
+   "refit_every": 12,
+   "test_start": "2022-01-01",
+   "include_tree_models": false,
+   "hypotheses": [
+    {
+     "id": "H1",
+     "statement": "Family B (price history + market-local weather) has lower 1-month forecast loss than family A.",
+     "challenger": "B",
+     "baseline": "A",
+     "horizon": 1,
+     "alternative": "challenger_better"
+    },
+    {
+     "id": "H2",
+     "statement": "Family B (price history + market-local weather) has lower 3-month forecast loss than family A.",
+     "challenger": "B",
+     "baseline": "A",
+     "horizon": 3,
+     "alternative": "challenger_better"
+    }
+   ],
+   "loss_aggregation": "country_balanced",
+   "min_test_periods": 24
+  },
+  "associational": null,
+  "descriptive": null,
+  "inference": {
+   "alpha": 0.05,
+   "multiplicity": "holm",
+   "test": "diebold_mariano_hac",
+   "unit_of_inference": "forecast-origin month: losses are averaged within each month before testing, so thousands of market-month forecasts are not treated as independent observations",
+   "bootstrap": "two_way_country_month",
+   "bootstrap_reps": 1000
+  },
+  "robustness": [
+   "price_lag_0",
+   "weather_lag_1",
+   "leave_one_country_out",
+   "drop_top3_months"
+  ],
+  "negative_controls": [
+   "weather_time_shift_60",
+   "weather_permuted_cells"
+  ],
+  "seed": 20261118,
+  "compute": {
+   "max_groups": 200,
+   "max_series": 20000,
+   "max_runtime_minutes": 480
+  },
+  "limitations": [
+   "Market-local weather is NASA POWER reanalysis at the market's grid cell, a geographic proxy; it is not the weather where the traded crop was grown.",
+   "Prices are nominal local-currency WFP retail prices; no deflation or currency conversion.",
+   "Predictive, not causal. An improvement would show that weather information helps forecasts, not that weather causes price changes.",
+   "The evaluation window (2022-2026) includes global commodity and currency shocks shared by many countries; the two-way bootstrap and month-level test account for shared shocks but cannot make a short window long.",
+   "CHIRPS was not integrated, so no alternative precipitation source is compared in v1."
+  ],
+  "authors": [
+   "Market Almanac maintainers"
+  ]
+ },
+ "families": {
+  "A": "price history only (lags, momentum, volatility, seasonality)",
+  "B": "A + market-local weather anomalies (NASA POWER at the market's grid cell)"
+ },
+ "headline": "113 commodity groups in 39 countries. H1 (h=1): no improvement established (-1.9% loss); H2 (h=3): no improvement established (+0.5% loss).",
+ "published_at": "2026-11-18T10:06:37.590020+00:00",
+ "frozen": true,
+ "freeze": {
+  "frozen_at": "2026-11-18T02:23:50.534111+00:00",
+  "code": {
+   "git_commit": "853d3d7be6fa6f6b3ad09408c4cd3b48cc99956b",
+   "dirty": false
+  },
+  "selection_hash": "63b201bd573f59bfbf284a3046d7849cbbb6cc6c631fad51465dc447722ad32a",
+  "spec_hash": "ad09ac46d2afe269066cf6de5c2189c81a1a405000ab56d3f44c6b9ffd7dc4ab",
+  "statement": "Groups were selected from observation metadata (counts, coverage, gaps, coordinates) without estimating any model on this population.",
+  "software_version": "1.0.0"
+ },
+ "n_countries": 39,
+ "results": {
+  "study_engine": "workbench-1",
+  "spec_id": "forecastability-atlas-v1",
+  "spec_hash": "ad09ac46d2afe269066cf6de5c2189c81a1a405000ab56d3f44c6b9ffd7dc4ab",
+  "title": "Global Food-Price Forecastability Atlas v1 - does market-local weather add predictive value?",
+  "question": "Across the countries for which WFP publishes enough monthly retail food prices, do market-local rainfall and temperature anomalies improve out-of-sample forecasts of staple-food price changes beyond a model that uses price history alone?",
+  "estimand": "Ratio of country-balanced mean squared forecast errors, ridge family B over ridge family A, on matched forecasts (same series, origin and target) with forecast origins from 2022-01, at horizons of 1 and 3 months. Each country present in an origin month has equal weight.",
+  "evidence_class": "confirmatory",
+  "frozen": true,
+  "frozen_at": "2026-11-18T02:23:50.534111+00:00",
+  "freeze_code": {
+   "git_commit": "853d3d7be6fa6f6b3ad09408c4cd3b48cc99956b",
+   "dirty": false
+  },
+  "selection_hash": "63b201bd573f59bfbf284a3046d7849cbbb6cc6c631fad51465dc447722ad32a",
+  "test_start": "2022-01-01",
+  "groups": [
+   {
+    "country_iso3": "ARM",
+    "commodity_code": "112",
+    "commodity_name": "Pasta",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "AMD",
+    "series": 13,
+    "eligible_series": 11,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "ARM",
+    "commodity_code": "133",
+    "commodity_name": "Rice (white)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "AMD",
+    "series": 13,
+    "eligible_series": 11,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "ARM",
+    "commodity_code": "459",
+    "commodity_name": "Bread (high grade flour)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "AMD",
+    "series": 13,
+    "eligible_series": 11,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "BEN",
+    "commodity_code": "403",
+    "commodity_name": "Cassava meal (gari)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 50,
+    "eligible_series": 50,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "BEN",
+    "commodity_code": "64",
+    "commodity_name": "Rice (imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 50,
+    "eligible_series": 50,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "BEN",
+    "commodity_code": "558",
+    "commodity_name": "Cassava meal (tapioca)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 50,
+    "eligible_series": 47,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "BOL",
+    "commodity_code": "126",
+    "commodity_name": "Noodles (short)",
+    "unit": "Pound",
+    "price_type": "Retail",
+    "currency": "BOB",
+    "series": 9,
+    "eligible_series": 9,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "BOL",
+    "commodity_code": "128",
+    "commodity_name": "Potatoes (Irish, imilla)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "BOB",
+    "series": 9,
+    "eligible_series": 9,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "BOL",
+    "commodity_code": "375",
+    "commodity_name": "Bread (wheat)",
+    "unit": "Unit",
+    "price_type": "Retail",
+    "currency": "BOB",
+    "series": 9,
+    "eligible_series": 9,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "CAF",
+    "commodity_code": "52",
+    "commodity_name": "Rice",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XAF",
+    "series": 36,
+    "eligible_series": 27,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "CAF",
+    "commodity_code": "302",
+    "commodity_name": "Cassava (cossette)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XAF",
+    "series": 43,
+    "eligible_series": 25,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "CAF",
+    "commodity_code": "51",
+    "commodity_name": "Maize",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XAF",
+    "series": 35,
+    "eligible_series": 22,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "CMR",
+    "commodity_code": "225",
+    "commodity_name": "Rice (long grain, imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XAF",
+    "series": 74,
+    "eligible_series": 18,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "CMR",
+    "commodity_code": "58",
+    "commodity_name": "Wheat flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XAF",
+    "series": 38,
+    "eligible_series": 12,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "CMR",
+    "commodity_code": "67",
+    "commodity_name": "Maize (white)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XAF",
+    "series": 66,
+    "eligible_series": 12,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "DJI",
+    "commodity_code": "112",
+    "commodity_name": "Pasta",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "DJF",
+    "series": 5,
+    "eligible_series": 5,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "DJI",
+    "commodity_code": "58",
+    "commodity_name": "Wheat flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "DJF",
+    "series": 6,
+    "eligible_series": 5,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "DJI",
+    "commodity_code": "64",
+    "commodity_name": "Rice (imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "DJF",
+    "series": 6,
+    "eligible_series": 5,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "ETH",
+    "commodity_code": "67",
+    "commodity_name": "Maize (white)",
+    "unit": "100 KG",
+    "price_type": "Retail",
+    "currency": "ETB",
+    "series": 114,
+    "eligible_series": 21,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "ETH",
+    "commodity_code": "766",
+    "commodity_name": "Wheat (white)",
+    "unit": "100 KG",
+    "price_type": "Retail",
+    "currency": "ETB",
+    "series": 70,
+    "eligible_series": 18,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "ETH",
+    "commodity_code": "282",
+    "commodity_name": "Sorghum (red)",
+    "unit": "100 KG",
+    "price_type": "Retail",
+    "currency": "ETB",
+    "series": 23,
+    "eligible_series": 10,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "GIN",
+    "commodity_code": "64",
+    "commodity_name": "Rice (imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "GNF",
+    "series": 13,
+    "eligible_series": 13,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "GIN",
+    "commodity_code": "71",
+    "commodity_name": "Rice (local)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "GNF",
+    "series": 13,
+    "eligible_series": 13,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "GIN",
+    "commodity_code": "100",
+    "commodity_name": "Fonio",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "GNF",
+    "series": 12,
+    "eligible_series": 12,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "GMB",
+    "commodity_code": "148",
+    "commodity_name": "Potatoes (Irish)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "GMD",
+    "series": 28,
+    "eligible_series": 28,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "GMB",
+    "commodity_code": "226",
+    "commodity_name": "Rice (medium grain, imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "GMD",
+    "series": 28,
+    "eligible_series": 28,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "GMB",
+    "commodity_code": "51",
+    "commodity_name": "Maize",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "GMD",
+    "series": 28,
+    "eligible_series": 28,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "GNB",
+    "commodity_code": "64",
+    "commodity_name": "Rice (imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 45,
+    "eligible_series": 25,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "GNB",
+    "commodity_code": "55",
+    "commodity_name": "Bread",
+    "unit": "Unit",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 44,
+    "eligible_series": 24,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "GNB",
+    "commodity_code": "58",
+    "commodity_name": "Wheat flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 44,
+    "eligible_series": 16,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "HTI",
+    "commodity_code": "339",
+    "commodity_name": "Wheat flour (imported)",
+    "unit": "Marmite",
+    "price_type": "Retail",
+    "currency": "HTG",
+    "series": 9,
+    "eligible_series": 9,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "HTI",
+    "commodity_code": "471",
+    "commodity_name": "Maize meal (local)",
+    "unit": "Marmite",
+    "price_type": "Retail",
+    "currency": "HTG",
+    "series": 9,
+    "eligible_series": 8,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "HTI",
+    "commodity_code": "65",
+    "commodity_name": "Sorghum",
+    "unit": "Marmite",
+    "price_type": "Retail",
+    "currency": "HTG",
+    "series": 9,
+    "eligible_series": 7,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "IND",
+    "commodity_code": "52",
+    "commodity_name": "Rice",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "INR",
+    "series": 169,
+    "eligible_series": 53,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "IND",
+    "commodity_code": "58",
+    "commodity_name": "Wheat flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "INR",
+    "series": 169,
+    "eligible_series": 53,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "IND",
+    "commodity_code": "83",
+    "commodity_name": "Potatoes",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "INR",
+    "series": 169,
+    "eligible_series": 53,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "JOR",
+    "commodity_code": "112",
+    "commodity_name": "Pasta",
+    "unit": "300 G",
+    "price_type": "Retail",
+    "currency": "JOD",
+    "series": 12,
+    "eligible_series": 12,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "JOR",
+    "commodity_code": "258",
+    "commodity_name": "Bulgur",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "JOD",
+    "series": 12,
+    "eligible_series": 12,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "JOR",
+    "commodity_code": "384",
+    "commodity_name": "Bread (pita)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "JOD",
+    "series": 12,
+    "eligible_series": 12,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "KGZ",
+    "commodity_code": "112",
+    "commodity_name": "Pasta",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "KGS",
+    "series": 19,
+    "eligible_series": 18,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "KGZ",
+    "commodity_code": "373",
+    "commodity_name": "Buckwheat grits",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "KGS",
+    "series": 19,
+    "eligible_series": 18,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "KGZ",
+    "commodity_code": "597",
+    "commodity_name": "Semolina",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "KGS",
+    "series": 19,
+    "eligible_series": 18,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LAO",
+    "commodity_code": "194",
+    "commodity_name": "Rice (glutinous, first quality)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "LAK",
+    "series": 17,
+    "eligible_series": 10,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LAO",
+    "commodity_code": "195",
+    "commodity_name": "Rice (glutinous, second quality)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "LAK",
+    "series": 17,
+    "eligible_series": 10,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LAO",
+    "commodity_code": "197",
+    "commodity_name": "Rice (ordinary, first quality)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "LAK",
+    "series": 17,
+    "eligible_series": 10,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LBN",
+    "commodity_code": "316",
+    "commodity_name": "Rice (imported, Egyptian)",
+    "unit": "900 G",
+    "price_type": "Retail",
+    "currency": "LBP",
+    "series": 27,
+    "eligible_series": 7,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LBN",
+    "commodity_code": "384",
+    "commodity_name": "Bread (pita)",
+    "unit": "800 G",
+    "price_type": "Retail",
+    "currency": "LBP",
+    "series": 27,
+    "eligible_series": 7,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LBN",
+    "commodity_code": "547",
+    "commodity_name": "Bulgur (brown)",
+    "unit": "900 G",
+    "price_type": "Retail",
+    "currency": "LBP",
+    "series": 27,
+    "eligible_series": 7,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LBY",
+    "commodity_code": "112",
+    "commodity_name": "Pasta",
+    "unit": "500 G",
+    "price_type": "Retail",
+    "currency": "LYD",
+    "series": 39,
+    "eligible_series": 27,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LBY",
+    "commodity_code": "52",
+    "commodity_name": "Rice",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "LYD",
+    "series": 39,
+    "eligible_series": 27,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LBY",
+    "commodity_code": "542",
+    "commodity_name": "Couscous",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "LYD",
+    "series": 39,
+    "eligible_series": 27,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LSO",
+    "commodity_code": "159",
+    "commodity_name": "Bread (brown)",
+    "unit": "Loaf",
+    "price_type": "Retail",
+    "currency": "LSL",
+    "series": 10,
+    "eligible_series": 10,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LSO",
+    "commodity_code": "54",
+    "commodity_name": "Maize meal",
+    "unit": "12.5 KG",
+    "price_type": "Retail",
+    "currency": "LSL",
+    "series": 10,
+    "eligible_series": 10,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "LSO",
+    "commodity_code": "58",
+    "commodity_name": "Wheat flour",
+    "unit": "12.5 KG",
+    "price_type": "Retail",
+    "currency": "LSL",
+    "series": 10,
+    "eligible_series": 10,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "MMR",
+    "commodity_code": "145",
+    "commodity_name": "Rice (low quality)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "MMK",
+    "series": 267,
+    "eligible_series": 36,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "MNG",
+    "commodity_code": "58",
+    "commodity_name": "Wheat flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "MNT",
+    "series": 5,
+    "eligible_series": 5,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "MNG",
+    "commodity_code": "83",
+    "commodity_name": "Potatoes",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "MNT",
+    "series": 5,
+    "eligible_series": 5,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "MOZ",
+    "commodity_code": "179",
+    "commodity_name": "Wheat flour (local)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "MZN",
+    "series": 52,
+    "eligible_series": 8,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "MOZ",
+    "commodity_code": "64",
+    "commodity_name": "Rice (imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "MZN",
+    "series": 51,
+    "eligible_series": 8,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "MOZ",
+    "commodity_code": "67",
+    "commodity_name": "Maize (white)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "MZN",
+    "series": 50,
+    "eligible_series": 8,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "NAM",
+    "commodity_code": "52",
+    "commodity_name": "Rice",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "NAD",
+    "series": 8,
+    "eligible_series": 8,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "NAM",
+    "commodity_code": "55",
+    "commodity_name": "Bread",
+    "unit": "Unit",
+    "price_type": "Retail",
+    "currency": "NAD",
+    "series": 8,
+    "eligible_series": 8,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "NAM",
+    "commodity_code": "571",
+    "commodity_name": "Bread (vetkoek)",
+    "unit": "Unit",
+    "price_type": "Retail",
+    "currency": "NAD",
+    "series": 7,
+    "eligible_series": 7,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "NPL",
+    "commodity_code": "131",
+    "commodity_name": "Rice (medium grain)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "NPR",
+    "series": 25,
+    "eligible_series": 24,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "NPL",
+    "commodity_code": "58",
+    "commodity_name": "Wheat flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "NPR",
+    "series": 36,
+    "eligible_series": 22,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "NPL",
+    "commodity_code": "336",
+    "commodity_name": "Potatoes (red)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "NPR",
+    "series": 25,
+    "eligible_series": 21,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "PAK",
+    "commodity_code": "122",
+    "commodity_name": "Rice (basmati, broken)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "PKR",
+    "series": 5,
+    "eligible_series": 5,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "PAK",
+    "commodity_code": "58",
+    "commodity_name": "Wheat flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "PKR",
+    "series": 5,
+    "eligible_series": 5,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "PAK",
+    "commodity_code": "60",
+    "commodity_name": "Rice (coarse)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "PKR",
+    "series": 5,
+    "eligible_series": 5,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "PHL",
+    "commodity_code": "80",
+    "commodity_name": "Rice (regular, milled)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "PHP",
+    "series": 117,
+    "eligible_series": 78,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "PHL",
+    "commodity_code": "872",
+    "commodity_name": "Rice (well milled)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "PHP",
+    "series": 104,
+    "eligible_series": 78,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "PHL",
+    "commodity_code": "874",
+    "commodity_name": "Rice (special)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "PHP",
+    "series": 103,
+    "eligible_series": 76,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "PSE",
+    "commodity_code": "227",
+    "commodity_name": "Rice (small grain, imported)",
+    "unit": "25 KG",
+    "price_type": "Retail",
+    "currency": "ILS",
+    "series": 13,
+    "eligible_series": 13,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "PSE",
+    "commodity_code": "242",
+    "commodity_name": "Potatoes (medium size)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "ILS",
+    "series": 13,
+    "eligible_series": 13,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "PSE",
+    "commodity_code": "55",
+    "commodity_name": "Bread",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "ILS",
+    "series": 13,
+    "eligible_series": 13,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "RWA",
+    "commodity_code": "148",
+    "commodity_name": "Potatoes (Irish)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "RWF",
+    "series": 33,
+    "eligible_series": 13,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "RWA",
+    "commodity_code": "74",
+    "commodity_name": "Cassava flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "RWF",
+    "series": 33,
+    "eligible_series": 12,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "RWA",
+    "commodity_code": "65",
+    "commodity_name": "Sorghum",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "RWF",
+    "series": 32,
+    "eligible_series": 10,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SDN",
+    "commodity_code": "58",
+    "commodity_name": "Wheat flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "SDG",
+    "series": 19,
+    "eligible_series": 7,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SDN",
+    "commodity_code": "65",
+    "commodity_name": "Sorghum",
+    "unit": "3 KG",
+    "price_type": "Retail",
+    "currency": "SDG",
+    "series": 19,
+    "eligible_series": 7,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SDN",
+    "commodity_code": "73",
+    "commodity_name": "Millet",
+    "unit": "3.5 KG",
+    "price_type": "Retail",
+    "currency": "SDG",
+    "series": 19,
+    "eligible_series": 7,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SEN",
+    "commodity_code": "197",
+    "commodity_name": "Rice (ordinary, first quality)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 58,
+    "eligible_series": 10,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SEN",
+    "commodity_code": "64",
+    "commodity_name": "Rice (imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 60,
+    "eligible_series": 9,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SEN",
+    "commodity_code": "73",
+    "commodity_name": "Millet",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 60,
+    "eligible_series": 9,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SLE",
+    "commodity_code": "403",
+    "commodity_name": "Cassava meal (gari)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "SLL",
+    "series": 15,
+    "eligible_series": 13,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SLE",
+    "commodity_code": "51",
+    "commodity_name": "Maize",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "SLL",
+    "series": 15,
+    "eligible_series": 13,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SLE",
+    "commodity_code": "64",
+    "commodity_name": "Rice (imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "SLL",
+    "series": 15,
+    "eligible_series": 13,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SYR",
+    "commodity_code": "52",
+    "commodity_name": "Rice",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "SYP",
+    "series": 234,
+    "eligible_series": 70,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SYR",
+    "commodity_code": "83",
+    "commodity_name": "Potatoes",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "SYP",
+    "series": 234,
+    "eligible_series": 69,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "SYR",
+    "commodity_code": "838",
+    "commodity_name": "Noodles (instant, indomie)",
+    "unit": "Packet",
+    "price_type": "Retail",
+    "currency": "SYP",
+    "series": 226,
+    "eligible_series": 68,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TCD",
+    "commodity_code": "112",
+    "commodity_name": "Pasta",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XAF",
+    "series": 61,
+    "eligible_series": 59,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TCD",
+    "commodity_code": "73",
+    "commodity_name": "Millet",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XAF",
+    "series": 72,
+    "eligible_series": 30,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TCD",
+    "commodity_code": "282",
+    "commodity_name": "Sorghum (red)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XAF",
+    "series": 71,
+    "eligible_series": 23,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TGO",
+    "commodity_code": "403",
+    "commodity_name": "Cassava meal (gari)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 114,
+    "eligible_series": 40,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TGO",
+    "commodity_code": "67",
+    "commodity_name": "Maize (white)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 118,
+    "eligible_series": 40,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TGO",
+    "commodity_code": "282",
+    "commodity_name": "Sorghum (red)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "XOF",
+    "series": 106,
+    "eligible_series": 37,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TLS",
+    "commodity_code": "339",
+    "commodity_name": "Wheat flour (imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "USD",
+    "series": 14,
+    "eligible_series": 5,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TLS",
+    "commodity_code": "400",
+    "commodity_name": "Rice (white, imported)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "USD",
+    "series": 14,
+    "eligible_series": 5,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TZA",
+    "commodity_code": "52",
+    "commodity_name": "Rice",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "TZS",
+    "series": 26,
+    "eligible_series": 25,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TZA",
+    "commodity_code": "134",
+    "commodity_name": "Maize flour (white)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "TZS",
+    "series": 26,
+    "eligible_series": 24,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "TZA",
+    "commodity_code": "148",
+    "commodity_name": "Potatoes (Irish)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "TZS",
+    "series": 26,
+    "eligible_series": 24,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "UGA",
+    "commodity_code": "76",
+    "commodity_name": "Maize flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "UGX",
+    "series": 41,
+    "eligible_series": 25,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "UGA",
+    "commodity_code": "67",
+    "commodity_name": "Maize (white)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "UGX",
+    "series": 41,
+    "eligible_series": 23,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "UGA",
+    "commodity_code": "65",
+    "commodity_name": "Sorghum",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "UGX",
+    "series": 41,
+    "eligible_series": 22,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "UKR",
+    "commodity_code": "307",
+    "commodity_name": "Barley",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "UAH",
+    "series": 25,
+    "eligible_series": 23,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "UKR",
+    "commodity_code": "375",
+    "commodity_name": "Bread (wheat)",
+    "unit": "500 G",
+    "price_type": "Retail",
+    "currency": "UAH",
+    "series": 25,
+    "eligible_series": 23,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "UKR",
+    "commodity_code": "459",
+    "commodity_name": "Bread (high grade flour)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "UAH",
+    "series": 25,
+    "eligible_series": 23,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "YEM",
+    "commodity_code": "58",
+    "commodity_name": "Wheat flour",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "YER",
+    "series": 24,
+    "eligible_series": 22,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "YEM",
+    "commodity_code": "83",
+    "commodity_name": "Potatoes",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "YER",
+    "series": 24,
+    "eligible_series": 22,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "YEM",
+    "commodity_code": "84",
+    "commodity_name": "Wheat",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "YER",
+    "series": 24,
+    "eligible_series": 22,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "ZMB",
+    "commodity_code": "265",
+    "commodity_name": "Maize meal (white, breakfast)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "ZMW",
+    "series": 70,
+    "eligible_series": 61,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "ZMB",
+    "commodity_code": "67",
+    "commodity_name": "Maize (white)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "ZMW",
+    "series": 65,
+    "eligible_series": 59,
+    "commodity_category": null
+   },
+   {
+    "country_iso3": "ZMB",
+    "commodity_code": "71",
+    "commodity_name": "Rice (local)",
+    "unit": "KG",
+    "price_type": "Retail",
+    "currency": "ZMW",
+    "series": 61,
+    "eligible_series": 42,
+    "commodity_category": null
+   }
+  ],
+  "n_groups": 113,
+  "n_countries": 39,
+  "data_snapshots": {
+   "prices:ARM": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "ARM",
+    "snapshot_id": "20261118T015258_84c34d",
+    "observation_hash": "11b3821ab553b4dab17375456bdd4a9b612cb7f7b5fa4d8a9a6f9b5014d4356c",
+    "file_sha256": "c7fa9e19317e2ab9e5eeb53c1db00af255d41d93bcdb2146b126fdd8658545ab",
+    "row_count": 37957,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:52:56.430804+00:00"
+   },
+   "prices:BEN": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "BEN",
+    "snapshot_id": "20261118T015412_f6da93",
+    "observation_hash": "1617461fcc68d994f0ee66ffb996cefa640b0a6025fb285c62739de991e60af4",
+    "file_sha256": "042d8d5f280e672358c97b807ac0e7f17abe8c38c73d6487e747a15a4b6b4fc3",
+    "row_count": 144706,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:53:54.212724+00:00"
+   },
+   "prices:BOL": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "BOL",
+    "snapshot_id": "20261118T015421_bdc306",
+    "observation_hash": "76adac477b071d6b6da4c20b02c740d4e9d4a4cee52ebb574a1fff85664904e7",
+    "file_sha256": "e17a475eba63e5ed71b22b42699b0a4bd2ca82a5d652b8b7cccbd8bad3dc062e",
+    "row_count": 13395,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:54:20.129341+00:00"
+   },
+   "prices:CAF": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "CAF",
+    "snapshot_id": "20261118T015432_d2315b",
+    "observation_hash": "d5f5d196b4d7b6ffa8d7730f305dce7cfd56c1fd6325e3de2c46b29e595e28c7",
+    "file_sha256": "ec6e0456b014a90365facfede51959608aedbc10cc1330449cfc4c12a97e8f5c",
+    "row_count": 28965,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:54:30.027836+00:00"
+   },
+   "prices:CMR": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "CMR",
+    "snapshot_id": "20261118T015502_27eb0e",
+    "observation_hash": "078db30b527cca5297d0f416c51f1c0cbfe7ee9dfaf676d0a8d3c4d266c88adc",
+    "file_sha256": "6e62e452b3c1bf89b7fbac841e3c20c09349fdb4eb0d835cd5c371f544ade855",
+    "row_count": 68996,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:54:46.648523+00:00"
+   },
+   "prices:DJI": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "DJI",
+    "snapshot_id": "20261118T015529_ced659",
+    "observation_hash": "dc36efd7b80275dec3ff7031702d11f0323719d6b9e3b3f0d06f89c90da2f9a8",
+    "file_sha256": "8eddce6823bed22e235d83666cdefaa369316a9bbe8bf8f1d8ddc8c68bddbf6c",
+    "row_count": 7529,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:55:28.121291+00:00"
+   },
+   "prices:ETH": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "ETH",
+    "snapshot_id": "20261118T015618_267df9",
+    "observation_hash": "c7435e6a237a0f9cf52a738f90966b7d1c5d63dd78f8d6a8d8b5a5db5f457524",
+    "file_sha256": "55842a1f9998efe9528e16d8e1e3ab9d4160dc006168729c28135f6c6b9cff45",
+    "row_count": 54331,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:56:04.526493+00:00"
+   },
+   "prices:GIN": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "GIN",
+    "snapshot_id": "20261118T015610_fabc84",
+    "observation_hash": "4eeebc9684d7b8b26677bfb6070391b36242dec169775065ddc89e734793fb74",
+    "file_sha256": "784629caa922a6ef2b25207041ccfa651bee500eabff6c0f135ee70f3b61aac5",
+    "row_count": 24073,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:56:02.975854+00:00"
+   },
+   "prices:GMB": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "GMB",
+    "snapshot_id": "20261118T015727_e4f2c7",
+    "observation_hash": "7abfcb7f4efc09f559177031247d20242d4a3bdfc7ded4e28bdba193aa45f82c",
+    "file_sha256": "4bfff3587071db094edebf71aeba59514ebb71ba93a198437cc5b460702285e4",
+    "row_count": 145700,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:56:57.036331+00:00"
+   },
+   "prices:GNB": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "GNB",
+    "snapshot_id": "20261118T015715_3f1876",
+    "observation_hash": "b4ce596e41201a1ec64df2021c424e88765d54a4f4a21fc4c44f8c24f5ef56a9",
+    "file_sha256": "f50900a2a2f5a3cf449918ce5c80044458de8869e7df1a24e7b0fc3a6af91392",
+    "row_count": 90517,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:56:48.601773+00:00"
+   },
+   "prices:HTI": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "HTI",
+    "snapshot_id": "20261118T015732_1b34d1",
+    "observation_hash": "3444f771823ba12b9f824591c9e48c2131eb104d87fe836e2208559de2ca8e7b",
+    "file_sha256": "1e6f2e9e0e6590b268fb756a3e09f81696cb843fc4ed0a0c3eeae68b63646a92",
+    "row_count": 10206,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:57:30.530501+00:00"
+   },
+   "prices:IND": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "IND",
+    "snapshot_id": "20261118T015843_6809ad",
+    "observation_hash": "99e71de1bb2324972de0d18d7a5c686517db076441ab15882defc27a12256535",
+    "file_sha256": "82c06723f7d33ad0a3e4e16304b99da0d58d438ab5a5b9c79ad2d1f96ee54082",
+    "row_count": 152122,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:58:25.227739+00:00"
+   },
+   "prices:JOR": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "JOR",
+    "snapshot_id": "20261118T015929_d99447",
+    "observation_hash": "5516e268b7f526e09d7cc3f1f91a13efe5750249bf670a424c5891e4106f5940",
+    "file_sha256": "2081681315d0ae343705e4730da65d504d3a585eb1fde8b9cf0048f862fbef33",
+    "row_count": 47451,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T01:59:26.640376+00:00"
+   },
+   "prices:KGZ": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "KGZ",
+    "snapshot_id": "20261118T020033_477cdd",
+    "observation_hash": "33d099f2574120ffb7c9c948eec544d99dff4b9ba850b6cdc5c4ead16e7b0274",
+    "file_sha256": "98bd547b90a21756d918a22113e45061442493e370c51cf08b2ee91c03652979",
+    "row_count": 71261,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:00:27.350267+00:00"
+   },
+   "prices:LAO": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "LAO",
+    "snapshot_id": "20261118T020053_363eb8",
+    "observation_hash": "79c7ed43b084095eaf96213171e1b8dcaf55f0ed4f66b97c8cb13b20cbc4e435",
+    "file_sha256": "1abb4f8f071f7546d5c6e24690363b06b989db8b4c4f5a27b45eb07ed16bfdaf",
+    "row_count": 36605,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:00:45.780648+00:00"
+   },
+   "prices:LBN": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "LBN",
+    "snapshot_id": "20261118T020107_982be3",
+    "observation_hash": "06a29ce8861855db7d7b8fc6948fbd9df98b07cd6c3452436f6254ce658c974e",
+    "file_sha256": "16f30da9d30b9fb6ed75f5c94664195657f47cb9cd86507a470ebe3c902ca603",
+    "row_count": 33871,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:01:05.289292+00:00"
+   },
+   "prices:LBY": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "LBY",
+    "snapshot_id": "20261118T020133_6f551a",
+    "observation_hash": "08732b6fcd1a1097a49b4c9e9fe968a7f267bdbb706d8f8ccd110425d0b57496",
+    "file_sha256": "b1811c1f183d0f595b6a556e41e4717e1bc9a2b36434703767bbd58f0e4e0d4f",
+    "row_count": 71630,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:01:29.110262+00:00"
+   },
+   "prices:LSO": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "LSO",
+    "snapshot_id": "20261118T020124_bebd10",
+    "observation_hash": "c575fff627e2f3598dcdfa3bc7659670fe8325c4260d2f3fb403e27c153bea3f",
+    "file_sha256": "7618222cc5de7ee620155d1db19aef72ade4b6a33cac55b197ff025c342cc49f",
+    "row_count": 6960,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:01:24.123774+00:00"
+   },
+   "prices:MMR": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "MMR",
+    "snapshot_id": "20261118T020158_4ac06c",
+    "observation_hash": "caa48ca2cfad2c4df77988189308a5832d32d873c67b0482ae8293f34d7ec192",
+    "file_sha256": "94374fd7aa335ec463470187ecc696dda140b566753e7a62ff17c87248ff5cec",
+    "row_count": 47662,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:01:53.835131+00:00"
+   },
+   "prices:MNG": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "MNG",
+    "snapshot_id": "20261118T020200_052622",
+    "observation_hash": "b1b8427b46f505f6d939a5b69dbb753c1740500d64d773744b68c5635a920426",
+    "file_sha256": "d0ef27a79f953205034e162ff658c3739834d442c494eb79536487772a4a764d",
+    "row_count": 1649,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:02:00.707291+00:00"
+   },
+   "prices:MOZ": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "MOZ",
+    "snapshot_id": "20261118T020220_59ed26",
+    "observation_hash": "65c32354b549887e94150192b92e7d8c642a980b97255ab16dcb01a67d61d752",
+    "file_sha256": "567ee603fda272880b2398c71dee01d65a3e8fd8191eb100ad126e1b1ed79ae2",
+    "row_count": 41790,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:02:17.081166+00:00"
+   },
+   "prices:NAM": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "NAM",
+    "snapshot_id": "20261118T020228_f2d1eb",
+    "observation_hash": "77a9027f07c46a9cc135b3116b2f89905aada2249292beed68262d53b2fda537",
+    "file_sha256": "866bff14a56198b9835391c2d1d70b87b9bde12fd59be8aa8654ee885d868009",
+    "row_count": 3585,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:02:28.465095+00:00"
+   },
+   "prices:NPL": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "NPL",
+    "snapshot_id": "20261118T020316_ab4a12",
+    "observation_hash": "577ee3a33ed73988bf11cf7b32b842249965d407e38583f2a4580fb1e73761dc",
+    "file_sha256": "96ee8ed9012b9f214349b778abf4b73cb11396b85fc3817de212b4eb349edd37",
+    "row_count": 43652,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:03:13.023494+00:00"
+   },
+   "prices:PAK": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "PAK",
+    "snapshot_id": "20261118T020314_33f429",
+    "observation_hash": "1f77abfc562fe40e238a594f59eb862621b914a998ad0c808b8c4a12bdadc806",
+    "file_sha256": "a133aadf46cbadb7ab0b629298d637d9163e6606827106b70bcbd3d4b6d68c2e",
+    "row_count": 9483,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:03:13.703682+00:00"
+   },
+   "prices:PHL": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "PHL",
+    "snapshot_id": "20261118T020445_afcf19",
+    "observation_hash": "324c6b01bcc039dfc88cf0b600efdcc65dd3920d6f7e24e359743d56cf87cf7a",
+    "file_sha256": "86c2d6f408c56fb311c5f5a9c4c98ca6c9c8c54ec79b0783ff88b4b9507ece60",
+    "row_count": 223899,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:04:31.875981+00:00"
+   },
+   "prices:PSE": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "PSE",
+    "snapshot_id": "20261118T020328_a75ebd",
+    "observation_hash": "10c256761ea9de6d8960f5583e84961912c4ab4d062bf3038b18c56641e10ef7",
+    "file_sha256": "84fdcca10d05bad36aff5e7f90297f4eaf8ed2054e615e4d4676ffd0bb3aa8e3",
+    "row_count": 22544,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:03:27.778204+00:00"
+   },
+   "prices:RWA": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "RWA",
+    "snapshot_id": "20261118T020345_bc4911",
+    "observation_hash": "cbc52981e8ace4c366c2f5335381171206d2b9537ae7875e69c5f6423b8af49c",
+    "file_sha256": "eb97eebd37cfbc5c1bed604efda73211d57a72318585ad42adbb72c8f835fa5a",
+    "row_count": 38284,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:03:42.739333+00:00"
+   },
+   "prices:SDN": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "SDN",
+    "snapshot_id": "20261118T020354_911c04",
+    "observation_hash": "8b3122bfe554bcef6f66a34ab611674a11686a25076d74cc6b20897bf538129e",
+    "file_sha256": "254f11ff0b298a906e20cfb37e9522805a477f1bfe9fe8ab081e712515373d24",
+    "row_count": 16282,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:03:52.921937+00:00"
+   },
+   "prices:SEN": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "SEN",
+    "snapshot_id": "20261118T020406_e067a9",
+    "observation_hash": "d43b3c1fd0882a8eb7255ce5748e5380934b64135724bd14d29501134f79815a",
+    "file_sha256": "0eddbab6d7c8a11bae6f881a380743cce2797b58be393d55e3d8ccb235b77e9c",
+    "row_count": 33138,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:04:04.039458+00:00"
+   },
+   "prices:SLE": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "SLE",
+    "snapshot_id": "20261118T020415_508a17",
+    "observation_hash": "c48a199651b61c59a88dac9536052d29c2abf895e9c4010e572a0b2ef4ad8d5e",
+    "file_sha256": "d25e90ddb57f85e567e69377e4c7a88ffd8a7ef6420c5403f3fa8679346d359e",
+    "row_count": 19519,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:04:14.074213+00:00"
+   },
+   "prices:SYR": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "SYR",
+    "snapshot_id": "20261118T020645_c74840",
+    "observation_hash": "e6a9db73b6d25e24e39d6f3cdedb93a0654aaa9a2aee98127a9859ba595ffd0a",
+    "file_sha256": "4c126edbf3020deb191790cc9a0d718d613b4392c6bdd0550d06e149519f2086",
+    "row_count": 271802,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:06:10.391320+00:00"
+   },
+   "prices:TCD": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "TCD",
+    "snapshot_id": "20261118T020530_b54d6a",
+    "observation_hash": "58d6dcb1dc12c50ae55249aabad9996f02ed537f42d66bfaff2c0a93aeb6b61b",
+    "file_sha256": "71fecea13b3eb1a0d1ebb7b429095ab074d99631a6ce3c2235bea06c966c1e8d",
+    "row_count": 109862,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:05:25.137980+00:00"
+   },
+   "prices:TGO": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "TGO",
+    "snapshot_id": "20261118T020544_1644f8",
+    "observation_hash": "21435b3223f20e22a29efaa1a2ede5233aeefe1370095c94a6b0fa3c4e8bb901",
+    "file_sha256": "885decc0ab6025dab5254bd4ced6bd7aea57f552458bc91c506c08d7fad84039",
+    "row_count": 39876,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:05:42.451798+00:00"
+   },
+   "prices:TLS": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "TLS",
+    "snapshot_id": "20261118T020610_f5d4f9",
+    "observation_hash": "0f83db5b1ac1ca1416fb4cf135471bc675ca74118dd733baf131055e676e8621",
+    "file_sha256": "3a2dbfa15c56c300dc248987a5b0d9f39c78450861d2ff4c6714302e405cc34d",
+    "row_count": 10739,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:06:09.554130+00:00"
+   },
+   "prices:TZA": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "TZA",
+    "snapshot_id": "20261118T020653_feaff4",
+    "observation_hash": "3c9e2dcb1579b3986a2f4bac100060d35eadf63a400d7925582f343523776723",
+    "file_sha256": "14bf42d42b9f7cbd929717faabdde9e99f46a705d5e6b30de63d81a9b02e54c9",
+    "row_count": 54216,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:06:48.480172+00:00"
+   },
+   "prices:UGA": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "UGA",
+    "snapshot_id": "20261118T020707_5dfa2a",
+    "observation_hash": "e075d9ea7cc647154e9ed933309ce0cb49bfd6950861b45f3743cbd4d7fb4e15",
+    "file_sha256": "54721d5f762ab79d88413f803639dde3014be3e7d464218ebe699d2461ce61c2",
+    "row_count": 30836,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:07:03.450663+00:00"
+   },
+   "prices:UKR": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "UKR",
+    "snapshot_id": "20261118T020736_5f1a54",
+    "observation_hash": "56221006159627df4944f1d1c2c44eb5508e7df16ab65654ae898727f6fe631f",
+    "file_sha256": "cc039061475865e5439031d160ac8ebe3b4e16bf87ac30a62b195d4801e1fd1c",
+    "row_count": 96517,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:07:29.921071+00:00"
+   },
+   "prices:YEM": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "YEM",
+    "snapshot_id": "20261118T020757_95da1a",
+    "observation_hash": "d1e044d28e69273e5d7d4c71cfd6dfdaf819315950b154b50049477c93625819",
+    "file_sha256": "4c5044cc84d37151f8e35263afe21f0133065cf4f308d7992c675529450af14a",
+    "row_count": 53608,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:07:54.296630+00:00"
+   },
+   "prices:ZMB": {
+    "layout": "partition",
+    "dataset": "prices",
+    "country_iso3": "ZMB",
+    "snapshot_id": "20261118T020807_de672b",
+    "observation_hash": "3b7e1f5d4c0b4095957443deafd6849027fd20973f0e40db822daa510559e3b9",
+    "file_sha256": "ac0f5e9264f1eae05dac7b01d3d2e153554e52bd6a306677039dbed03cbf0312",
+    "row_count": 50701,
+    "provider": "hdx_hapi",
+    "retrieved_at_max": "2026-11-18T02:07:59.002537+00:00"
+   },
+   "weather_monthly:ARM": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021237_97f8a5",
+    "observation_hash": "c8b4f855643ae412769a6d62a1c582ce419d65a2ae24a4865e4fcecadfff8867",
+    "file_sha256": "580258dcc0cd0bb75f2df8f9800a51eeaef57711377d4726257749010a2c6f80"
+   },
+   "weather_monthly:BEN": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021246_6cbcdb",
+    "observation_hash": "3ba76eea29fcaccebb5d3cb87c786b9f660b88463a2cd30b215705a5f208e37e",
+    "file_sha256": "f6f642e362d6b7bbdb746c916eeb7c1a6bbddadae8c59ac0bf69507847c5823b"
+   },
+   "weather_monthly:BOL": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021249_bfda8a",
+    "observation_hash": "71beef8545f49cfde6ef17ee961788e6e16895621392902d962e746481896e63",
+    "file_sha256": "a2b7c2dd5e88b285c3820a92401d1ba4b7efc7ca086223712addb9cee2dc5fed"
+   },
+   "weather_monthly:CAF": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021259_81da35",
+    "observation_hash": "4251e8150c3a52338714529b5b622810aef22a3008a6882774ad76b39f5f166a",
+    "file_sha256": "548a3256bbc4c2dd4906f0314c70226f08a81eebc72b1e1d05f07dfd53acccf5"
+   },
+   "weather_monthly:CMR": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021303_839eb2",
+    "observation_hash": "294eb93a9f9bf935da0598f35b395a963e8a15a040cffd3c26afe23e045e3450",
+    "file_sha256": "6327d59f266267acb36d25ac58e4c89cd717aa1a6000b721eaed9c05cf320305"
+   },
+   "weather_monthly:DJI": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021304_144cb4",
+    "observation_hash": "8de87f9ef11d8ac9270730c3bb829b77a0adee906b03d6a2c73e61ba3d33d31e",
+    "file_sha256": "df6bb728917cf86725614a6c42b974fe22bbbf339f9a4bccfd1b30942c4aa96a"
+   },
+   "weather_monthly:ETH": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021310_1f79f1",
+    "observation_hash": "6959893135e6a8e585fa82160f297c38c2a82d108e4fb8a2b2664c1afec133b7",
+    "file_sha256": "3b9c70ed2d8300f27ef7db064fb371cd3a11f7a9e80a8f0f00d804758af72be4"
+   },
+   "weather_monthly:GIN": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021314_405775",
+    "observation_hash": "780ce9288718748d74cdf78d9fe1e7235fd6ecfe61c22f3f078b198ccfb5f68c",
+    "file_sha256": "5b8f9e429d6a8523bec699d769387ea8a3d713fb4cfec4724a9dbf04a863cba0"
+   },
+   "weather_monthly:GMB": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021316_048270",
+    "observation_hash": "55060c1ecc635b0d42b90d7c57eb24881a846230edf3db592f2283a0d6467d49",
+    "file_sha256": "03994925d67020ab437d548d4d83bb0d5b95a6c2c4f9d11bf0eeff60a4a16e68"
+   },
+   "weather_monthly:GNB": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021320_3471a1",
+    "observation_hash": "fa954f90ce78fca3a9d8f81ed639195fc528e47b2b8971d40e1b3ad42dce5b40",
+    "file_sha256": "4d4aee39686340fe0d28df2966c5103dc7bfaa7af11e1950e74f861cfa2a8bca"
+   },
+   "weather_monthly:HTI": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021322_e273b7",
+    "observation_hash": "b6351a578f317184ef1042975639f203528723372666a53f3b9121955c258c00",
+    "file_sha256": "ca5747782f783a7f5f49ec9c23289b7117610a1fa37bc4b651799b5ffbe6dde4"
+   },
+   "weather_monthly:IND": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021337_474eb8",
+    "observation_hash": "7b3db1b5870a9430ca84c72bb531150e3a91952f809fe49a8faad72cc3ccc543",
+    "file_sha256": "07b3fe5bdab3cda30d2a197b8f3a586b52c63f0fcd7332d82137dbebcb687b14"
+   },
+   "weather_monthly:JOR": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021339_eb9803",
+    "observation_hash": "3c5378d8fd765407aec30f32c01edf856f61bdc15a9ef4ada8458f6fa08341d1",
+    "file_sha256": "37c54a35790a6edf8a63a3988c5fa7408bdf742bf8223156dc2dd8526114034e"
+   },
+   "weather_monthly:KGZ": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021344_1f6414",
+    "observation_hash": "3576c7140fdbd2d622c1418ed405115bfb5db880c21cbda2cb737ca36f8b707f",
+    "file_sha256": "b086a6ca2bc93a5e9a09051762eb62ab17e271776d14a1a8d045c8e82dc13c92"
+   },
+   "weather_monthly:LAO": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021347_45b1c7",
+    "observation_hash": "456a7a3034dfb8c4142c7452973e19ae1baa87879a7d7c5e66d353781dd9df72",
+    "file_sha256": "451731c4068b027a671738e13b2325efea77d892b32d12fb051da7f8af5458ee"
+   },
+   "weather_monthly:LBN": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021348_3487b4",
+    "observation_hash": "a6cca81438ad174a91d6ab8626b6611262ec19333a02637e8b653cbce5e2d24d",
+    "file_sha256": "eb045d8d76641aba8e4260872556d1b09216d341794614be4b4a93e272771151"
+   },
+   "weather_monthly:LBY": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021355_5ca7e6",
+    "observation_hash": "c4f83ab65c7feed7cca8451e4d8d6f4cbb9344d5c1e9afaf3434185fd154c1b8",
+    "file_sha256": "7ac2e64ef2541e83f23b029efdab3b0c916f3c55147e7c08a33d20cc0dea104c"
+   },
+   "weather_monthly:LSO": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021359_38fa7d",
+    "observation_hash": "ddaf9d74225a38d6afe8a485bfd2ecc82695f14b68948c8dc4f66b8f1f614c3f",
+    "file_sha256": "1d3153642e70dffb38932516b6212da3f6c419512640ceda646d54ccc700d948"
+   },
+   "weather_monthly:MMR": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021406_582ecf",
+    "observation_hash": "5499c21af7b32a6c94e1b35475d804313532130850e54eb45199ef540aae93f7",
+    "file_sha256": "c0164d9c96f6c083e4212ddeed077fa0d91a1747fa4c8b433cb33326907148a5"
+   },
+   "weather_monthly:MNG": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021408_b70d22",
+    "observation_hash": "7bc5f95f40cc57654d2aba2694c5e101c37b9251f8926e64980b6a2f98cafd0b",
+    "file_sha256": "fdd392a9f33127330eefbd0d013aa5842b101d875dcb1955ab56b3113becb3a0"
+   },
+   "weather_monthly:MOZ": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021411_f5849e",
+    "observation_hash": "856db9b4011fb34fa241bc07f1905738920eeadc323aa38bfbdc1dadf7f36d2e",
+    "file_sha256": "607def65407a26cbb29fe8d7a7d6f1b9c0671a6a3d1ec0ead53d12ada7eb8259"
+   },
+   "weather_monthly:NAM": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021413_a0bbf0",
+    "observation_hash": "976ccbb0f4830076d162c5d0af5aef1a5f728076f6abe50a1791a33c76244c2b",
+    "file_sha256": "a5abacefcbe6bca055b343f89a04d00eb8a9725cd3f30795a8d7f4118dcf85c9"
+   },
+   "weather_monthly:NPL": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021420_915df0",
+    "observation_hash": "e3f5f94a5078d98a000b0bf9a7da50138964f7e560b552185d5a62c570c1a37d",
+    "file_sha256": "6a5cd4efd6caf3d9e96d6bfd34231aa7c815efd11c080a2b77e7e4d0ba2c4d82"
+   },
+   "weather_monthly:PAK": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021421_eab406",
+    "observation_hash": "b1f1bb604cfe6e0faf09c9953912fbc49b8c3a39086a2c50a67f378538ccec35",
+    "file_sha256": "46db8f0e70c94556222a599ba464a874db2ff206d842e02d5f7e5ad7dd5d0ede"
+   },
+   "weather_monthly:PHL": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021438_ce37d0",
+    "observation_hash": "c4856256e3b3e8fda119e5b78bd13163aeeb67e2f80a148024e44fa8f4ab5958",
+    "file_sha256": "dd18b8857a49bf75a61e35bd1d47a95561f006fad2bf8355260ed62540d288f1"
+   },
+   "weather_monthly:PSE": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021439_d82ba0",
+    "observation_hash": "a7ae56c84c7d75d28057f2f13002a3f0d2da72c2334cf0df5673f32a6b384e0a",
+    "file_sha256": "79fc320b7b1da8a029c96c397b0d8c3a3d6b7fb8e5db58b6b6fb31ac08968775"
+   },
+   "weather_monthly:RWA": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021441_c73567",
+    "observation_hash": "6102697337da447619f2d66c129ee4a2809dbf62119dd5dbfa2e4926987ba1c8",
+    "file_sha256": "1644a6671b1a6f0890a254c22b99b11133f67e2bb53f32f5544ae96c4a3bbda1"
+   },
+   "weather_monthly:SDN": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021443_ef0701",
+    "observation_hash": "9f66f87db2c0865a86e6f6e707e057ab20d9a95c47101831c4c523fc11302df1",
+    "file_sha256": "1bf5cac05e576f26dd930817f2e9d10fe325e55bce97204a6e32dcf3729c198b"
+   },
+   "weather_monthly:SEN": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021446_975939",
+    "observation_hash": "5e8e329118208e6f1367f927473ab4fc7d65e5ddf846066805bfde1ee7f3dea2",
+    "file_sha256": "9512b4831030fc235a35a67b973e41b43b91b350966673a3c6cd1e227e0915e5"
+   },
+   "weather_monthly:SLE": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021448_65dc79",
+    "observation_hash": "b0c7086223d5fc3bac40b0df1b978d8fbe2fab173509b08989f4b6d4d39dd3e0",
+    "file_sha256": "789ac7f77a3cc696f5408f5a3db82f7d50dd5972dae0267270c2e42baa1a9b33"
+   },
+   "weather_monthly:SYR": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021458_12b291",
+    "observation_hash": "ff3b84b4753fb8f6a306f0aec3e234e863e9e6a009394dde4b44817f62af9720",
+    "file_sha256": "f89bca25478b0695b1f054eab3e7e87c39e0223a59ef3685f4939ad823c3065d"
+   },
+   "weather_monthly:TCD": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021513_74ca9d",
+    "observation_hash": "ccd83e26a3f5233ab6b34a5484f659f6b8b61cb8701213af5485f57ecbf7c44c",
+    "file_sha256": "b16e9dd72973644aa80f58d40ff10cd684f7388d5b850f97070b07cab9eb4825"
+   },
+   "weather_monthly:TGO": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021518_b68887",
+    "observation_hash": "97e344c8eff1e24bc1ca19662a97cc05dd3c43313c276e250358c26726237c31",
+    "file_sha256": "31c9e58dfbea6e5b22c3b6d870c4d26dfd5d71f03cb3fa2f8e33d3bf0737d581"
+   },
+   "weather_monthly:TLS": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021518_bb64d5",
+    "observation_hash": "1aeb69336c75f4cc981df217e669d82d9471d8bbf51532743b67004b95225195",
+    "file_sha256": "115dcd50e56491899d4c1c7be8d4a9ad0f8692f5d47d49aea5cdc69a2e059531"
+   },
+   "weather_monthly:TZA": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021527_6f37db",
+    "observation_hash": "4eec3efdd4e6a5a66130a8238f5f759a2d5d025b99c70abc139e62ac85697bda",
+    "file_sha256": "a9956b3a098ac9ed1aead501ca6551a6f4eaa5b8a2ca9bd7ed450471bccbc811"
+   },
+   "weather_monthly:UGA": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021532_e04817",
+    "observation_hash": "c4caf1ad3570014f6e2df55025faee916665c7c64e44b48b342ba140d8b9bc48",
+    "file_sha256": "2172e129ab1554b51d7c68193707da568a47149001f2db647b29d0b2ba61a18a"
+   },
+   "weather_monthly:UKR": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021538_97039f",
+    "observation_hash": "6f7f453b437ea57448662d54548c222bab91a61230aba7c60629735a3f882324",
+    "file_sha256": "1e0a47d18452d273b6b67ef592712f82416db24d5c820aaa8a7b1cb0e0aa91fa"
+   },
+   "weather_monthly:YEM": {
+    "layout": "partition",
+    "snapshot_id": "20261118T021545_853192",
+    "observation_hash": "d096869d8df84e1b814b6667378697d904fab85bcdfd1b34f587869334eded68",
+    "file_sha256": "7308ed61b55f2df60eb578b70b74e0b5b67b0a1727701c48eabd23a30b20f411"
+   },
+   "weather_monthly:ZMB": {
+    "layout": "partition",
+    "snapshot_id": "20261118T022222_f86484",
+    "observation_hash": "0c6c75ccdd6b3ae9b660c049df89bb380b5574310bf6d64a4efeee1bd5c73882",
+    "file_sha256": "006277593fa1fde0ecaee36e34f2b1e8bbe4e6b12d56347dc482ca069d4a80e5"
+   },
+   "weather_monthly:lake": {
+    "layout": "lake",
+    "snapshot_id": "20261117T031938_006340",
+    "content_hash": "2843793a0fe49621"
+   }
+  },
+  "hypotheses": [
+   {
+    "hypothesis": {
+     "id": "H1",
+     "statement": "Family B (price history + market-local weather) has lower 1-month forecast loss than family A.",
+     "challenger": "B",
+     "baseline": "A",
+     "horizon": 1,
+     "alternative": "challenger_better"
+    },
+    "result": {
+     "status": "ok",
+     "reason": null,
+     "aggregation": "country_balanced",
+     "n_months": 57,
+     "n_countries": 39,
+     "n_series": 2307,
+     "n_forecasts": 84706,
+     "first_origin": "2022-01-01",
+     "last_origin": "2026-09-01",
+     "loss_ratio": 0.9812454518058722,
+     "pct_change_in_loss": -1.8754548194127807,
+     "mean_loss_baseline": 0.04593206089713655,
+     "mean_loss_challenger": 0.04507062584738559,
+     "dm_stat": 0.6718642131698794,
+     "hac_lags": 3,
+     "p_challenger_better": 0.25221630719477905,
+     "p_challenger_worse": 0.747783692805221,
+     "p_two_sided": 0.5044326143895581,
+     "ci_block": {
+      "ci_low": 0.9381678999650814,
+      "ci_high": 1.0281121459813676,
+      "block_length": 4,
+      "reps": 1000
+     },
+     "ci_primary": {
+      "ci_low": 0.9277872991822815,
+      "ci_high": 1.0391762381423861,
+      "reps": 1000,
+      "block_length": 4,
+      "note": "countries and moving blocks of origin months resampled jointly",
+      "method": "two_way_country_month"
+     },
+     "sign_test_countries": {
+      "better": 12,
+      "worse": 27,
+      "p_one_sided_better": 0.9952623478602618,
+      "p_two_sided": 0.023702702470473014,
+      "median_ratio": 1.007722293311737
+     },
+     "influence": {
+      "top_months": [
+       "2026-08-01",
+       "2026-07-01",
+       "2026-06-01"
+      ],
+      "top_share_of_total_difference": 1.4767878700697634,
+      "ratio_without_top": 1.0104198128822617,
+      "fragile": true
+     },
+     "leave_one_country_out": {
+      "min": 0.9777007582515219,
+      "min_without": "SDN",
+      "max": 1.0137154877488084,
+      "max_without": "PSE"
+     },
+     "per_country": [
+      {
+       "country_iso3": "ARM",
+       "loss_a": 0.0013941980567906426,
+       "loss_b": 0.0013957754668406546,
+       "n_forecasts": 1881,
+       "n_series": 33,
+       "n_months": 57,
+       "ratio": 1.001131410305967,
+       "log_ratio": 0.0011307707436861974
+      },
+      {
+       "country_iso3": "BEN",
+       "loss_a": 0.01354772579276584,
+       "loss_b": 0.013901450966479587,
+       "n_forecasts": 7469,
+       "n_series": 147,
+       "n_months": 55,
+       "ratio": 1.0261095610528688,
+       "log_ratio": 0.02577452569942158
+      },
+      {
+       "country_iso3": "BOL",
+       "loss_a": 0.020745282061381334,
+       "loss_b": 0.020796177135360704,
+       "n_forecasts": 1482,
+       "n_series": 26,
+       "n_months": 57,
+       "ratio": 1.0024533324651255,
+       "log_ratio": 0.0024503279580663875
+      },
+      {
+       "country_iso3": "CAF",
+       "loss_a": 0.04571543577063125,
+       "loss_b": 0.0466847841678753,
+       "n_forecasts": 3974,
+       "n_series": 74,
+       "n_months": 57,
+       "ratio": 1.0212039627513905,
+       "log_ratio": 0.020982286862768866
+      },
+      {
+       "country_iso3": "CMR",
+       "loss_a": 0.08179661552775212,
+       "loss_b": 0.08172403907452586,
+       "n_forecasts": 1426,
+       "n_series": 42,
+       "n_months": 56,
+       "ratio": 0.9991127205843664,
+       "log_ratio": -0.0008876732810106342
+      },
+      {
+       "country_iso3": "DJI",
+       "loss_a": 0.010322730498330315,
+       "loss_b": 0.010288820842912985,
+       "n_forecasts": 724,
+       "n_series": 15,
+       "n_months": 51,
+       "ratio": 0.9967150498191525,
+       "log_ratio": -0.0032903574747341915
+      },
+      {
+       "country_iso3": "ETH",
+       "loss_a": 0.020144119491461093,
+       "loss_b": 0.02075685175433411,
+       "n_forecasts": 1249,
+       "n_series": 49,
+       "n_months": 29,
+       "ratio": 1.0304174259457082,
+       "log_ratio": 0.029963988051140738
+      },
+      {
+       "country_iso3": "GIN",
+       "loss_a": 0.01265292532157613,
+       "loss_b": 0.01262074953413298,
+       "n_forecasts": 1966,
+       "n_series": 38,
+       "n_months": 55,
+       "ratio": 0.9974570475502387,
+       "log_ratio": -0.0025461912452426063
+      },
+      {
+       "country_iso3": "GMB",
+       "loss_a": 0.009707692923272247,
+       "loss_b": 0.009744172332223418,
+       "n_forecasts": 4592,
+       "n_series": 84,
+       "n_months": 56,
+       "ratio": 1.0037577835680935,
+       "log_ratio": 0.003750740737529163
+      },
+      {
+       "country_iso3": "GNB",
+       "loss_a": 0.012932941980932823,
+       "loss_b": 0.01166817655770706,
+       "n_forecasts": 1160,
+       "n_series": 65,
+       "n_months": 36,
+       "ratio": 0.9022058998570921,
+       "log_ratio": -0.10291251461768257
+      },
+      {
+       "country_iso3": "HTI",
+       "loss_a": 0.039831925183595254,
+       "loss_b": 0.03834793047268389,
+       "n_forecasts": 782,
+       "n_series": 24,
+       "n_months": 33,
+       "ratio": 0.9627435856019696,
+       "log_ratio": -0.03796816888841581
+      },
+      {
+       "country_iso3": "IND",
+       "loss_a": 0.012282016629371515,
+       "loss_b": 0.012413318593788967,
+       "n_forecasts": 2844,
+       "n_series": 159,
+       "n_months": 18,
+       "ratio": 1.0106905867643472,
+       "log_ratio": 0.010633846474765039
+      },
+      {
+       "country_iso3": "JOR",
+       "loss_a": 0.0004120674351839834,
+       "loss_b": 0.0005240116570719134,
+       "n_forecasts": 2016,
+       "n_series": 36,
+       "n_months": 56,
+       "ratio": 1.2716648109743205,
+       "log_ratio": 0.2403269168072096
+      },
+      {
+       "country_iso3": "KGZ",
+       "loss_a": 0.008751532135738439,
+       "loss_b": 0.008772697821737972,
+       "n_forecasts": 3022,
+       "n_series": 54,
+       "n_months": 56,
+       "ratio": 1.0024185120583742,
+       "log_ratio": 0.0024155921650031984
+      },
+      {
+       "country_iso3": "LAO",
+       "loss_a": 0.005518584170188789,
+       "loss_b": 0.005755802476743672,
+       "n_forecasts": 1500,
+       "n_series": 30,
+       "n_months": 55,
+       "ratio": 1.0429853562506717,
+       "log_ratio": 0.042087135891954085
+      },
+      {
+       "country_iso3": "LBN",
+       "loss_a": 0.011721082081410424,
+       "loss_b": 0.014119855253893497,
+       "n_forecasts": 336,
+       "n_series": 21,
+       "n_months": 16,
+       "ratio": 1.2046545835804285,
+       "log_ratio": 0.18619287321955025
+      },
+      {
+       "country_iso3": "LBY",
+       "loss_a": 0.03915573145659518,
+       "loss_b": 0.039458103499738606,
+       "n_forecasts": 1944,
+       "n_series": 81,
+       "n_months": 37,
+       "ratio": 1.007722293311737,
+       "log_ratio": 0.007692629024417642
+      },
+      {
+       "country_iso3": "LSO",
+       "loss_a": 0.0012014766645975605,
+       "loss_b": 0.0012320117690098533,
+       "n_forecasts": 1620,
+       "n_series": 30,
+       "n_months": 54,
+       "ratio": 1.0254146462532592,
+       "log_ratio": 0.025097063718994884
+      },
+      {
+       "country_iso3": "MMR",
+       "loss_a": 0.02463657082220976,
+       "loss_b": 0.02513064878414695,
+       "n_forecasts": 1506,
+       "n_series": 36,
+       "n_months": 54,
+       "ratio": 1.0200546563684822,
+       "log_ratio": 0.019856210535554898
+      },
+      {
+       "country_iso3": "MNG",
+       "loss_a": 0.0072627504996890906,
+       "loss_b": 0.004438421389331535,
+       "n_forecasts": 35,
+       "n_series": 10,
+       "n_months": 4,
+       "ratio": 0.6111212810520666,
+       "log_ratio": -0.49245984351470246
+      },
+      {
+       "country_iso3": "MOZ",
+       "loss_a": 0.032751765564732235,
+       "loss_b": 0.033327538475478174,
+       "n_forecasts": 382,
+       "n_series": 24,
+       "n_months": 22,
+       "ratio": 1.0175799044972995,
+       "log_ratio": 0.017427165469753
+      },
+      {
+       "country_iso3": "NAM",
+       "loss_a": 0.032761649027776174,
+       "loss_b": 0.03274149625820569,
+       "n_forecasts": 92,
+       "n_series": 23,
+       "n_months": 4,
+       "ratio": 0.9993848670574121,
+       "log_ratio": -0.0006153222144786179
+      },
+      {
+       "country_iso3": "NPL",
+       "loss_a": 0.01290284657439747,
+       "loss_b": 0.013247340271032455,
+       "n_forecasts": 2399,
+       "n_series": 67,
+       "n_months": 36,
+       "ratio": 1.0266990461871064,
+       "log_ratio": 0.02634884631398036
+      },
+      {
+       "country_iso3": "PAK",
+       "loss_a": 0.01211758529725793,
+       "loss_b": 0.01215831986403674,
+       "n_forecasts": 836,
+       "n_series": 15,
+       "n_months": 56,
+       "ratio": 1.0033616075958656,
+       "log_ratio": 0.0033559700237218997
+      },
+      {
+       "country_iso3": "PHL",
+       "loss_a": 0.004110403304301375,
+       "loss_b": 0.004219758457966953,
+       "n_forecasts": 6490,
+       "n_series": 232,
+       "n_months": 28,
+       "ratio": 1.0266044827161223,
+       "log_ratio": 0.0262567377000128
+      },
+      {
+       "country_iso3": "PSE",
+       "loss_a": 0.6321260994604201,
+       "loss_b": 0.59913288450101,
+       "n_forecasts": 330,
+       "n_series": 6,
+       "n_months": 55,
+       "ratio": 0.9478059599380995,
+       "log_ratio": -0.05360548128726386
+      },
+      {
+       "country_iso3": "RWA",
+       "loss_a": 0.027361104030794305,
+       "loss_b": 0.027979719665794947,
+       "n_forecasts": 1038,
+       "n_series": 29,
+       "n_months": 44,
+       "ratio": 1.022609308246641,
+       "log_ratio": 0.02235750615180889
+      },
+      {
+       "country_iso3": "SDN",
+       "loss_a": 0.10187728718310955,
+       "loss_b": 0.10336379737389824,
+       "n_forecasts": 868,
+       "n_series": 21,
+       "n_months": 57,
+       "ratio": 1.0145911834903585,
+       "log_ratio": 0.014485756471812813
+      },
+      {
+       "country_iso3": "SEN",
+       "loss_a": 0.01199801859502328,
+       "loss_b": 0.012126872186966052,
+       "n_forecasts": 1165,
+       "n_series": 28,
+       "n_months": 57,
+       "ratio": 1.01073957261545,
+       "log_ratio": 0.010682313003163347
+      },
+      {
+       "country_iso3": "SLE",
+       "loss_a": 0.03565734276497614,
+       "loss_b": 0.03508911233489388,
+       "n_forecasts": 1285,
+       "n_series": 39,
+       "n_months": 51,
+       "ratio": 0.9840641397810385,
+       "log_ratio": -0.01606420134987641
+      },
+      {
+       "country_iso3": "SYR",
+       "loss_a": 0.07969482192028401,
+       "loss_b": 0.08348266345249528,
+       "n_forecasts": 6550,
+       "n_series": 207,
+       "n_months": 41,
+       "ratio": 1.0475293305253899,
+       "log_ratio": 0.04643437292371454
+      },
+      {
+       "country_iso3": "TCD",
+       "loss_a": 0.02859858355226203,
+       "loss_b": 0.028669653594429335,
+       "n_forecasts": 5456,
+       "n_series": 112,
+       "n_months": 56,
+       "ratio": 1.0024850895862527,
+       "log_ratio": 0.0024820068573089926
+      },
+      {
+       "country_iso3": "TGO",
+       "loss_a": 0.03586757406813674,
+       "loss_b": 0.03513247512522535,
+       "n_forecasts": 6193,
+       "n_series": 117,
+       "n_months": 57,
+       "ratio": 0.9795051948170528,
+       "log_ratio": -0.020707738071990438
+      },
+      {
+       "country_iso3": "TLS",
+       "loss_a": 0.0058186303485890075,
+       "loss_b": 0.0058692662617890815,
+       "n_forecasts": 192,
+       "n_series": 10,
+       "n_months": 27,
+       "ratio": 1.0087023767049152,
+       "log_ratio": 0.008664729281800522
+      },
+      {
+       "country_iso3": "TZA",
+       "loss_a": 0.026309682354672098,
+       "loss_b": 0.02544857425477919,
+       "n_forecasts": 713,
+       "n_series": 73,
+       "n_months": 11,
+       "ratio": 0.9672702966047025,
+       "log_ratio": -0.03327730179670176
+      },
+      {
+       "country_iso3": "UGA",
+       "loss_a": 0.051676103998640116,
+       "loss_b": 0.05433607767020557,
+       "n_forecasts": 3585,
+       "n_series": 70,
+       "n_months": 57,
+       "ratio": 1.0514739592527225,
+       "log_ratio": 0.050192950521305256
+      },
+      {
+       "country_iso3": "UKR",
+       "loss_a": 0.002563526782667691,
+       "loss_b": 0.0026338114721177245,
+       "n_forecasts": 2724,
+       "n_series": 69,
+       "n_months": 44,
+       "ratio": 1.027417185545022,
+       "log_ratio": 0.02704806613034759
+      },
+      {
+       "country_iso3": "YEM",
+       "loss_a": 0.029977710689243403,
+       "loss_b": 0.030172806072323435,
+       "n_forecasts": 2736,
+       "n_series": 66,
+       "n_months": 55,
+       "ratio": 1.0065080147414338,
+       "log_ratio": 0.006486929048055231
+      },
+      {
+       "country_iso3": "ZMB",
+       "loss_a": 0.025919609411952024,
+       "loss_b": 0.025558326472608014,
+       "n_forecasts": 144,
+       "n_series": 45,
+       "n_months": 7,
+       "ratio": 0.9860614049539876,
+       "log_ratio": -0.01403664948902081
+      }
+     ]
+    },
+    "p_raw": 0.25221630719477905,
+    "p_adjusted": 0.5044326143895581,
+    "evidence": {
+     "class": "not_established",
+     "text": "No improvement was established; this is not evidence that the information has no value."
+    }
+   },
+   {
+    "hypothesis": {
+     "id": "H2",
+     "statement": "Family B (price history + market-local weather) has lower 3-month forecast loss than family A.",
+     "challenger": "B",
+     "baseline": "A",
+     "horizon": 3,
+     "alternative": "challenger_better"
+    },
+    "result": {
+     "status": "ok",
+     "reason": null,
+     "aggregation": "country_balanced",
+     "n_months": 55,
+     "n_countries": 39,
+     "n_series": 2279,
+     "n_forecasts": 80352,
+     "first_origin": "2022-01-01",
+     "last_origin": "2026-07-01",
+     "loss_ratio": 1.0049776669183765,
+     "pct_change_in_loss": 0.4977666918376533,
+     "mean_loss_baseline": 0.06664736833611044,
+     "mean_loss_challenger": 0.06697911673667396,
+     "dm_stat": -0.8483104548318354,
+     "hac_lags": 3,
+     "p_challenger_better": 0.7999950797881696,
+     "p_challenger_worse": 0.20000492021183042,
+     "p_two_sided": 0.40000984042366083,
+     "ci_block": {
+      "ci_low": 0.9923561239000951,
+      "ci_high": 1.0159228647622467,
+      "block_length": 4,
+      "reps": 1000
+     },
+     "ci_primary": {
+      "ci_low": 0.9849607061854712,
+      "ci_high": 1.0246030384846452,
+      "reps": 1000,
+      "block_length": 4,
+      "note": "countries and moving blocks of origin months resampled jointly",
+      "method": "two_way_country_month"
+     },
+     "sign_test_countries": {
+      "better": 17,
+      "worse": 22,
+      "p_one_sided_better": 0.8316081824050343,
+      "p_two_sided": 0.5223973804968411,
+      "median_ratio": 1.0031010731003176
+     },
+     "influence": {
+      "top_months": [
+       "2024-05-01",
+       "2022-01-01",
+       "2025-12-01"
+      ],
+      "top_share_of_total_difference": 0.5283438255677941,
+      "ratio_without_top": 1.0024400066397958,
+      "fragile": true
+     },
+     "leave_one_country_out": {
+      "min": 1.003194941450751,
+      "min_without": "CMR",
+      "max": 1.0074381209740708,
+      "max_without": "SYR"
+     },
+     "per_country": [
+      {
+       "country_iso3": "ARM",
+       "loss_a": 0.0036376171083922107,
+       "loss_b": 0.0036639048782830014,
+       "n_forecasts": 1815,
+       "n_series": 33,
+       "n_months": 55,
+       "ratio": 1.0072266456604635,
+       "log_ratio": 0.007200658581213023
+      },
+      {
+       "country_iso3": "BEN",
+       "loss_a": 0.025619059093510196,
+       "loss_b": 0.026704136692355628,
+       "n_forecasts": 7183,
+       "n_series": 147,
+       "n_months": 54,
+       "ratio": 1.0423543110964721,
+       "log_ratio": 0.04148191537719301
+      },
+      {
+       "country_iso3": "BOL",
+       "loss_a": 0.041269867559418756,
+       "loss_b": 0.04090216247910609,
+       "n_forecasts": 1430,
+       "n_series": 26,
+       "n_months": 55,
+       "ratio": 0.9910902287296353,
+       "log_ratio": -0.008949700633678306
+      },
+      {
+       "country_iso3": "CAF",
+       "loss_a": 0.054104741930632756,
+       "loss_b": 0.05762848608670577,
+       "n_forecasts": 3821,
+       "n_series": 74,
+       "n_months": 55,
+       "ratio": 1.0651281945044813,
+       "log_ratio": 0.06309516234419289
+      },
+      {
+       "country_iso3": "CMR",
+       "loss_a": 0.05654634036016356,
+       "loss_b": 0.058475691212637695,
+       "n_forecasts": 1359,
+       "n_series": 42,
+       "n_months": 54,
+       "ratio": 1.0341198181913351,
+       "log_ratio": 0.03355064770103965
+      },
+      {
+       "country_iso3": "DJI",
+       "loss_a": 0.01580537714997193,
+       "loss_b": 0.01591623350670339,
+       "n_forecasts": 676,
+       "n_series": 15,
+       "n_months": 48,
+       "ratio": 1.007013838118482,
+       "log_ratio": 0.006989355567012914
+      },
+      {
+       "country_iso3": "ETH",
+       "loss_a": 0.03761588016359225,
+       "loss_b": 0.03504305023340655,
+       "n_forecasts": 1205,
+       "n_series": 49,
+       "n_months": 27,
+       "ratio": 0.9316025593712972,
+       "log_ratio": -0.07084899369009029
+      },
+      {
+       "country_iso3": "GIN",
+       "loss_a": 0.017149247971973675,
+       "loss_b": 0.017154454248518945,
+       "n_forecasts": 1890,
+       "n_series": 36,
+       "n_months": 53,
+       "ratio": 1.0003035862886687,
+       "log_ratio": 0.00030354021567584983
+      },
+      {
+       "country_iso3": "GMB",
+       "loss_a": 0.016656266189755253,
+       "loss_b": 0.015395378216766556,
+       "n_forecasts": 4424,
+       "n_series": 84,
+       "n_months": 54,
+       "ratio": 0.9242994823315066,
+       "log_ratio": -0.07871914477700975
+      },
+      {
+       "country_iso3": "GNB",
+       "loss_a": 0.030729977147527985,
+       "loss_b": 0.03069096860617791,
+       "n_forecasts": 1162,
+       "n_series": 65,
+       "n_months": 36,
+       "ratio": 0.9987306029821368,
+       "log_ratio": -0.0012702033847297287
+      },
+      {
+       "country_iso3": "HTI",
+       "loss_a": 0.0823214666273691,
+       "loss_b": 0.08042615781333817,
+       "n_forecasts": 759,
+       "n_series": 24,
+       "n_months": 32,
+       "ratio": 0.9769767365466154,
+       "log_ratio": -0.02329243833173228
+      },
+      {
+       "country_iso3": "IND",
+       "loss_a": 0.02397527189494223,
+       "loss_b": 0.024403111981759113,
+       "n_forecasts": 2535,
+       "n_series": 159,
+       "n_months": 16,
+       "ratio": 1.0178450567189246,
+       "log_ratio": 0.01768770292819753
+      },
+      {
+       "country_iso3": "JOR",
+       "loss_a": 0.0012873809637222791,
+       "loss_b": 0.0016550668632890294,
+       "n_forecasts": 1944,
+       "n_series": 36,
+       "n_months": 54,
+       "ratio": 1.285607687178812,
+       "log_ratio": 0.25123151487164924
+      },
+      {
+       "country_iso3": "KGZ",
+       "loss_a": 0.013061680041678871,
+       "loss_b": 0.012941861355608184,
+       "n_forecasts": 2914,
+       "n_series": 54,
+       "n_months": 54,
+       "ratio": 0.9908267017957603,
+       "log_ratio": -0.00921563199676341
+      },
+      {
+       "country_iso3": "LAO",
+       "loss_a": 0.012541342455618549,
+       "loss_b": 0.013600385090811618,
+       "n_forecasts": 1434,
+       "n_series": 30,
+       "n_months": 53,
+       "ratio": 1.0844441206306918,
+       "log_ratio": 0.08106752448998988
+      },
+      {
+       "country_iso3": "LBN",
+       "loss_a": 0.04975706551429939,
+       "loss_b": 0.051879717818567574,
+       "n_forecasts": 294,
+       "n_series": 21,
+       "n_months": 14,
+       "ratio": 1.042660319340138,
+       "log_ratio": 0.04177544640704382
+      },
+      {
+       "country_iso3": "LBY",
+       "loss_a": 0.055819009364764374,
+       "loss_b": 0.055658853542820685,
+       "n_forecasts": 1587,
+       "n_series": 81,
+       "n_months": 32,
+       "ratio": 0.9971308014282892,
+       "log_ratio": -0.0028733226122826055
+      },
+      {
+       "country_iso3": "LSO",
+       "loss_a": 0.002575570717197832,
+       "loss_b": 0.002672782244443605,
+       "n_forecasts": 1590,
+       "n_series": 30,
+       "n_months": 53,
+       "ratio": 1.037743683990761,
+       "log_ratio": 0.03704882167930837
+      },
+      {
+       "country_iso3": "MMR",
+       "loss_a": 0.048943806188101506,
+       "loss_b": 0.05081283792223907,
+       "n_forecasts": 1432,
+       "n_series": 35,
+       "n_months": 52,
+       "ratio": 1.0381872984490514,
+       "log_ratio": 0.03747621013181044
+      },
+      {
+       "country_iso3": "MNG",
+       "loss_a": 0.01458737901814525,
+       "loss_b": 0.012271907117140261,
+       "n_forecasts": 15,
+       "n_series": 10,
+       "n_months": 2,
+       "ratio": 0.8412688188793359,
+       "log_ratio": -0.17284402813452363
+      },
+      {
+       "country_iso3": "MOZ",
+       "loss_a": 0.0442910626607733,
+       "loss_b": 0.04675227965303533,
+       "n_forecasts": 337,
+       "n_series": 24,
+       "n_months": 20,
+       "ratio": 1.0555691564935474,
+       "log_ratio": 0.05408010628641379
+      },
+      {
+       "country_iso3": "NAM",
+       "loss_a": 0.06588099784939637,
+       "loss_b": 0.06628617307167818,
+       "n_forecasts": 46,
+       "n_series": 23,
+       "n_months": 2,
+       "ratio": 1.0061501075501018,
+       "log_ratio": 0.006131272822946143
+      },
+      {
+       "country_iso3": "NPL",
+       "loss_a": 0.019489859415155953,
+       "loss_b": 0.019674262048581345,
+       "n_forecasts": 2268,
+       "n_series": 67,
+       "n_months": 34,
+       "ratio": 1.0094614655497205,
+       "log_ratio": 0.009416986224184323
+      },
+      {
+       "country_iso3": "PAK",
+       "loss_a": 0.031038344123185735,
+       "loss_b": 0.03251676027853532,
+       "n_forecasts": 806,
+       "n_series": 15,
+       "n_months": 54,
+       "ratio": 1.0476319274469672,
+       "log_ratio": 0.046532309940513536
+      },
+      {
+       "country_iso3": "PHL",
+       "loss_a": 0.010154161901753963,
+       "loss_b": 0.010841267510213881,
+       "n_forecasts": 6026,
+       "n_series": 232,
+       "n_months": 26,
+       "ratio": 1.0676673875311395,
+       "log_ratio": 0.06547625713614792
+      },
+      {
+       "country_iso3": "PSE",
+       "loss_a": 0.8005602874434163,
+       "loss_b": 0.8030428834159896,
+       "n_forecasts": 318,
+       "n_series": 6,
+       "n_months": 53,
+       "ratio": 1.0031010731003176,
+       "log_ratio": 0.0030962746907174377
+      },
+      {
+       "country_iso3": "RWA",
+       "loss_a": 0.04488876351900932,
+       "loss_b": 0.04464220783249046,
+       "n_forecasts": 1012,
+       "n_series": 29,
+       "n_months": 43,
+       "ratio": 0.9945074074848498,
+       "log_ratio": -0.0055077322645176304
+      },
+      {
+       "country_iso3": "SDN",
+       "loss_a": 0.19097472649304284,
+       "loss_b": 0.19154673007114945,
+       "n_forecasts": 827,
+       "n_series": 21,
+       "n_months": 55,
+       "ratio": 1.0029951794596623,
+       "log_ratio": 0.0029907028462772757
+      },
+      {
+       "country_iso3": "SEN",
+       "loss_a": 0.02283910116054233,
+       "loss_b": 0.022651212733117612,
+       "n_forecasts": 1103,
+       "n_series": 28,
+       "n_months": 55,
+       "ratio": 0.9917733878358873,
+       "log_ratio": -0.008260637475147893
+      },
+      {
+       "country_iso3": "SLE",
+       "loss_a": 0.05928397403875847,
+       "loss_b": 0.05891575091714427,
+       "n_forecasts": 1208,
+       "n_series": 39,
+       "n_months": 49,
+       "ratio": 0.9937888252671209,
+       "log_ratio": -0.0062305443255957155
+      },
+      {
+       "country_iso3": "SYR",
+       "loss_a": 0.17676256468710683,
+       "loss_b": 0.17172793074960632,
+       "n_forecasts": 6269,
+       "n_series": 207,
+       "n_months": 40,
+       "ratio": 0.9715175328757394,
+       "log_ratio": -0.028895963105937752
+      },
+      {
+       "country_iso3": "TCD",
+       "loss_a": 0.03840638519267135,
+       "loss_b": 0.038106406177445075,
+       "n_forecasts": 5230,
+       "n_series": 112,
+       "n_months": 54,
+       "ratio": 0.9921893452424281,
+       "log_ratio": -0.00784131769085925
+      },
+      {
+       "country_iso3": "TGO",
+       "loss_a": 0.05659633986851506,
+       "loss_b": 0.055789181488177755,
+       "n_forecasts": 5958,
+       "n_series": 117,
+       "n_months": 55,
+       "ratio": 0.9857383289765292,
+       "log_ratio": -0.014364346034253135
+      },
+      {
+       "country_iso3": "TLS",
+       "loss_a": 0.009450603008805758,
+       "loss_b": 0.00963224544765227,
+       "n_forecasts": 180,
+       "n_series": 10,
+       "n_months": 26,
+       "ratio": 1.019220195650718,
+       "log_ratio": 0.019037820838342608
+      },
+      {
+       "country_iso3": "TZA",
+       "loss_a": 0.05939982821197185,
+       "loss_b": 0.0560718629719347,
+       "n_forecasts": 554,
+       "n_series": 72,
+       "n_months": 9,
+       "ratio": 0.9439734871259037,
+       "log_ratio": -0.05765719890275843
+      },
+      {
+       "country_iso3": "UGA",
+       "loss_a": 0.08200188031295086,
+       "loss_b": 0.08172517069122365,
+       "n_forecasts": 3469,
+       "n_series": 70,
+       "n_months": 55,
+       "ratio": 0.9966255697958244,
+       "log_ratio": -0.003380136434243358
+      },
+      {
+       "country_iso3": "UKR",
+       "loss_a": 0.005646113879500067,
+       "loss_b": 0.006028431203485312,
+       "n_forecasts": 2586,
+       "n_series": 69,
+       "n_months": 42,
+       "ratio": 1.06771335685831,
+       "log_ratio": 0.06551931205953641
+      },
+      {
+       "country_iso3": "YEM",
+       "loss_a": 0.05411939032419258,
+       "loss_b": 0.055646381194553736,
+       "n_forecasts": 2604,
+       "n_series": 66,
+       "n_months": 53,
+       "ratio": 1.02821522676464,
+       "log_ratio": 0.027824509676315928
+      },
+      {
+       "country_iso3": "ZMB",
+       "loss_a": 0.043743635092898636,
+       "loss_b": 0.04268633086562804,
+       "n_forecasts": 82,
+       "n_series": 21,
+       "n_months": 5,
+       "ratio": 0.9758295298270208,
+       "log_ratio": -0.02446736988671769
+      }
+     ]
+    },
+    "p_raw": 0.7999950797881696,
+    "p_adjusted": 0.7999950797881696,
+    "evidence": {
+     "class": "not_established",
+     "text": "No improvement was established; this is not evidence that the information has no value."
+    }
+   }
+  ],
+  "multiplicity": {
+   "method": "holm",
+   "family": [
+    "H1",
+    "H2"
+   ],
+   "alpha": 0.05
+  },
+  "variants": [
+   {
+    "variant": "price_lag_0",
+    "kind": "robustness",
+    "contrast": "ridge_B vs ridge_A",
+    "horizon": 1,
+    "status": "ok",
+    "loss_ratio": 1.0115354370350422,
+    "p_challenger_better": 0.9975486922542557,
+    "p_two_sided": 0.004902615491488594,
+    "n_months": 57,
+    "n_countries": 39,
+    "n_series": 2341,
+    "ci_primary": {
+     "ci_low": 0.9994214181793042,
+     "ci_high": 1.0319562941205955,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   },
+   {
+    "variant": "price_lag_0",
+    "kind": "robustness",
+    "contrast": "ridge_B vs ridge_A",
+    "horizon": 3,
+    "status": "ok",
+    "loss_ratio": 0.894279061163095,
+    "p_challenger_better": 0.07738838998678162,
+    "p_two_sided": 0.15477677997356323,
+    "n_months": 55,
+    "n_countries": 39,
+    "n_series": 2279,
+    "ci_primary": {
+     "ci_low": 0.7174640254624174,
+     "ci_high": 1.0191919009302872,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   },
+   {
+    "variant": "weather_lag_1",
+    "kind": "robustness",
+    "contrast": "ridge_B vs ridge_A",
+    "horizon": 1,
+    "status": "ok",
+    "loss_ratio": 0.9756529478002672,
+    "p_challenger_better": 0.18886606685168314,
+    "p_two_sided": 0.3777321337033663,
+    "n_months": 57,
+    "n_countries": 39,
+    "n_series": 2307,
+    "ci_primary": {
+     "ci_low": 0.9214237823524662,
+     "ci_high": 1.026526401086216,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   },
+   {
+    "variant": "weather_lag_1",
+    "kind": "robustness",
+    "contrast": "ridge_B vs ridge_A",
+    "horizon": 3,
+    "status": "ok",
+    "loss_ratio": 1.0094796979466043,
+    "p_challenger_better": 0.8923974614816514,
+    "p_two_sided": 0.21520507703669708,
+    "n_months": 55,
+    "n_countries": 39,
+    "n_series": 2279,
+    "ci_primary": {
+     "ci_low": 0.9900334173301084,
+     "ci_high": 1.0311799431238915,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   },
+   {
+    "variant": "weather_time_shift_60",
+    "kind": "negative_control",
+    "contrast": "ridge_B vs ridge_A",
+    "horizon": 1,
+    "status": "ok",
+    "loss_ratio": 0.8578400007175169,
+    "p_challenger_better": 0.07435970892751137,
+    "p_two_sided": 0.14871941785502274,
+    "n_months": 57,
+    "n_countries": 39,
+    "n_series": 2307,
+    "ci_primary": {
+     "ci_low": 0.6562286027344745,
+     "ci_high": 1.0355002996845484,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   },
+   {
+    "variant": "weather_time_shift_60",
+    "kind": "negative_control",
+    "contrast": "ridge_B vs ridge_A",
+    "horizon": 3,
+    "status": "ok",
+    "loss_ratio": 1.0169734105176147,
+    "p_challenger_better": 0.9946088315257321,
+    "p_two_sided": 0.010782336948535783,
+    "n_months": 55,
+    "n_countries": 39,
+    "n_series": 2279,
+    "ci_primary": {
+     "ci_low": 0.9998573954800795,
+     "ci_high": 1.0474783114472042,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   },
+   {
+    "variant": "weather_permuted_cells",
+    "kind": "negative_control",
+    "contrast": "ridge_B vs ridge_A",
+    "horizon": 1,
+    "status": "ok",
+    "loss_ratio": 0.9720639234333383,
+    "p_challenger_better": 0.10550896092174934,
+    "p_two_sided": 0.21101792184349868,
+    "n_months": 57,
+    "n_countries": 39,
+    "n_series": 2307,
+    "ci_primary": {
+     "ci_low": 0.931797780949227,
+     "ci_high": 1.0123764558423352,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   },
+   {
+    "variant": "weather_permuted_cells",
+    "kind": "negative_control",
+    "contrast": "ridge_B vs ridge_A",
+    "horizon": 3,
+    "status": "ok",
+    "loss_ratio": 1.00639085034476,
+    "p_challenger_better": 0.9101264494426513,
+    "p_two_sided": 0.1797471011146975,
+    "n_months": 55,
+    "n_countries": 39,
+    "n_series": 2279,
+    "ci_primary": {
+     "ci_low": 0.9919293297415772,
+     "ci_high": 1.0181472527267859,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   }
+  ],
+  "baseline_skill": [
+   {
+    "baseline": "naive",
+    "model": "ridge_A",
+    "horizon": 1,
+    "status": "ok",
+    "loss_ratio": 1.2493248719013235,
+    "p_challenger_better": 0.9213108080187069,
+    "p_challenger_worse": 0.07868919198129312,
+    "n_months": 57,
+    "n_countries": 39,
+    "n_series": 2307,
+    "ci_primary": {
+     "ci_low": 0.811331956307475,
+     "ci_high": 1.959652980521422,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   },
+   {
+    "baseline": "seasonal_naive",
+    "model": "ridge_A",
+    "horizon": 1,
+    "status": "ok",
+    "loss_ratio": 0.7441279591024178,
+    "p_challenger_better": 0.0011841389033828368,
+    "p_challenger_worse": 0.9988158610966171,
+    "n_months": 57,
+    "n_countries": 39,
+    "n_series": 2302,
+    "ci_primary": {
+     "ci_low": 0.47258458991233,
+     "ci_high": 1.1262907153414676,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   },
+   {
+    "baseline": "naive",
+    "model": "ridge_A",
+    "horizon": 3,
+    "status": "ok",
+    "loss_ratio": 1.0963684805578084,
+    "p_challenger_better": 0.7956402468952891,
+    "p_challenger_worse": 0.20435975310471088,
+    "n_months": 55,
+    "n_countries": 39,
+    "n_series": 2279,
+    "ci_primary": {
+     "ci_low": 0.801503916406695,
+     "ci_high": 1.4835747366378094,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   },
+   {
+    "baseline": "seasonal_naive",
+    "model": "ridge_A",
+    "horizon": 3,
+    "status": "ok",
+    "loss_ratio": 0.6684239547144363,
+    "p_challenger_better": 6.049079846122994e-09,
+    "p_challenger_worse": 0.9999999939509202,
+    "n_months": 55,
+    "n_countries": 39,
+    "n_series": 2279,
+    "ci_primary": {
+     "ci_low": 0.4844759811854704,
+     "ci_high": 0.8821682957093362,
+     "reps": 1000,
+     "block_length": 4,
+     "note": "countries and moving blocks of origin months resampled jointly",
+     "method": "two_way_country_month"
+    }
+   }
+  ],
+  "heterogeneity": [
+   {
+    "hypothesis": "H1",
+    "dimension": "macro_region",
+    "level": "Africa",
+    "status": "ok",
+    "loss_ratio": 1.010566893852781,
+    "p_two_sided": 0.16337451212648813,
+    "n_months": 57,
+    "n_countries": 21,
+    "n_series": 1206,
+    "ci_block": {
+     "ci_low": 0.9966454408327223,
+     "ci_high": 1.023780918781324,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.5550334388334184,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H1",
+    "dimension": "macro_region",
+    "level": "Americas",
+    "status": "ok",
+    "loss_ratio": 0.9988143648744547,
+    "p_two_sided": 0.9679133863897704,
+    "n_months": 57,
+    "n_countries": 2,
+    "n_series": 50,
+    "ci_block": {
+     "ci_low": 0.9296000676868056,
+     "ci_high": 1.0413650435252608,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.9679133863897705,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H1",
+    "dimension": "macro_region",
+    "level": "Asia",
+    "status": "ok",
+    "loss_ratio": 0.9612590786709608,
+    "p_two_sided": 0.42451641958515784,
+    "n_months": 57,
+    "n_countries": 15,
+    "n_series": 982,
+    "ci_block": {
+     "ci_low": 0.9023739582689967,
+     "ci_high": 1.057872316841995,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.6708004723022778,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H1",
+    "dimension": "macro_region",
+    "level": "Europe and Oceania",
+    "status": "ok",
+    "loss_ratio": 1.0312061230801852,
+    "p_two_sided": 0.4844670077738673,
+    "n_months": 44,
+    "n_countries": 1,
+    "n_series": 69,
+    "ci_block": {
+     "ci_low": 0.9461959160692625,
+     "ci_high": 1.0791474647259838,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.6708004723022778,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H1",
+    "dimension": "origin_label",
+    "level": "labelled imported",
+    "status": "ok",
+    "loss_ratio": 1.0056954384831276,
+    "p_two_sided": 0.6743997466862063,
+    "n_months": 57,
+    "n_countries": 13,
+    "n_series": 197,
+    "ci_block": {
+     "ci_low": 0.9790264754958482,
+     "ci_high": 1.029124141896912,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.7586997150219821,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H1",
+    "dimension": "origin_label",
+    "level": "not labelled imported",
+    "status": "ok",
+    "loss_ratio": 0.9712844598730883,
+    "p_two_sided": 0.4083534886755367,
+    "n_months": 57,
+    "n_countries": 38,
+    "n_series": 2110,
+    "ci_block": {
+     "ci_low": 0.9283931602719222,
+     "ci_high": 1.034841417011838,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.6708004723022778,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H1",
+    "dimension": "volatility_tercile",
+    "level": "high",
+    "status": "ok",
+    "loss_ratio": 1.0093785346143058,
+    "p_two_sided": 0.1455208564802912,
+    "n_months": 57,
+    "n_countries": 26,
+    "n_series": 501,
+    "ci_block": {
+     "ci_low": 0.9960093145104554,
+     "ci_high": 1.019405088256157,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.5550334388334184,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H1",
+    "dimension": "volatility_tercile",
+    "level": "low",
+    "status": "ok",
+    "loss_ratio": 1.0045406159679884,
+    "p_two_sided": 0.7802764520823184,
+    "n_months": 57,
+    "n_countries": 30,
+    "n_series": 517,
+    "ci_block": {
+     "ci_low": 0.9724814474883354,
+     "ci_high": 1.0302522692654787,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.8261750669106902,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H1",
+    "dimension": "volatility_tercile",
+    "level": "middle",
+    "status": "ok",
+    "loss_ratio": 1.0157024021596648,
+    "p_two_sided": 0.12240724397274433,
+    "n_months": 57,
+    "n_countries": 30,
+    "n_series": 526,
+    "ci_block": {
+     "ci_low": 0.9938897616877809,
+     "ci_high": 1.0266052547572488,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.5550334388334184,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H2",
+    "dimension": "macro_region",
+    "level": "Africa",
+    "status": "ok",
+    "loss_ratio": 1.0057740476924173,
+    "p_two_sided": 0.5749084179562295,
+    "n_months": 55,
+    "n_countries": 21,
+    "n_series": 1179,
+    "ci_block": {
+     "ci_low": 0.9860652245897811,
+     "ci_high": 1.022916530855445,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.7391679659437236,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H2",
+    "dimension": "macro_region",
+    "level": "Americas",
+    "status": "ok",
+    "loss_ratio": 0.9801999937596172,
+    "p_two_sided": 0.18501114627780613,
+    "n_months": 55,
+    "n_countries": 2,
+    "n_series": 50,
+    "ci_block": {
+     "ci_low": 0.9574202649660857,
+     "ci_high": 1.0113357496404998,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.5550334388334184,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H2",
+    "dimension": "macro_region",
+    "level": "Asia",
+    "status": "ok",
+    "loss_ratio": 1.005723349457575,
+    "p_two_sided": 0.48168384017723576,
+    "n_months": 55,
+    "n_countries": 15,
+    "n_series": 981,
+    "ci_block": {
+     "ci_low": 0.9913958938702594,
+     "ci_high": 1.0183654068485384,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.6708004723022778,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H2",
+    "dimension": "macro_region",
+    "level": "Europe and Oceania",
+    "status": "ok",
+    "loss_ratio": 1.069850620262738,
+    "p_two_sided": 0.04934397320509626,
+    "n_months": 42,
+    "n_countries": 1,
+    "n_series": 69,
+    "ci_block": {
+     "ci_low": 1.0118185662268904,
+     "ci_high": 1.1051217994292577,
+     "block_length": 3,
+     "reps": 200
+    },
+    "q_value_bh": 0.5550334388334184,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H2",
+    "dimension": "origin_label",
+    "level": "labelled imported",
+    "status": "ok",
+    "loss_ratio": 1.017034689619623,
+    "p_two_sided": 0.4730631434015353,
+    "n_months": 55,
+    "n_countries": 13,
+    "n_series": 196,
+    "ci_block": {
+     "ci_low": 0.9710186777220168,
+     "ci_high": 1.0541190661542714,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.6708004723022778,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H2",
+    "dimension": "origin_label",
+    "level": "not labelled imported",
+    "status": "ok",
+    "loss_ratio": 1.0034849039791793,
+    "p_two_sided": 0.6294774332215637,
+    "n_months": 55,
+    "n_countries": 38,
+    "n_series": 2083,
+    "ci_block": {
+     "ci_low": 0.989708523964821,
+     "ci_high": 1.0169388575955138,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.7553729198658765,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H2",
+    "dimension": "volatility_tercile",
+    "level": "high",
+    "status": "ok",
+    "loss_ratio": 1.0041631252471759,
+    "p_two_sided": 0.46322199205466524,
+    "n_months": 55,
+    "n_countries": 26,
+    "n_series": 479,
+    "ci_block": {
+     "ci_low": 0.9926072718262267,
+     "ci_high": 1.0108985624614082,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.6708004723022778,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H2",
+    "dimension": "volatility_tercile",
+    "level": "low",
+    "status": "ok",
+    "loss_ratio": 1.0482525007483483,
+    "p_two_sided": 0.13389489549325023,
+    "n_months": 55,
+    "n_countries": 30,
+    "n_series": 516,
+    "ci_block": {
+     "ci_low": 0.9947783278006715,
+     "ci_high": 1.0930812049073901,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.5550334388334184,
+    "evidence_class": "exploratory"
+   },
+   {
+    "hypothesis": "H2",
+    "dimension": "volatility_tercile",
+    "level": "middle",
+    "status": "ok",
+    "loss_ratio": 1.0114995453354425,
+    "p_two_sided": 0.24957687913591137,
+    "n_months": 55,
+    "n_countries": 30,
+    "n_series": 521,
+    "ci_block": {
+     "ci_low": 0.9931653130562882,
+     "ci_high": 1.0238139775660942,
+     "block_length": 4,
+     "reps": 200
+    },
+    "q_value_bh": 0.6417691177780578,
+    "evidence_class": "exploratory"
+   }
+  ],
+  "countries": [
+   {
+    "country_iso3": "ARM",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.001131410305967,
+    "ratio_A_vs_naive": 1.1428805617074278,
+    "n_series": 33,
+    "n_months": 57,
+    "n_forecasts": 1881,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "BEN",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0261095610528688,
+    "ratio_A_vs_naive": 1.049526909329492,
+    "n_series": 147,
+    "n_months": 55,
+    "n_forecasts": 7469,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "BOL",
+    "macro_region": "Americas",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0024533324651255,
+    "ratio_A_vs_naive": 1.0652375931642675,
+    "n_series": 26,
+    "n_months": 57,
+    "n_forecasts": 1482,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "CAF",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0212039627513905,
+    "ratio_A_vs_naive": 0.6249207157408528,
+    "n_series": 74,
+    "n_months": 57,
+    "n_forecasts": 3974,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "CMR",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9991127205843664,
+    "ratio_A_vs_naive": 0.726851576805174,
+    "n_series": 42,
+    "n_months": 56,
+    "n_forecasts": 1426,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "DJI",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9967150498191525,
+    "ratio_A_vs_naive": 0.9862504170138255,
+    "n_series": 15,
+    "n_months": 51,
+    "n_forecasts": 724,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "ETH",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0304174259457082,
+    "ratio_A_vs_naive": 1.006088408762628,
+    "n_series": 49,
+    "n_months": 29,
+    "n_forecasts": 1249,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "GIN",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9974570475502387,
+    "ratio_A_vs_naive": 0.8365371924543034,
+    "n_series": 38,
+    "n_months": 55,
+    "n_forecasts": 1966,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "GMB",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0037577835680935,
+    "ratio_A_vs_naive": 1.1864259379515467,
+    "n_series": 84,
+    "n_months": 56,
+    "n_forecasts": 4592,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "GNB",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9022058998570921,
+    "ratio_A_vs_naive": 0.98859668021642,
+    "n_series": 65,
+    "n_months": 36,
+    "n_forecasts": 1160,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "HTI",
+    "macro_region": "Americas",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9627435856019696,
+    "ratio_A_vs_naive": 1.044811738499075,
+    "n_series": 24,
+    "n_months": 33,
+    "n_forecasts": 782,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "IND",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0106905867643472,
+    "ratio_A_vs_naive": 0.6516510341532996,
+    "n_series": 159,
+    "n_months": 18,
+    "n_forecasts": 2844,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "JOR",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.2716648109743205,
+    "ratio_A_vs_naive": 1.7363755211600989,
+    "n_series": 36,
+    "n_months": 56,
+    "n_forecasts": 2016,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "KGZ",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0024185120583742,
+    "ratio_A_vs_naive": 1.1461183754874105,
+    "n_series": 54,
+    "n_months": 56,
+    "n_forecasts": 3022,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "LAO",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0429853562506717,
+    "ratio_A_vs_naive": 0.9642518583190983,
+    "n_series": 30,
+    "n_months": 55,
+    "n_forecasts": 1500,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "LBN",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.2046545835804285,
+    "ratio_A_vs_naive": 4.997415827586909,
+    "n_series": 21,
+    "n_months": 16,
+    "n_forecasts": 336,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "LBY",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.007722293311737,
+    "ratio_A_vs_naive": 0.9163076815665013,
+    "n_series": 81,
+    "n_months": 37,
+    "n_forecasts": 1944,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "LSO",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0254146462532592,
+    "ratio_A_vs_naive": 0.9952933426736098,
+    "n_series": 30,
+    "n_months": 54,
+    "n_forecasts": 1620,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "MMR",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0200546563684822,
+    "ratio_A_vs_naive": 1.003388342114876,
+    "n_series": 36,
+    "n_months": 54,
+    "n_forecasts": 1506,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "MNG",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.6111212810520666,
+    "ratio_A_vs_naive": 1.1826417546581776,
+    "n_series": 10,
+    "n_months": 4,
+    "n_forecasts": 35,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "MOZ",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0175799044972995,
+    "ratio_A_vs_naive": 0.8191292334364024,
+    "n_series": 24,
+    "n_months": 22,
+    "n_forecasts": 382,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "NAM",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9993848670574121,
+    "ratio_A_vs_naive": 0.981770099016066,
+    "n_series": 23,
+    "n_months": 4,
+    "n_forecasts": 92,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "NPL",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0266990461871064,
+    "ratio_A_vs_naive": 0.7614992088609683,
+    "n_series": 67,
+    "n_months": 36,
+    "n_forecasts": 2399,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "PAK",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0033616075958656,
+    "ratio_A_vs_naive": 0.9926160147692431,
+    "n_series": 15,
+    "n_months": 56,
+    "n_forecasts": 836,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "PHL",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0266044827161223,
+    "ratio_A_vs_naive": 1.097513139208457,
+    "n_series": 232,
+    "n_months": 28,
+    "n_forecasts": 6490,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "PSE",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9478059599380995,
+    "ratio_A_vs_naive": 2.2370573912426854,
+    "n_series": 6,
+    "n_months": 55,
+    "n_forecasts": 330,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "RWA",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.022609308246641,
+    "ratio_A_vs_naive": 0.8305587870644467,
+    "n_series": 29,
+    "n_months": 44,
+    "n_forecasts": 1038,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "SDN",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0145911834903585,
+    "ratio_A_vs_naive": 0.9068149968741938,
+    "n_series": 21,
+    "n_months": 57,
+    "n_forecasts": 868,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "SEN",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.01073957261545,
+    "ratio_A_vs_naive": 1.002565011139128,
+    "n_series": 28,
+    "n_months": 57,
+    "n_forecasts": 1165,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "SLE",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9840641397810385,
+    "ratio_A_vs_naive": 1.0268482982530578,
+    "n_series": 39,
+    "n_months": 51,
+    "n_forecasts": 1285,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "SYR",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0475293305253899,
+    "ratio_A_vs_naive": 1.1896742196063157,
+    "n_series": 207,
+    "n_months": 41,
+    "n_forecasts": 6550,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "TCD",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0024850895862527,
+    "ratio_A_vs_naive": 0.7838308381868472,
+    "n_series": 112,
+    "n_months": 56,
+    "n_forecasts": 5456,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "TGO",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9795051948170528,
+    "ratio_A_vs_naive": 0.9266972063552124,
+    "n_series": 117,
+    "n_months": 57,
+    "n_forecasts": 6193,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "TLS",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0087023767049152,
+    "ratio_A_vs_naive": 1.0212236341313994,
+    "n_series": 10,
+    "n_months": 27,
+    "n_forecasts": 192,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "TZA",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9672702966047025,
+    "ratio_A_vs_naive": 1.0012653859111547,
+    "n_series": 73,
+    "n_months": 11,
+    "n_forecasts": 713,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "UGA",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0514739592527225,
+    "ratio_A_vs_naive": 1.0200939396311137,
+    "n_series": 70,
+    "n_months": 57,
+    "n_forecasts": 3585,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "UKR",
+    "macro_region": "Europe and Oceania",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.027417185545022,
+    "ratio_A_vs_naive": 0.9844567618427608,
+    "n_series": 69,
+    "n_months": 44,
+    "n_forecasts": 2724,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "YEM",
+    "macro_region": "Asia",
+    "horizon": 1,
+    "ratio_B_vs_A": 1.0065080147414338,
+    "ratio_A_vs_naive": 1.0522632071686393,
+    "n_series": 66,
+    "n_months": 55,
+    "n_forecasts": 2736,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "ZMB",
+    "macro_region": "Africa",
+    "horizon": 1,
+    "ratio_B_vs_A": 0.9860614049539876,
+    "ratio_A_vs_naive": 0.8798524088934855,
+    "n_series": 45,
+    "n_months": 7,
+    "n_forecasts": 144,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "ARM",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0072266456604635,
+    "ratio_A_vs_naive": 1.265389383155111,
+    "n_series": 33,
+    "n_months": 55,
+    "n_forecasts": 1815,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "BEN",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0423543110964721,
+    "ratio_A_vs_naive": 1.1636714290036232,
+    "n_series": 147,
+    "n_months": 54,
+    "n_forecasts": 7183,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "BOL",
+    "macro_region": "Americas",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9910902287296353,
+    "ratio_A_vs_naive": 1.0121108619263384,
+    "n_series": 26,
+    "n_months": 55,
+    "n_forecasts": 1430,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "CAF",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0651281945044813,
+    "ratio_A_vs_naive": 0.47864516939284857,
+    "n_series": 74,
+    "n_months": 55,
+    "n_forecasts": 3821,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "CMR",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0341198181913351,
+    "ratio_A_vs_naive": 0.6459607038413244,
+    "n_series": 42,
+    "n_months": 54,
+    "n_forecasts": 1359,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "DJI",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.007013838118482,
+    "ratio_A_vs_naive": 1.0149896806047523,
+    "n_series": 15,
+    "n_months": 48,
+    "n_forecasts": 676,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "ETH",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9316025593712972,
+    "ratio_A_vs_naive": 1.0706393834804329,
+    "n_series": 49,
+    "n_months": 27,
+    "n_forecasts": 1205,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "GIN",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0003035862886687,
+    "ratio_A_vs_naive": 0.8452773592066187,
+    "n_series": 36,
+    "n_months": 53,
+    "n_forecasts": 1890,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "GMB",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9242994823315066,
+    "ratio_A_vs_naive": 1.1059959640596613,
+    "n_series": 84,
+    "n_months": 54,
+    "n_forecasts": 4424,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "GNB",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9987306029821368,
+    "ratio_A_vs_naive": 0.933306573025378,
+    "n_series": 65,
+    "n_months": 36,
+    "n_forecasts": 1162,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "HTI",
+    "macro_region": "Americas",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9769767365466154,
+    "ratio_A_vs_naive": 1.0982429282419697,
+    "n_series": 24,
+    "n_months": 32,
+    "n_forecasts": 759,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "IND",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0178450567189246,
+    "ratio_A_vs_naive": 0.5834736077192758,
+    "n_series": 159,
+    "n_months": 16,
+    "n_forecasts": 2535,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "JOR",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.285607687178812,
+    "ratio_A_vs_naive": 2.9507564710472525,
+    "n_series": 36,
+    "n_months": 54,
+    "n_forecasts": 1944,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "KGZ",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9908267017957603,
+    "ratio_A_vs_naive": 1.1905214399501807,
+    "n_series": 54,
+    "n_months": 54,
+    "n_forecasts": 2914,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "LAO",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0844441206306918,
+    "ratio_A_vs_naive": 0.9192121515896784,
+    "n_series": 30,
+    "n_months": 53,
+    "n_forecasts": 1434,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "LBN",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.042660319340138,
+    "ratio_A_vs_naive": 12.632593925370282,
+    "n_series": 21,
+    "n_months": 14,
+    "n_forecasts": 294,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "LBY",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9971308014282892,
+    "ratio_A_vs_naive": 0.8937682537917987,
+    "n_series": 81,
+    "n_months": 32,
+    "n_forecasts": 1587,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "LSO",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.037743683990761,
+    "ratio_A_vs_naive": 0.9739114170191265,
+    "n_series": 30,
+    "n_months": 53,
+    "n_forecasts": 1590,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "MMR",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0381872984490514,
+    "ratio_A_vs_naive": 0.9941388514376207,
+    "n_series": 35,
+    "n_months": 52,
+    "n_forecasts": 1432,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "MNG",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.8412688188793359,
+    "ratio_A_vs_naive": 0.7727246818486343,
+    "n_series": 10,
+    "n_months": 2,
+    "n_forecasts": 15,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "MOZ",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0555691564935474,
+    "ratio_A_vs_naive": 0.7464857773295783,
+    "n_series": 24,
+    "n_months": 20,
+    "n_forecasts": 337,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "NAM",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0061501075501018,
+    "ratio_A_vs_naive": 0.9580196698370074,
+    "n_series": 23,
+    "n_months": 2,
+    "n_forecasts": 46,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "NPL",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0094614655497205,
+    "ratio_A_vs_naive": 0.6489195262740243,
+    "n_series": 67,
+    "n_months": 34,
+    "n_forecasts": 2268,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "PAK",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0476319274469672,
+    "ratio_A_vs_naive": 1.0378949768095846,
+    "n_series": 15,
+    "n_months": 54,
+    "n_forecasts": 806,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "PHL",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0676673875311395,
+    "ratio_A_vs_naive": 1.0686699910189124,
+    "n_series": 232,
+    "n_months": 26,
+    "n_forecasts": 6026,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "PSE",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0031010731003176,
+    "ratio_A_vs_naive": 1.6352362769856925,
+    "n_series": 6,
+    "n_months": 53,
+    "n_forecasts": 318,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "RWA",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9945074074848498,
+    "ratio_A_vs_naive": 0.8136568826695463,
+    "n_series": 29,
+    "n_months": 43,
+    "n_forecasts": 1012,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "SDN",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.0029951794596623,
+    "ratio_A_vs_naive": 0.8332443114785907,
+    "n_series": 21,
+    "n_months": 55,
+    "n_forecasts": 827,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "SEN",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9917733878358873,
+    "ratio_A_vs_naive": 0.9963997300072002,
+    "n_series": 28,
+    "n_months": 55,
+    "n_forecasts": 1103,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "SLE",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9937888252671209,
+    "ratio_A_vs_naive": 1.1224493023916782,
+    "n_series": 39,
+    "n_months": 49,
+    "n_forecasts": 1208,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "SYR",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9715175328757394,
+    "ratio_A_vs_naive": 1.536992325546114,
+    "n_series": 207,
+    "n_months": 40,
+    "n_forecasts": 6269,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "TCD",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9921893452424281,
+    "ratio_A_vs_naive": 0.7039181651925609,
+    "n_series": 112,
+    "n_months": 54,
+    "n_forecasts": 5230,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "TGO",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9857383289765292,
+    "ratio_A_vs_naive": 0.9065520368848016,
+    "n_series": 117,
+    "n_months": 55,
+    "n_forecasts": 5958,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "TLS",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.019220195650718,
+    "ratio_A_vs_naive": 1.142632295981099,
+    "n_series": 10,
+    "n_months": 26,
+    "n_forecasts": 180,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "TZA",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9439734871259037,
+    "ratio_A_vs_naive": 1.2700608471026482,
+    "n_series": 72,
+    "n_months": 9,
+    "n_forecasts": 554,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "UGA",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9966255697958244,
+    "ratio_A_vs_naive": 1.0292682700328328,
+    "n_series": 70,
+    "n_months": 55,
+    "n_forecasts": 3469,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "UKR",
+    "macro_region": "Europe and Oceania",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.06771335685831,
+    "ratio_A_vs_naive": 0.8795731552185366,
+    "n_series": 69,
+    "n_months": 42,
+    "n_forecasts": 2586,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "YEM",
+    "macro_region": "Asia",
+    "horizon": 3,
+    "ratio_B_vs_A": 1.02821522676464,
+    "ratio_A_vs_naive": 1.0633862865336172,
+    "n_series": 66,
+    "n_months": 53,
+    "n_forecasts": 2604,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   },
+   {
+    "country_iso3": "ZMB",
+    "macro_region": "Africa",
+    "horizon": 3,
+    "ratio_B_vs_A": 0.9758295298270208,
+    "ratio_A_vs_naive": 0.9573706172731907,
+    "n_series": 21,
+    "n_months": 5,
+    "n_forecasts": 82,
+    "note": "descriptive per-country ratio; no per-country test is in the confirmatory family"
+   }
+  ],
+  "inference_note": "forecast-origin month: losses are averaged within each month before testing, so thousands of market-month forecasts are not treated as independent observations",
+  "timing": {
+   "price_release_lag_months": 1,
+   "weather_release_lag_months": 0,
+   "vintage_statement": "Backtests use today's revised data; original publication dates are not available from the providers, so information timing is an explicitly assumed release lag, not an observed real-time vintage."
+  },
+  "limitations": [
+   "Market-local weather is NASA POWER reanalysis at the market's grid cell, a geographic proxy; it is not the weather where the traded crop was grown.",
+   "Prices are nominal local-currency WFP retail prices; no deflation or currency conversion.",
+   "Predictive, not causal. An improvement would show that weather information helps forecasts, not that weather causes price changes.",
+   "The evaluation window (2022-2026) includes global commodity and currency shocks shared by many countries; the two-way bootstrap and month-level test account for shared shocks but cannot make a short window long.",
+   "CHIRPS was not integrated, so no alternative precipitation source is compared in v1.",
+   "Backtests use today's revised data; original publication dates are not available from the providers, so information timing is an explicitly assumed release lag, not an observed real-time vintage."
+  ],
+  "code": {
+   "git_commit": "abea5d25c761baab9350bb0a0c2847cdc5881e70",
+   "dirty": true
+  },
+  "software_version": "1.0.0",
+  "generated_at": "2026-11-18T07:45:45.332795+00:00",
+  "execution": {
+   "started_at": "2026-11-18T02:24:11.416041+00:00",
+   "finished_at": "2026-11-18T07:45:45.346919+00:00",
+   "jobs_run": 565,
+   "jobs_failed": 0,
+   "failures": [],
+   "workers": 6
+  }
+ }
+}
