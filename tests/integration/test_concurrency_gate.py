@@ -69,3 +69,27 @@ def test_heap_release_is_throttled_and_harmless_without_glibc():
     assert resources.release_heap(now=10_000.0) in (True, False)
     assert resources.release_heap(now=10_000.5) is False  # within the throttle window
     assert isinstance(resources.limit_malloc_arenas(), bool)
+
+
+def test_memory_watch_logs_only_above_the_threshold_with_the_requests_in_flight(monkeypatch):
+    seen: list[dict] = []
+    reading = {"v": (200.0, 250.0)}
+    monkeypatch.setattr(resources, "rss_mb", lambda: reading["v"])
+    resources.start_memory_watch(
+        lambda: {"/api/v1/status": 2}, lambda msg, **kw: seen.append({"msg": msg, **kw}), 380.0, 0.01
+    )
+    time.sleep(0.1)
+    assert seen == []  # below the threshold: silent
+    reading["v"] = (450.4, 470.9)
+    time.sleep(0.1)
+    assert seen and seen[0] == {
+        "msg": "memory high",
+        "rss_mb": 450,
+        "peak_mb": 471,
+        "inflight": {"/api/v1/status": 2},
+    }
+
+
+def test_rss_reading_is_none_or_plausible():
+    got = resources.rss_mb()
+    assert got is None or 10 < got[0] <= got[1] < 100_000

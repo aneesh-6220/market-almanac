@@ -13,7 +13,10 @@ All of it is a no-op where glibc is absent (macOS, musl), so development and tes
 from __future__ import annotations
 
 import ctypes
+import threading
 import time
+from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 M_ARENA_MAX = -8  # mallopt parameter number (glibc malloc.h)
@@ -55,3 +58,42 @@ def release_heap(now: float | None = None) -> bool:
     except AttributeError:
         return False
     return True
+
+
+def rss_mb() -> tuple[float, float] | None:
+    """(current, peak) resident memory of this process in MB from /proc (Linux), else None."""
+    try:
+        fields = {}
+        for line in Path("/proc/self/status").read_text().splitlines():
+            if line.startswith(("VmRSS:", "VmHWM:")):
+                key, value = line.split(":", 1)
+                fields[key] = float(value.split()[0]) / 1024
+        return fields["VmRSS"], fields["VmHWM"]
+    except (OSError, KeyError, ValueError):
+        return None
+
+
+def start_memory_watch(
+    inflight: Callable[[], dict[str, int]],
+    emit: Callable[..., None],
+    threshold_mb: float = 380.0,
+    interval_seconds: float = 1.0,
+) -> threading.Thread | None:
+    """Log when resident memory is high, with the requests in flight, so an out-of-memory kill is explainable.
+
+    Sampling is one /proc read per second; nothing is logged while memory is below ``threshold_mb``. A no-op where
+    /proc is not available.
+    """
+    if rss_mb() is None:
+        return None
+
+    def run() -> None:
+        while True:
+            time.sleep(interval_seconds)
+            sample = rss_mb()
+            if sample and sample[0] >= threshold_mb:
+                emit("memory high", rss_mb=round(sample[0]), peak_mb=round(sample[1]), inflight=inflight())
+
+    t = threading.Thread(target=run, name="memory-watch", daemon=True)
+    t.start()
+    return t

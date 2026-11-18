@@ -159,6 +159,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     _mark_install_pending()
     _mark_prices_pending()
     threading.Thread(target=_startup, name="data-startup", daemon=True).start()
+    resources.start_memory_watch(lambda: dict(INFLIGHT), lambda msg, **kw: log_event(log, msg, level=30, **kw))
     yield
 
 
@@ -259,6 +260,10 @@ class InstallGate(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+# Data requests currently executing, by path (read by the memory watch; written only on the event loop).
+INFLIGHT: dict[str, int] = {}
+
+
 class ConcurrencyGate(BaseHTTPMiddleware):
     """Run at most ``limit`` data requests at once; later ones wait in the event loop (no thread, no memory).
 
@@ -297,9 +302,14 @@ class ConcurrencyGate(BaseHTTPMiddleware):
                 status_code=503,
                 headers={"Retry-After": "5"},
             )
+        path = request.url.path
+        INFLIGHT[path] = INFLIGHT.get(path, 0) + 1
         try:
             return await call_next(request)
         finally:
+            INFLIGHT[path] -= 1
+            if not INFLIGHT[path]:
+                del INFLIGHT[path]
             slots.release()
             resources.release_heap()
 
