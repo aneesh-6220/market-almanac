@@ -8,12 +8,21 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
-- **Out-of-memory kill under concurrent load (found in production verification of 1.2.0).** A dozen
-  parallel visitors made Render kill the 512 MiB instance (`oomKilled`), because every global query
-  held its own DuckDB memory budget and the API serves requests from a thread pool. Global queries now
-  run one at a time (they take milliseconds), each with a 128 MB budget instead of 160 MB, and freed heap
-  is returned to the OS after each query. A regression test pins the bound; `benchmark_global_prices.py`
-  gained `--concurrency`. The CI memory guard was recalibrated on the Linux runner (410 MB measured).
+- **Out-of-memory kills under concurrent load (found in production verification of 1.2.0).** A dozen
+  parallel visitors, then a browser test run, made Render kill the 512 MiB instance (`oomKilled`) twice.
+  Three causes, each fixed:
+  - every global query held its own DuckDB budget while the API serves requests from a thread pool:
+    global queries now run one at a time with a 128 MB budget, and freed heap is returned to the OS;
+  - nothing bounded how many data requests ran at once: an async `ConcurrencyGate` lets
+    `API_MAX_CONCURRENT_REQUESTS` (default 3) execute and queues the rest in the event loop (503 with
+    `Retry-After` after `API_QUEUE_TIMEOUT_SECONDS`); `/health` and `/ready` are never gated;
+    glibc malloc arenas are capped at 2;
+  - the first market page opened loaded the whole weather table, with its long metadata strings, into the
+    process for good (about 60-90 MB): the environment and production-region features now read a
+    column-projected copy (same values, checked identical on real data and by a test).
+  Measured on real data with a real server (12-18 parallel page loads): peak 392 MB to 340 MB.
+  `benchmark_global_prices.py` gained `--concurrency`. The CI memory guard was recalibrated on the Linux
+  runner (410 MB measured).
 
 ## [1.2.0] - 2026-11-18
 

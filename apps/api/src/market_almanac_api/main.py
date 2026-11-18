@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import threading
 import time
 import uuid
+import weakref
 from collections import defaultdict, deque
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -21,6 +23,7 @@ from starlette.responses import Response
 from market_almanac import __version__
 from market_almanac.config import Settings, get_settings
 from market_almanac.logging import configure_logging, get_logger, log_event
+from market_almanac_api import resources
 from market_almanac_api.deps import DataUnavailableError
 from market_almanac_api.routers import coverage, data, global_prices, markets, research, system, workbench
 
@@ -256,6 +259,51 @@ class InstallGate(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+class ConcurrencyGate(BaseHTTPMiddleware):
+    """Run at most ``limit`` data requests at once; later ones wait in the event loop (no thread, no memory).
+
+    Production showed why: a handful of browsers opening market pages at the same time ran the legacy pandas
+    endpoints in parallel and pushed the 512 MiB instance over its limit. ``/health``, ``/ready`` and
+    the docs are not gated, so liveness probes never queue behind data work. A request that cannot start within
+    ``queue_timeout`` seconds gets 503 with ``Retry-After`` instead of hanging.
+    """
+
+    def __init__(self, app: FastAPI, limit: int, queue_timeout: float) -> None:
+        super().__init__(app)
+        self._limit = max(1, limit)
+        self._timeout = queue_timeout
+        # One semaphore per event loop: the server has a single loop (so the bound is global), while test clients
+        # that start a loop per request must not share one across loops.
+        self._slots: weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, asyncio.Semaphore] = (
+            weakref.WeakKeyDictionary()
+        )
+
+    def _semaphore(self) -> asyncio.Semaphore:
+        loop = asyncio.get_running_loop()
+        sem = self._slots.get(loop)
+        if sem is None:
+            sem = self._slots[loop] = asyncio.Semaphore(self._limit)
+        return sem
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        if not request.url.path.startswith("/api/") or request.method == "OPTIONS":
+            return await call_next(request)
+        slots = self._semaphore()
+        try:
+            await asyncio.wait_for(slots.acquire(), timeout=self._timeout)
+        except TimeoutError:
+            return JSONResponse(
+                {"error": "busy", "detail": "The server is busy with other requests; retry shortly."},
+                status_code=503,
+                headers={"Retry-After": "5"},
+            )
+        try:
+            return await call_next(request)
+        finally:
+            slots.release()
+            resources.release_heap()
+
+
 class RequestLog(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         rid = request.headers.get("x-request-id", uuid.uuid4().hex[:12])[:64]
@@ -277,6 +325,7 @@ class RequestLog(BaseHTTPMiddleware):
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    resources.limit_malloc_arenas()
     configure_logging(settings.log_level)
     app = FastAPI(
         title="Market Almanac API",
@@ -286,6 +335,11 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.add_middleware(GZipMiddleware, minimum_size=2048)
+    app.add_middleware(
+        ConcurrencyGate,  # type: ignore[arg-type]
+        limit=settings.api_max_concurrent_requests,
+        queue_timeout=settings.api_queue_timeout_seconds,
+    )
     app.add_middleware(RateLimiter, per_minute=settings.api_rate_limit_per_minute)  # type: ignore[arg-type]
     app.add_middleware(InstallGate)
     app.add_middleware(RequestLog)

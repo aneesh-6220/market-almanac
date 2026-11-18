@@ -207,3 +207,31 @@ def test_peer_panel_matches_per_series_definition(client, series):  # type: igno
     panel = cache.peer_panel(cat, sid)
     pd.testing.assert_frame_equal(expected, panel, check_names=False, check_freq=False)
     assert cache.peer_panel(cat, sid) is panel  # cached per comparable group
+
+
+def test_environment_payload_is_the_same_with_the_lean_weather_table(client, series, monkeypatch):
+    """The market page reads a column-projected weather table; payloads must equal the full-table ones."""
+    import json
+
+    from market_almanac_api.deps import cache
+    from market_almanac_api.routers import markets
+
+    cat, _, _ = cache.catalog()
+    rows = cat[cat["has_weather"]]
+    assert len(rows) > 0, "the demo lake must contain weather for this check to mean anything"
+    ids = list(rows.drop_duplicates(["country_iso3", "commodity_code"]).series_id)[:12]
+
+    lean, _ = cache.weather_lean()
+    full, _ = cache.frame("weather_monthly")
+    assert set(lean.columns) < set(full.columns)  # strictly fewer columns: that is the saving
+    assert lean.memory_usage(deep=True).sum() < full.memory_usage(deep=True).sum()
+
+    def payloads() -> dict[str, str]:
+        cache._prod.clear()
+        return {i: json.dumps(markets._environment(cat.loc[i], 60), default=str, sort_keys=True) for i in ids}
+
+    with_lean = payloads()
+    monkeypatch.setattr(cache, "weather_lean", lambda: cache.frame("weather_monthly"))
+    with_full = payloads()
+    assert with_lean == with_full
+    assert any('"status": "ok"' in v for v in with_lean.values())

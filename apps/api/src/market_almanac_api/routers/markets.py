@@ -546,7 +546,7 @@ def series_seasonality(series_id: SeriesId) -> dict[str, Any]:
 
 
 def _environment(row: pd.Series, months: int = 60) -> dict[str, Any]:
-    weather, wsid = cache.frame("weather_monthly")
+    weather, wsid = cache.weather_lean()
     out: dict[str, Any] = {
         "status": "no_weather",
         "market_cell": None,

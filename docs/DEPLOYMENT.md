@@ -124,8 +124,12 @@ configuration:
   `market-almanac global prices-bundle --out dist`, upload the archive as a GitHub release asset, and
   update `prices_release.json` (URL, SHA-256, per-country snapshot ids). Older snapshots stay in the
   partitions, so anything that cited them stays reproducible.
-- Memory: the browse workload peaks around 330 MB resident including the Python interpreter and
-  scientific stack (about 210 MB before the first request); DuckDB is limited to one thread and 128 MB, and queries run one at a time (a burst of visitors queues instead of multiplying memory budgets).
+- Memory: the browse workload peaks around 340 MB resident including the Python interpreter and
+  scientific stack (about 210 MB before the first request). Three bounds keep a burst of visitors inside
+  512 MiB: DuckDB runs one query at a time with a 128 MB budget; `API_MAX_CONCURRENT_REQUESTS` (default 3)
+  data requests execute at once and the rest wait in the event loop (`/health` and `/ready` never wait;
+  a request that waits longer than `API_QUEUE_TIMEOUT_SECONDS`, default 30, gets 503 with `Retry-After`);
+  and the weather table is held column-projected. On a larger host raise the first two.
   Measure with `python scripts/ops/benchmark_global_prices.py --data-dir data` (or `--url` against a
   running API).
 

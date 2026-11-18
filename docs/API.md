@@ -8,7 +8,7 @@ The Market Almanac API is a read-only FastAPI service. Interactive OpenAPI docum
 - Every list endpoint that can be large is paginated with `limit` and `offset` and returns
   `{items, total, limit, offset, snapshot_id, synthetic}`. `limit` is capped by `API_MAX_PAGE_SIZE`.
 - Every data response states `synthetic: true|false`. In demo mode it is always `true`.
-- Rate limiting: `API_RATE_LIMIT_PER_MINUTE` requests per client IP (HTTP 429 when exceeded).
+- Rate limiting: `API_RATE_LIMIT_PER_MINUTE` requests per client IP (HTTP 429 when exceeded). Data requests are also admitted a few at a time (`API_MAX_CONCURRENT_REQUESTS`); under heavy load a request may wait, and after `API_QUEUE_TIMEOUT_SECONDS` receives HTTP 503 with `Retry-After`.
 - Errors return `{"error": "<code>", "detail": "<message>"}` (`http_error`, `invalid_request`,
   `rate_limited`, `internal_error`). Unexpected errors return a generic 500 message; details are
   logged server-side only, and stack traces are never sent to clients. Handled responses carry an

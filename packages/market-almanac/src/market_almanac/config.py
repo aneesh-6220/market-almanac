@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     # API protection.
     api_rate_limit_per_minute: int = 120
     api_max_page_size: int = 1000
+    # Data requests that may execute at once; the rest wait their turn. On a 512 MiB host each concurrent request
+    # can add tens of MB of working set, so this is a memory bound as much as a CPU one.
+    api_max_concurrent_requests: int = 3
+    api_queue_timeout_seconds: float = 30.0
 
     @field_validator("database_url")
     @classmethod

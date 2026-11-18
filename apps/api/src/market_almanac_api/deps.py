@@ -81,6 +81,7 @@ class DataCache:
         self._prod: dict[Any, Any] = {}
         self._peers: dict[tuple[Any, ...], pd.DataFrame] = {}
         self._memo: dict[tuple[Any, ...], tuple[float, Any]] = {}
+        self._lean: dict[tuple[Any, ...], pd.DataFrame] = {}
 
     def store(self) -> DatasetStore:
         s = get_settings()
@@ -292,10 +293,57 @@ class DataCache:
             self._memo[key] = (time.monotonic(), locs)
         return locs
 
+    # Columns of the weather table that the market page's computations read. The full table also carries long
+    # metadata strings (provider, time standard, spatial basis, retrieval time) that cost over half its memory.
+    WEATHER_LEAN_COLUMNS = (
+        "location_id",
+        "lat",
+        "lon",
+        "period",
+        "precip_total_mm",
+        "precip_total_mm_raw",
+        "t2m_mean_c",
+        "heat_days_t2m_max_ge_35c",
+        "precip_qc_flagged_days",
+    )
+
+    def weather_lean(self) -> tuple[pd.DataFrame, str | None]:
+        """The weather table without its metadata columns, for the environment and production-region features.
+
+        Same values and dtypes as ``frame("weather_monthly")`` for the columns kept, at under half the resident
+        memory (the table is shared by every request, so this is paid once for the life of the process).
+        """
+        import dataclasses
+
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+
+        from market_almanac.data.schema import SCHEMAS, coerce
+
+        st = self.store()
+        latest = st.latest("weather_monthly")
+        if latest is None:
+            return st.read("weather_monthly"), None
+        key = (st.mode, "weather_lean", latest.snapshot_id)
+        with self._lock:
+            hit = self._lean.get(key)
+            if hit is not None:
+                return hit, latest.snapshot_id
+        full = SCHEMAS["weather_monthly"]
+        names = set(pq.ParquetFile(st.path("weather_monthly", latest.snapshot_id)).schema_arrow.names)
+        cols = [c for c in self.WEATHER_LEAN_COLUMNS if c in names]
+        raw = pq.read_table(st.path("weather_monthly", latest.snapshot_id), columns=cols).to_pandas()
+        pa.default_memory_pool().release_unused()
+        lean_schema = dataclasses.replace(full, columns={c: t for c, t in full.columns.items() if c in cols})
+        frame = coerce(raw, lean_schema)
+        with self._lock:
+            self._lean = {key: frame}
+        return frame, latest.snapshot_id
+
     def production_features(self, country: str, commodity_code: str, commodity_name: str) -> tuple[pd.DataFrame, Any]:
         from market_almanac.features.production_weather import build_production_features
 
-        weather, wsid = self.frame("weather_monthly")
+        weather, wsid = self.weather_lean()
         key = (wsid, country, commodity_code)
         with self._lock:
             hit = self._prod.get(key)
