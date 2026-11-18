@@ -26,7 +26,7 @@ series is shown a forecast only if an out-of-sample evaluation covers it.
 See [ADR 0007](adr/0007-global-read-layer-and-price-artefact.md) and the endpoint list in
 [API.md](API.md#global-price-layer-every-country-with-stored-prices). In short: a precomputed catalog
 (125,202 rows) answers discovery; observation queries run DuckDB over one country's Parquet partition
-with projection and predicate pushdown, one connection per call (one thread, 160 MB limit); a
+with projection and predicate pushdown, one connection per call (one thread, 128 MB limit, one query at a time process-wide); a
 data-only 19.3 MB artefact, pinned by URL and SHA-256 in code, is installed at start-up on Render Free's
 ephemeral disk; the price endpoints have their own readiness scope.
 

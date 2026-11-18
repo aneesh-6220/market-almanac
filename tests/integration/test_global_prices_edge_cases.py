@@ -332,3 +332,43 @@ def test_single_snapshot_lake_without_a_catalog_is_served_through_the_same_endpo
         assert client.get(f"/api/v1/series/{sid}/history").json()["n_observed"] == 30
         # the catalog was built into the cache directory, never into the data directory
         assert not (data / "public" / "live" / "series_catalog.parquet").exists()
+
+
+def test_concurrent_requests_never_run_more_than_the_allowed_queries_at_once(world, monkeypatch):
+    """A burst of visitors must not multiply DuckDB memory budgets: queries are gated to MAX_CONCURRENT_QUERIES."""
+    import threading
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    from market_almanac.globaldata import prices
+
+    client, _, ids = world
+    state = {"now": 0, "peak": 0}
+    guard = threading.Lock()
+    real = prices._connect
+
+    def slow_connect():
+        with guard:
+            state["now"] += 1
+            state["peak"] = max(state["peak"], state["now"])
+        time.sleep(0.02)  # hold the slot long enough for other threads to pile up behind it
+        return real()
+
+    class Tracked:
+        def __init__(self, con):
+            self._c = con
+
+        def execute(self, *a, **k):
+            return self._c.execute(*a, **k)
+
+        def close(self):
+            self._c.close()
+            with guard:
+                state["now"] -= 1
+
+    monkeypatch.setattr(prices, "_connect", lambda: Tracked(slow_connect()))
+    urls = [f"{G}/countries/TST/series", f"{G}/series/{ids['complete']}/observations", f"{G}/countries/TST/markets"] * 8
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        codes = list(pool.map(lambda u: client.get(u).status_code, urls))
+    assert set(codes) == {200}
+    assert state["peak"] <= prices.MAX_CONCURRENT_QUERIES, state

@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **Out-of-memory kill under concurrent load (found in production verification of 1.2.0).** A dozen
+  parallel visitors made Render kill the 512 MiB instance (`oomKilled`), because every global query
+  held its own DuckDB memory budget and the API serves requests from a thread pool. Global queries now
+  run one at a time (they take milliseconds), each with a 128 MB budget instead of 160 MB, and freed heap
+  is returned to the OS after each query. A regression test pins the bound; `benchmark_global_prices.py`
+  gained `--concurrency`. The CI memory guard was recalibrated on the Linux runner (410 MB measured).
+
 ## [1.2.0] - 2026-11-18
 
 ### Added

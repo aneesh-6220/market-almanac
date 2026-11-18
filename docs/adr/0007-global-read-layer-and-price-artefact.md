@@ -13,7 +13,7 @@ is 242 MB).
 ## Decision
 
 1. **Query Parquet with DuckDB, never load it into pandas per request.** `globaldata/prices.py`
-   opens one short-lived in-memory DuckDB connection per call (one thread, 160 MB memory limit, UTC),
+   opens one short-lived in-memory DuckDB connection per call (one thread, 128 MB memory limit, UTC; a process-wide gate runs one query at a time so concurrent requests cannot multiply the budget),
    projects only the needed columns and pushes filters down to the partition. Country and series
    pages are answered from a **precomputed global catalog** (125,202 rows, sorted for row-group
    pruning, zstd) instead of `build_catalog` over raw observations, which peaked at about 500 MB for

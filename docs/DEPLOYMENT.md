@@ -125,7 +125,7 @@ configuration:
   update `prices_release.json` (URL, SHA-256, per-country snapshot ids). Older snapshots stay in the
   partitions, so anything that cited them stays reproducible.
 - Memory: the browse workload peaks around 330 MB resident including the Python interpreter and
-  scientific stack (about 210 MB before the first request); DuckDB is limited to one thread and 160 MB.
+  scientific stack (about 210 MB before the first request); DuckDB is limited to one thread and 128 MB, and queries run one at a time (a burst of visitors queues instead of multiplying memory budgets).
   Measure with `python scripts/ops/benchmark_global_prices.py --data-dir data` (or `--url` against a
   running API).
 

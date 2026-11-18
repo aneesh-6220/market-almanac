@@ -48,8 +48,13 @@ GLOBAL_CATALOG_MANIFEST = "global_catalog_manifest.json"
 GLOBAL_CATALOG_FORMAT = "global-series-catalog-1"
 LEGACY_CATALOG = "series_catalog.parquet"
 MAX_OBSERVATION_ROWS = 20_000  # one series never has this many; bounds a pathological partition
-DUCKDB_MEMORY = "160MB"
+DUCKDB_MEMORY = "128MB"
+# Every query opens its own in-memory connection with the budget above. The API serves sync endpoints from a thread
+# pool, so without a gate N concurrent visitors could hold N budgets at once: on a 512 MiB host that is an OOM kill
+# (observed in production under a dozen parallel requests). Queries take milliseconds, so they are run one at a time.
+MAX_CONCURRENT_QUERIES = 1
 SOURCE_TTL_SECONDS = 30.0
+_QUERY_GATE = threading.BoundedSemaphore(MAX_CONCURRENT_QUERIES)
 
 OBSERVATION_COLUMNS = (
     "period",
@@ -81,6 +86,25 @@ class CountrySnapshot:
 
 def _q(s: str) -> str:
     return "'" + s.replace("'", "''") + "'"
+
+
+def _load_malloc_trim() -> Any:
+    """``malloc_trim`` from glibc, or None where it does not exist (macOS, musl). Resolved once."""
+    try:
+        import ctypes
+
+        return ctypes.CDLL("libc.so.6").malloc_trim
+    except (OSError, AttributeError):
+        return None
+
+
+_MALLOC_TRIM = _load_malloc_trim()
+
+
+def _release_heap() -> None:
+    """Hand freed heap pages back to the OS (glibc only, a no-op elsewhere), so resident memory cannot ratchet up."""
+    if _MALLOC_TRIM is not None:
+        _MALLOC_TRIM(0)
 
 
 def _connect() -> duckdb.DuckDBPyConnection:
@@ -343,11 +367,13 @@ class GlobalPrices:
         return f"(SELECT *, {_q(sid)} AS snapshot_id FROM read_parquet({_q(str(p))}))"
 
     def _query(self, sql: str, params: list[Any] | None = None) -> pd.DataFrame:
-        con = _connect()
-        try:
-            return con.execute(sql, params or []).df()
-        finally:
-            con.close()
+        with _QUERY_GATE:
+            con = _connect()
+            try:
+                return con.execute(sql, params or []).df()
+            finally:
+                con.close()
+                _release_heap()
 
     def stale_countries(self) -> list[str]:
         """Countries whose newest installed snapshot differs from the one their catalog rows came from."""

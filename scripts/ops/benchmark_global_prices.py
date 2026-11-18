@@ -29,28 +29,43 @@ def _percentile(xs: list[float], q: float) -> float:
     return xs[min(len(xs) - 1, int(len(xs) * q))]
 
 
-def run(get: Any, rounds: int) -> dict[str, Any]:
+def run(get: Any, rounds: int, concurrency: int = 1) -> dict[str, Any]:
+    """Run the browse workload; with ``concurrency`` > 1 that many visitors browse at the same time."""
     lat: dict[str, list[float]] = {}
+    errors: list[str] = []
 
     def call(label: str, url: str, **params: Any) -> Any:
         t = time.perf_counter()
         r = get(url, params=params)
         lat.setdefault(label, []).append((time.perf_counter() - t) * 1000)
         if r.status_code != 200:
-            raise SystemExit(f"{url} -> {r.status_code}: {r.text[:200]}")
+            errors.append(f"{url} -> {r.status_code}: {r.text[:120]}")
+            raise RuntimeError(errors[-1])
         return r
 
-    for _ in range(rounds):
-        call("countries", "/api/v1/global/countries")
-        for iso in COUNTRIES:
-            call("markets", f"/api/v1/global/countries/{iso}/markets")
-            call("commodities", f"/api/v1/global/countries/{iso}/commodities")
-            page = call("series_page", f"/api/v1/global/countries/{iso}/series", limit=50, sort="observations").json()
-            sid = page["items"][0]["series_id"]
-            call("series_detail", f"/api/v1/global/series/{sid}")
-            call("observations", f"/api/v1/global/series/{sid}/observations", limit=500)
-            call("history", f"/api/v1/series/{sid}/history")
-            call("export_csv", f"/api/v1/global/series/{sid}/export", format="csv")
+    def visitor() -> None:
+        for _ in range(rounds):
+            call("countries", "/api/v1/global/countries")
+            for iso in COUNTRIES:
+                call("markets", f"/api/v1/global/countries/{iso}/markets")
+                call("commodities", f"/api/v1/global/countries/{iso}/commodities")
+                page = call(
+                    "series_page", f"/api/v1/global/countries/{iso}/series", limit=50, sort="observations"
+                ).json()
+                sid = page["items"][0]["series_id"]
+                call("series_detail", f"/api/v1/global/series/{sid}")
+                call("observations", f"/api/v1/global/series/{sid}/observations", limit=500)
+                call("history", f"/api/v1/series/{sid}/history")
+                call("export_csv", f"/api/v1/global/series/{sid}/export", format="csv")
+
+    if concurrency <= 1:
+        visitor()
+    else:
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=concurrency) as pool:
+            for f in [pool.submit(visitor) for _ in range(concurrency)]:
+                f.result()
     out = {
         k: {
             "n": len(v),
@@ -75,6 +90,7 @@ def main() -> None:
     ap.add_argument("--data-dir", help="local data directory holding the installed price artefact")
     ap.add_argument("--url", help="base URL of a running API")
     ap.add_argument("--rounds", type=int, default=2)
+    ap.add_argument("--concurrency", type=int, default=1, help="simultaneous visitors (default 1)")
     a = ap.parse_args()
     if bool(a.data_dir) == bool(a.url):
         ap.error("give exactly one of --data-dir or --url")
@@ -89,7 +105,7 @@ def main() -> None:
                 "first_request_ms": round((time.perf_counter() - t0) * 1000),
                 "first_status": first.status_code,
             }
-            result["latency"] = run(c.get, a.rounds)
+            result["latency"] = run(c.get, a.rounds, a.concurrency)
         print(json.dumps(result, indent=2))
         return
     import tempfile
@@ -119,7 +135,7 @@ def main() -> None:
     result = {
         "target": "in-process",
         "rss_after_import_mb": round(base / divisor, 1),
-        "latency": run(client.get, a.rounds),
+        "latency": run(client.get, a.rounds, a.concurrency),
     }
     result["peak_rss_mb"] = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / divisor, 1)
     print(json.dumps(result, indent=2))
