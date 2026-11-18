@@ -82,3 +82,26 @@ cold starts.
 [ADRs](adr/README.md) · [MAINTAINER_RUNBOOK](MAINTAINER_RUNBOOK.md) ·
 [exercises 6–10](../exercises/README.md) · [FORECASTABILITY_ATLAS_PROTOCOL](research/FORECASTABILITY_ATLAS_PROTOCOL.md) ·
 [RESUME_EVIDENCE](RESUME_EVIDENCE.md) · [CHANGELOG](../CHANGELOG.md) · [CITATION.cff](../CITATION.cff)
+
+## Deployment verification (2026-11-18)
+
+Pushed `06e03eb` (results) and `86c4403` (CI fix) to `main` with a normal fast-forward push; tags
+`protocol-atlas-v1` and `protocol-sahel-v1` pushed. CI run 44294319294 on `86c4403`: Python, Web,
+end-to-end (demo) and Docker jobs all succeeded. The Web job had failed on every push since
+`layout.tsx` adopted `LayoutProps`; `typecheck` now runs `next typegen` first.
+
+| Check | Result |
+|---|---|
+| Render API `/api/v1/status` | version 1.1.0, mode live |
+| `/api/v1/coverage/registry` | 200, packaged copy, 42 forecast-evaluated, 10 research-eligible, 43 validated, 149 unsupported |
+| `/api/v1/workbench/studies` | both studies listed; atlas detail 200 (106 KB) |
+| `POST /api/v1/workbench/validate` | atlas spec valid, hash `ad09ac46…` |
+| Existing endpoints (`/health`, `/sources`, `/catalog/*`, `/studies`, `/experiments`) | 200 |
+| CORS from an unknown origin | no `Access-Control-Allow-Origin` header |
+| Vercel pages `/`, `/atlas`, `/forecastability`, `/studies`, `/workbench`, `/lab`, `/explorer` | 200; atlas and study data render; Lab shows the Sahel confirmatory results |
+
+Observed during verification: for about a minute after the Render deploy, the new instance answered
+before its data bundle had reinstalled, so `/api/v1/studies` returned `[]` and the Lab's study panel
+showed "Loading study…" with 404s. It recovered without intervention. This is the existing Render
+Free cold-start behaviour (ephemeral disk); the new endpoints are unaffected because they read
+packaged files.
