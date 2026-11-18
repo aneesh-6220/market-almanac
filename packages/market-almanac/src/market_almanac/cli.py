@@ -584,6 +584,43 @@ def global_registry(
     _echo_json({"counts": reg["counts"], "totals": reg["totals"]})
 
 
+@global_app.command("catalog")
+def global_catalog(
+    country: Annotated[
+        list[str] | None, typer.Option("--country", help="limit to these ISO3 codes (repeatable)")
+    ] = None,
+    mode: ModeOpt = None,
+) -> None:
+    """Build the global series catalog (one row per series) from the newest partition of every country."""
+    from market_almanac.globaldata.prices import build_global_catalog
+
+    _echo_json(build_global_catalog(_settings(mode), countries=country))
+
+
+@global_app.command("prices-bundle")
+def global_prices_bundle(
+    out: Annotated[Path, typer.Option(help="output directory")] = Path("dist"),
+    mode: ModeOpt = None,
+) -> None:
+    """Package the newest price partition of every country and the global catalog (data-only artefact)."""
+    from market_almanac.data.public_bundle import build_prices_bundle
+
+    s = _settings(mode)
+    _echo_json(build_prices_bundle(s.data_dir, s.market_almanac_mode.value, out))
+
+
+@global_app.command("install-prices")
+def global_install_prices(
+    source: Annotated[str | None, typer.Argument(help="path or https:// URL; defaults to the pinned release")] = None,
+    sha256: Annotated[str | None, typer.Option(help="expected SHA-256 (defaults to the pinned release's)")] = None,
+    mode: ModeOpt = None,
+) -> None:
+    """Install the data-only price artefact into DATA_DIR and verify it (the pinned release by default)."""
+    from market_almanac.globaldata.release import install_prices
+
+    _echo_json(install_prices(_settings(mode), source, sha256))
+
+
 @global_app.command("weather")
 def global_weather(
     spec_path: Annotated[Path, typer.Option("--spec", help="research specification whose markets need weather")],

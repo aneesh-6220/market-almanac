@@ -102,6 +102,33 @@ instance has 512 MB of RAM; resident memory settles around 300 MB, so heavy ad-h
 the `/lagged-relationships` endpoint, which loads the whole price table) can still exceed it. Set
 `MALLOC_ARENA_MAX=2` and `ARROW_DEFAULT_MEMORY_POOL=system` on the service to limit allocator overhead.
 
+## The price artefact (global explorer)
+
+The Market Explorer reads a **data-only price artefact**, not the research bundle: the newest
+partition of every country, their manifests and the precomputed series catalog (19.3 MB archive,
+about 24 MB installed; the 75 MB research bundle and the 242 MB Atlas package are not needed to browse
+prices). It is pinned in `packages/market-almanac/src/market_almanac/globaldata/prices_release.json`
+(release `global-prices-v1`, URL and SHA-256), so a live service installs it with no extra
+configuration:
+
+- At start-up, in a background thread, the API installs the artefact if the newest partitions or their
+  catalog are missing. The archive hash and every file are verified; an existing file that differs is
+  never overwritten; the manifest is written last, so an interrupted install is simply retried.
+- Price endpoints answer `503` with `Retry-After` while it installs (about a second after the
+  download) and have their own readiness scope, so they do not wait for the research bundle. `/ready`
+  returns `{"status", "parts": {"prices", "research"}}`.
+- Override with `GLOBAL_PRICES_BUNDLE_URL` + `GLOBAL_PRICES_BUNDLE_SHA256` (the digest is mandatory) or
+  disable with `GLOBAL_PRICES_AUTO_INSTALL=0` for a volume filled by hand:
+  `market-almanac global install-prices [source] [--sha256 …]`.
+- **Publishing new data:** ingest, `market-almanac global catalog`,
+  `market-almanac global prices-bundle --out dist`, upload the archive as a GitHub release asset, and
+  update `prices_release.json` (URL, SHA-256, per-country snapshot ids). Older snapshots stay in the
+  partitions, so anything that cited them stays reproducible.
+- Memory: the browse workload peaks around 330 MB resident including the Python interpreter and
+  scientific stack (about 210 MB before the first request); DuckDB is limited to one thread and 160 MB.
+  Measure with `python scripts/ops/benchmark_global_prices.py --data-dir data` (or `--url` against a
+  running API).
+
 ## Managed PostgreSQL
 
 Any PostgreSQL 14+ works (the project was developed against a hosted Neon database).

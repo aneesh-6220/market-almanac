@@ -39,6 +39,26 @@ jobs:
             python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f"
           done
 
+  global-data:
+    name: Global price data (pinned release, real observations)
+    runs-on: ubuntu-latest
+    env:
+      MARKET_ALMANAC_MODE: live
+      DATA_DIR: ${{ github.workspace }}/.real-data
+      MARKET_ALMANAC_REAL_DATA_DIR: ${{ github.workspace }}/.real-data
+      DATABASE_URL: sqlite:///./.real-data/api.db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --frozen
+      - name: Install the pinned data-only price artefact (SHA-256 verified)
+        run: uv run market-almanac global install-prices
+      - name: Journeys over 3.8 million archived observations, 95 countries
+        run: uv run pytest tests/integration/test_global_prices_real.py -q -p no:cacheprovider
+
   web:
     name: Web (lint, types, unit tests, build)
     runs-on: ubuntu-latest

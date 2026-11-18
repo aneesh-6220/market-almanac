@@ -105,3 +105,11 @@ before its data bundle had reinstalled, so `/api/v1/studies` returned `[]` and t
 showed "Loading study…" with 404s. It recovered without intervention. This is the existing Render
 Free cold-start behaviour (ephemeral disk); the new endpoints are unaffected because they read
 packaged files.
+
+## v1.2.0: global Market Explorer
+
+The public explorer now reads the global lake. See [GLOBAL_EXPLORER.md](GLOBAL_EXPLORER.md) for what was
+built, what is unsupported, validation and measured performance, and
+[ADR 0007](adr/0007-global-read-layer-and-price-artefact.md) for the design. Scientific artefacts are
+unchanged; the layer is read-only.
+

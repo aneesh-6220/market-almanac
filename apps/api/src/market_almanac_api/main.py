@@ -22,7 +22,7 @@ from market_almanac import __version__
 from market_almanac.config import Settings, get_settings
 from market_almanac.logging import configure_logging, get_logger, log_event
 from market_almanac_api.deps import DataUnavailableError
-from market_almanac_api.routers import coverage, data, markets, research, system, workbench
+from market_almanac_api.routers import coverage, data, global_prices, markets, research, system, workbench
 
 log = get_logger("api")
 
@@ -108,7 +108,45 @@ def _bootstrap_data() -> None:
         BootstrapState.installing = False
 
 
+def _prices_bootstrap_needed(s: Settings) -> bool:
+    """Live deployments install the price artefact when the newest partitions and their catalog are missing."""
+    from market_almanac.globaldata.release import is_installed
+
+    return s.market_almanac_mode.value == "live" and s.global_prices_auto_install and not is_installed(s)
+
+
+def _mark_prices_pending() -> None:
+    from market_almanac_api.deps import BootstrapState
+
+    try:
+        BootstrapState.prices_installing = _prices_bootstrap_needed(get_settings())
+    except Exception:  # an unreadable lake is reported by the install attempt itself
+        BootstrapState.prices_installing = True
+
+
+def _bootstrap_prices() -> None:
+    """Install the data-only global price artefact (about 30 MB) so price browsing survives an ephemeral disk."""
+    from market_almanac.globaldata.release import install_prices
+    from market_almanac_api.deps import BootstrapState, global_prices
+
+    s = get_settings()
+    try:
+        if not _prices_bootstrap_needed(s):
+            return
+        BootstrapState.prices_installing, BootstrapState.prices_error = True, None
+        log_event(log, "installing global price artefact")
+        res = install_prices(s)
+        global_prices().invalidate()
+        log_event(log, "global price artefact installed", files=res["files"], countries=res["countries"])
+    except Exception as exc:  # stay up and answer 503 rather than crash-loop
+        BootstrapState.prices_error = f"{type(exc).__name__}: {exc}"[:300]
+        log_event(log, "price artefact install failed", level=40, error=BootstrapState.prices_error)
+    finally:
+        BootstrapState.prices_installing = False
+
+
 def _startup() -> None:
+    _bootstrap_prices()
     _bootstrap_data()
     _warm_caches()
 
@@ -116,6 +154,7 @@ def _startup() -> None:
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     _mark_install_pending()
+    _mark_prices_pending()
     threading.Thread(target=_startup, name="data-startup", daemon=True).start()
     yield
 
@@ -160,15 +199,29 @@ UNGATED_PATHS = frozenset({"/health", "/ready", "/docs", "/docs/oauth2-redirect"
 INSTALL_RETRY_AFTER_SECONDS = 30
 
 
-def readiness() -> tuple[str, str | None]:
-    """'installing', 'failed' (start-up install refused or failed) or 'ready'."""
+def readiness(scope: str = "research") -> tuple[str, str | None]:
+    """'installing', 'failed' (start-up install refused or failed) or 'ready'.
+
+    ``scope`` is "prices" for the global price layer (installed from the small price artefact) or
+    "research" for everything that reads the research bundle (experiments, studies, forecasts).
+    """
     from market_almanac_api.deps import BootstrapState
 
+    if scope == "prices":
+        if BootstrapState.prices_installing:
+            return "installing", None
+        if BootstrapState.prices_error:
+            return "failed", BootstrapState.prices_error
+        return "ready", None
     if BootstrapState.installing:
         return "installing", None
     if BootstrapState.error:
         return "failed", BootstrapState.error
     return "ready", None
+
+
+# Routes that read only the price artefact (the global explorer and the series pages built on it).
+PRICE_SCOPED_PREFIXES = ("/api/v1/global", "/api/v1/series/", "/api/v1/compare")
 
 
 class InstallGate(BaseHTTPMiddleware):
@@ -182,12 +235,14 @@ class InstallGate(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         if request.url.path in UNGATED_PATHS or request.method == "OPTIONS":
             return await call_next(request)
-        state, err = readiness()
+        scope = "prices" if request.url.path.startswith(PRICE_SCOPED_PREFIXES) else "research"
+        state, err = readiness(scope)
         if state == "installing":
+            what = "price artefact" if scope == "prices" else "research data bundle"
             return JSONResponse(
                 {
                     "error": "data_installing",
-                    "detail": "The research data bundle is being installed on this deployment; retry shortly.",
+                    "detail": f"The {what} is being installed on this deployment; retry shortly.",
                 },
                 status_code=503,
                 headers={"Retry-After": str(INSTALL_RETRY_AFTER_SECONDS)},
@@ -263,16 +318,22 @@ def create_app() -> FastAPI:
 
     @app.get("/ready", tags=["system"])
     def ready() -> JSONResponse:
-        """Readiness: 200 once the research data is usable, 503 while it installs or after a failed install."""
-        state, err = readiness()
-        body = {"status": state, **({"detail": err} if err else {})}
-        return JSONResponse(body, status_code=200 if state == "ready" else 503)
+        """Readiness: 200 once the price artefact and the research data are usable, else 503 with each part's state."""
+        parts = {"prices": readiness("prices"), "research": readiness("research")}
+        order = ("failed", "installing", "ready")
+        worst = min((st for st, _ in parts.values()), key=order.index)
+        detail = {k: err for k, (_, err) in parts.items() if err}
+        body: dict[str, object] = {"status": worst, "parts": {k: st for k, (st, _) in parts.items()}}
+        if detail:
+            body["detail"] = detail
+        return JSONResponse(body, status_code=200 if worst == "ready" else 503)
 
     app.include_router(system.router)
     app.include_router(data.router)
     app.include_router(research.router)
     app.include_router(markets.router)
     app.include_router(coverage.router)
+    app.include_router(global_prices.router)
     app.include_router(workbench.router)
     return app
 

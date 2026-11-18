@@ -35,6 +35,35 @@ The Market Almanac API is a read-only FastAPI service. Interactive OpenAPI docum
 | `GET /api/v1/compare` | 2–8 `series_id`s: comparability decision with reasons, aligned prices, indices, statistics (`format=json|csv`). |
 | `GET /api/v1/studies`, `GET /api/v1/studies/{id}?phase=confirmatory|exploratory|all` | Pre-registered study results, as stored. |
 
+### Global price layer (every country with stored prices)
+
+Read-only, bounded queries over the partitioned lake: 95 countries, 4,835 markets, 125,202 series,
+3,801,021 monthly observations. Pages are capped (`limit` ≤ 500 series, ≤ 1000 observations); nothing
+loads a country into memory. Every response carries the snapshot id of the country it came from.
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/v1/global/status` | Layout, readiness, series and observation totals, countries whose catalog is stale. |
+| `GET /api/v1/global/countries` | Every country with stored prices: markets, commodities, series (and how many are usable or forecast-evaluation eligible), records, period, currencies, snapshot id, **data tier** and its meaning. `status`, `q` filters. |
+| `GET /api/v1/global/countries/{iso3}` | One country: coverage, tier, snapshot identity (hash, revision, diff against its parent), QC, licence, published evaluations. `404` explains whether the country is unsupported, discoverable upstream or unknown. |
+| `GET /api/v1/global/countries/{iso3}/markets` | Markets with coordinates, **`coordinate_status` (`ok`, `missing`, `invalid`)**, series counts and period. Invalid or `0,0` coordinates are reported, never repaired. |
+| `GET /api/v1/global/countries/{iso3}/commodities` | Commodities with every **unit, currency and price type** they are reported in. |
+| `GET /api/v1/global/countries/{iso3}/series` | Series: `commodity`, `market`, `unit`, `currency`, `price_type`, `q`, `usable_only` (default true; ≥ 12 prices), `eligible_only`, `sort`, `limit`, `offset`. Includes months spanned, missing months, conflicting duplicates and coordinate status. |
+| `GET /api/v1/global/series/{id}` | Identity, summary statistics, completeness (records stored and not valid, flag counts, months with duplicates), provenance (snapshot, hashes, source references, attribution, licence note) and the country's tier and evaluations. |
+| `GET /api/v1/global/series/{id}/observations` | Every stored record in month order with price flag, quality flags, `valid`, `used_in_series`, `duplicate_month`, reference period and source: `start`, `end` (`YYYY-MM`), `limit`, `offset`. |
+| `GET /api/v1/global/series/{id}/export` | The same records as `format=csv` (with a `#` preamble naming the snapshot, attribution and licence) or `json`; `start`, `end`. Currency, unit and price type are on every CSV row. |
+
+Existing endpoints (`/api/v1/series/{id}`, `/history`, `/movement`, `/seasonality`, `/environment`,
+`/brief`, `/compare`) resolve any of the 125,202 series through the same layer. Data tiers, from weakest to strongest claim:
+`ingested`, `validated`, `research_eligible`, `forecast_evaluated`; only the last two say anything
+about forecasting, and no forecast is returned for a series without an evaluation. `/compare` refuses
+differing commodities, units and price types and allows differing currencies only as an indexed
+comparison (no conversion is ever applied).
+
+When the price data are not installed (or the catalog does not match the installed snapshots) these
+endpoints answer `503` with a reason and `Retry-After` while the artefact installs; `/ready` reports the
+`prices` and `research` parts separately.
+
 ### System
 
 | Endpoint | Purpose |

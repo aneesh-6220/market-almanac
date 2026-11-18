@@ -30,7 +30,7 @@ from market_almanac.db import models as m
 from market_almanac.features.weather import ClimatologyConfig, anomaly
 from market_almanac.geo.calendar import season_for
 from market_almanac.geo.spam import SOURCE_CITATION, crop_for_commodity, packaged_weights
-from market_almanac_api.deps import cache, db_dep, settings_dep
+from market_almanac_api.deps import ResolvedSeries, cache, db_dep, resolve_series, settings_dep
 from market_almanac_api.schemas import Page
 
 router = APIRouter(prefix="/api/v1")
@@ -65,8 +65,8 @@ class CatalogSeries(BaseModel):
     price_type: str
     price_flag: str
     currency: str
-    first_period: str
-    last_period: str
+    first_period: str | None = None
+    last_period: str | None = None
     n_observations: int
     coverage: float
     longest_gap_months: int
@@ -228,8 +228,8 @@ def _clean(v: Any) -> Any:
 def _entry(r: Any) -> CatalogSeries:
     d = r._asdict() if hasattr(r, "_asdict") else dict(r)
     d = {k: (None if isinstance(v, float) and not np.isfinite(v) else v) for k, v in d.items()}
-    d["first_period"] = pd.Timestamp(d["first_period"]).date().isoformat()
-    d["last_period"] = pd.Timestamp(d["last_period"]).date().isoformat()
+    for k in ("first_period", "last_period"):
+        d[k] = None if d.get(k) is None or pd.isna(d[k]) else pd.Timestamp(d[k]).date().isoformat()
     d["ineligible_reasons"] = d.get("ineligible_reasons") or None
     return CatalogSeries(**{k: d.get(k) for k in CatalogSeries.model_fields})
 
@@ -241,7 +241,12 @@ def _one(cat: pd.DataFrame, series_id: str) -> pd.Series:
 
 
 def _month(v: str | None) -> pd.Timestamp | None:
-    return pd.Timestamp(v + "-01") if v else None
+    if not v:
+        return None
+    try:
+        return pd.Timestamp(v + "-01")
+    except (ValueError, pd.errors.ParserError) as exc:  # e.g. 2023-13 passes the shape check but is not a month
+        raise HTTPException(422, f"invalid month {v!r}; expected YYYY-MM") from exc
 
 
 def _csv(header: list[str], rows: list[list[Any]], filename: str, notes: list[str]) -> PlainTextResponse:
@@ -444,13 +449,12 @@ def _provenance(row: pd.Series, sid: str | None) -> Provenance:
 @router.get("/series/{series_id}", response_model=SeriesDetail, tags=["data"])
 def series_detail(series_id: SeriesId, settings: Settings = Depends(settings_dep)) -> SeriesDetail:
     """Identity, latest observation (with its observation month), recent changes and provenance."""
-    cat, _, sid = cache.catalog()
-    row = _one(cat, series_id)
-    summary = series_summary(cache.series_monthly(series_id), cat["last_period"].max())
+    ref = resolve_series(series_id)
+    summary = series_summary(ref.monthly(), ref.dataset_last)
     return SeriesDetail(
-        series=_entry(row.to_dict()),
+        series=_entry(ref.row.to_dict()),
         summary=_clean(summary),
-        provenance=_provenance(row, sid),
+        provenance=_provenance(ref.row, ref.snapshot_id),
         synthetic=_synthetic(settings),
     )
 
@@ -464,10 +468,10 @@ def series_history(
     settings: Settings = Depends(settings_dep),
 ) -> Any:
     """Monthly prices on a complete month index; missing months are explicit nulls, never interpolated."""
-    cat, _, sid = cache.catalog()
-    row = _one(cat, series_id)
-    p = cache.series_monthly(series_id)
-    excluded = len(cache.series_rows(series_id)) - len(p)
+    ref = resolve_series(series_id)
+    row, sid = ref.row, ref.snapshot_id
+    p = ref.monthly()
+    excluded = ref.raw_count() - len(p)
     lo, hi = _month(start), _month(end)
     if lo is not None and hi is not None and lo > hi:
         raise HTTPException(422, "start must not be after end")
@@ -515,13 +519,13 @@ def series_movement(
     at: Annotated[str | None, Query(pattern=MONTH, description="assess the change ending in this month")] = None,
 ) -> MovementResponse:
     """How unusual is the latest (or a chosen) price movement, by a documented historical comparison."""
-    cat, _, sid = cache.catalog()
-    _one(cat, series_id)
-    p = cache.series_monthly(series_id)
+    ref = resolve_series(series_id)
+    sid = ref.snapshot_id
+    p = ref.monthly()
     a = assess_movement(p, _month(at))
     peers = None
     if a.get("status") == "ok" and a.get("span_months") == 1:
-        peers = peer_context(cache.peer_panel(cat, series_id), series_id, pd.Timestamp(a["period"]))
+        peers = peer_context(ref.peer_panel(), series_id, pd.Timestamp(a["period"]))
     return MovementResponse(
         series_id=series_id,
         assessment=_clean(a),
@@ -535,15 +539,13 @@ def series_movement(
 @router.get("/series/{series_id}/seasonality", tags=["data"])
 def series_seasonality(series_id: SeriesId) -> dict[str, Any]:
     """Typical within-year price pattern (median of price / calendar-year mean, by month)."""
-    cat, _, sid = cache.catalog()
-    _one(cat, series_id)
-    out = seasonal_profile(cache.series_monthly(series_id))
-    out.update({"series_id": series_id, "snapshot_id": sid})
+    ref = resolve_series(series_id)
+    out = seasonal_profile(ref.monthly())
+    out.update({"series_id": series_id, "snapshot_id": ref.snapshot_id})
     return _clean(out)
 
 
-def _environment(cat: pd.DataFrame, series_id: str, months: int = 60) -> dict[str, Any]:
-    row = _one(cat, series_id)
+def _environment(row: pd.Series, months: int = 60) -> dict[str, Any]:
     weather, wsid = cache.frame("weather_monthly")
     out: dict[str, Any] = {
         "status": "no_weather",
@@ -645,8 +647,7 @@ ENV_CAVEATS = [
 @router.get("/series/{series_id}/environment", response_model=EnvironmentResponse, tags=["data"])
 def series_environment(series_id: SeriesId, months: Annotated[int, Query(ge=12, le=240)] = 60) -> EnvironmentResponse:
     """Observed weather context: the market's grid cell and, where defined, the crop's production region."""
-    cat, _, _ = cache.catalog()
-    env = _environment(cat, series_id, months)
+    env = _environment(resolve_series(series_id).row, months)
     return EnvironmentResponse(
         series_id=series_id,
         status=env["status"],
@@ -700,15 +701,15 @@ def series_brief(
 
     Text is produced by fixed templates from the statistics in `evidence`; no language model is involved.
     """
-    cat, _, sid = cache.catalog()
-    row = _one(cat, series_id)
-    p = cache.series_monthly(series_id)
-    summary = series_summary(p, cat["last_period"].max())
+    ref = resolve_series(series_id)
+    row, sid = ref.row, ref.snapshot_id
+    p = ref.monthly()
+    summary = series_summary(p, ref.dataset_last)
     movement = assess_movement(p)
     peers = None
     if movement.get("status") == "ok" and movement.get("span_months") == 1:
-        peers = peer_context(cache.peer_panel(cat, series_id), series_id, pd.Timestamp(movement["period"]))
-    env = _environment(cat, series_id, 12)
+        peers = peer_context(ref.peer_panel(), series_id, pd.Timestamp(movement["period"]))
+    env = _environment(row, 12)
     quality = {
         "eligible": bool(row["eligible"]),
         "reasons": [r for r in str(row["ineligible_reasons"] or "").split("; ") if r],
@@ -757,12 +758,13 @@ def compare_series(
         raise HTTPException(422, "series_id must look like ps_ followed by 16 hex characters")
     if len(ids) < 2:
         raise HTTPException(422, "provide at least two distinct series")
-    cat, _, sid = cache.catalog()
-    rows = [_one(cat, s) for s in ids]
+    refs: list[ResolvedSeries] = [resolve_series(s) for s in ids]
+    rows = [r.row for r in refs]
+    sid = refs[0].snapshot_id if len({r.snapshot_id for r in refs}) == 1 else None
     lo, hi = _month(start), _month(end)
     if lo is not None and hi is not None and lo > hi:
         raise HTTPException(422, "start must not be after end")
-    res = compare({s: cache.series_monthly(s) for s in ids}, [r.to_dict() for r in rows], lo, hi)
+    res = compare({r.series_id: r.monthly() for r in refs}, [r.to_dict() for r in rows], lo, hi)
     meta = [_entry(r.to_dict()) for r in rows]
     if format == "csv":
         if res["status"] != "ok":

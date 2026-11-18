@@ -136,7 +136,13 @@ def build_catalog(
         observed[idx] = True
         n = len(val)
         m = meta.loc[sid]
-        has_coords = bool(pd.notna(m["lat"]) and pd.notna(m["lon"]) and not (m["lat"] == 0 and m["lon"] == 0))
+        has_coords = bool(
+            pd.notna(m["lat"])
+            and pd.notna(m["lon"])
+            and -90 <= m["lat"] <= 90
+            and -180 <= m["lon"] <= 180  # out-of-range values are treated as missing, never fed to the grid
+            and not (m["lat"] == 0 and m["lon"] == 0)
+        )
         gap = _longest_gap(observed)
         n_conf = int(conflicts.get(sid, 0))
         reasons = []

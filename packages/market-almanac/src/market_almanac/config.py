@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     data_bundle_url: str | None = None
     data_bundle_sha256: str | None = None
 
+    # Data-only global price artefact (country partitions + catalog). Defaults to the release pinned in
+    # ``globaldata/prices_release.json``; set these to host the artefact elsewhere. Live mode only.
+    global_prices_bundle_url: str | None = None
+    global_prices_bundle_sha256: str | None = None
+    global_prices_auto_install: bool = True
+
     # Provider credentials. Never logged; never sent to the browser.
     hdx_hapi_app_identifier: SecretStr | None = None
     faostat_access_token: SecretStr | None = None

@@ -174,6 +174,11 @@ function CountryDetail({ iso3 }: { iso3: string }) {
               </ul>
             </div>
           )}
+          <p>
+            <Link href={`/explorer?country=${r.country_iso3}`} className="underline">
+              Browse {r.name} prices in the explorer
+            </Link>
+          </p>
           <p className="text-xs text-ink-3">{r.licence}</p>
           <ul className="list-disc space-y-0.5 pl-5 text-xs text-ink-3">
             {r.known_restrictions.map((k) => (

@@ -6,6 +6,41 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-18
+
+### Added
+
+- **Global Market Explorer.** The explorer, market and comparison pages now cover all 95 countries
+  with stored prices (3,801,021 observations, 125,202 series, 4,835 markets), not only the 10-country
+  research lake: country, commodity and market discovery, search, unit and short-history filters,
+  completeness and quality flags per series, coordinate status, an observation table with
+  `used`/`excluded` status, JSON and CSV export of the displayed records, study links, and peer
+  comparison across countries (indices only; prices are never converted).
+- **Global read API** (`/api/v1/global/*`, see `docs/API.md`): bounded, paginated queries over the
+  partitioned lake with DuckDB, a precomputed series catalog checked against the installed snapshots,
+  observation-level quality flags, snapshot identity and attribution, CSV and JSON export.
+- **Data-only price artefact** (`market-almanac-global-prices-1`, 19.3 MB, pinned release
+  `global-prices-v1`): installed at start-up on ephemeral disks with SHA-256 and per-file
+  verification and its own readiness scope; CLI `global catalog | prices-bundle | install-prices`.
+- Data tiers on every country (`ingested`, `validated`, `research_eligible`, `forecast_evaluated`).
+- Tests: synthetic edge cases (invalid coordinates, conflicting duplicates, units, currencies, snapshot
+  revisions, cold start, export fidelity), real-data journeys for Armenia, Chad, Nepal, Ethiopia and
+  Haiti, memory and latency, and Playwright journeys on real data; a CI job installs the pinned
+  artefact and runs the real-data tests. `scripts/ops/benchmark_global_prices.py`.
+- ADR 0007.
+
+### Fixed
+
+- Out-of-range market coordinates no longer abort catalog construction; they are treated as missing.
+- `start`/`end` values such as `2023-13` on history and compare endpoints answer `422`, not `500`.
+- An unknown series id is `404` (not `503`) when the global catalog is installed.
+- Weather availability is read from one column of the weather snapshot instead of loading the table
+  (about 70 MB less memory on the first series request).
+
+### Unchanged
+
+- All stored confirmatory artefacts, study results and the Forecastability Atlas v1 outcome.
+
 ## [1.1.0] - 2026-11-18
 
 ### Added

@@ -12,3 +12,4 @@ which constraints are deliberate.
 | [0004](0004-declarative-research-specs.md) | Research studies as validated, hashed specifications; no code execution on the server |
 | [0005](0005-country-balanced-two-way-inference.md) | Country-balanced estimand with month-level tests and a two-way bootstrap |
 | [0006](0006-local-execution-published-summaries.md) | Studies run locally; production serves packaged summaries |
+| [0007](0007-global-read-layer-and-price-artefact.md) | A bounded DuckDB read layer over the partitioned lake and a data-only price artefact |

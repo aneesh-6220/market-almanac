@@ -10,6 +10,11 @@ source.
 
 ## What you can do with it
 
+- **Explore any market in 95 countries** (`/explorer`): pick a country, commodity and market, read its
+  monthly history with the correct currency, unit and observation month, inspect completeness, quality
+  flags and provenance, compare economically compatible series, and download every stored record
+  (CSV or JSON). Each country is labelled as ingested, validated, research-eligible or
+  forecast-evaluated, and no forecast appears where none was evaluated.
 - **See global coverage** (`/atlas`): 95 countries with stored WFP prices (3,801,021 monthly
   observations, 125,202 series, 4,835 markets), each with a status (validated, research-eligible,
   forecast-evaluated…), QC results, snapshot hashes and licence; the 149 areas with no integrated

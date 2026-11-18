@@ -38,6 +38,8 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 BUNDLE_FORMAT = "market-almanac-public-bundle-1"
+PRICES_BUNDLE_FORMAT = "market-almanac-global-prices-1"
+SUPPORTED_FORMATS = (BUNDLE_FORMAT, PRICES_BUNDLE_FORMAT)
 MANIFEST_NAME = "BUNDLE_MANIFEST.json"
 EXPERIMENT_FILES = ("results.json", "predictions.parquet", "config.json", "manifest.json")
 MAX_DOWNLOAD_BYTES = 2 * 1024**3
@@ -92,12 +94,31 @@ def bundle_files(data_dir: Path, mode: str) -> Iterator[Path]:
                     yield (d / name).relative_to(data_dir)
 
 
-def build_bundle(data_dir: Path, mode: str, out_dir: Path) -> dict[str, Any]:
-    """Write ``market-almanac-<mode>-data-<stamp>.tar.gz`` and its ``.sha256`` to ``out_dir``."""
-    data_dir = Path(data_dir)
-    files = list(bundle_files(data_dir, mode))
-    if not any(str(f).startswith(f"lake/{mode}/") for f in files):
-        raise BundleError(f"no lake snapshots for mode {mode!r} under {data_dir}; ingest data first")
+def prices_bundle_files(data_dir: Path, mode: str) -> Iterator[Path]:
+    """Files of the data-only price artefact: the newest partition of every country and its catalog.
+
+    Nothing else is needed to serve price browsing: no weather, macro, agriculture, experiments or
+    older snapshots, which is why this is ~30 MB where the full research bundle is 75 MB and the Atlas
+    reproducibility package 242 MB.
+    """
+    from market_almanac.globaldata.partitions import PartitionStore
+    from market_almanac.globaldata.prices import GLOBAL_CATALOG, GLOBAL_CATALOG_MANIFEST
+
+    store = PartitionStore(data_dir / "lake" / mode, mode)
+    for c in store.countries("prices"):
+        m = store.latest("prices", c)
+        if m is None:
+            continue
+        d = store.path("prices", c, m.snapshot_id).parent
+        yield from sorted(p.relative_to(data_dir) for p in d.iterdir() if p.is_file())
+    for name in (GLOBAL_CATALOG, GLOBAL_CATALOG_MANIFEST):
+        if (data_dir / "public" / mode / name).is_file():
+            yield Path("public") / mode / name
+
+
+def _write_bundle(
+    data_dir: Path, files: list[Path], mode: str, out_dir: Path, *, fmt: str, prefix: str, extra: dict[str, Any]
+) -> dict[str, Any]:
     entries: list[dict[str, Any]] = [
         {
             "path": PurePosixPath(*f.parts).as_posix(),
@@ -108,18 +129,18 @@ def build_bundle(data_dir: Path, mode: str, out_dir: Path) -> dict[str, Any]:
     ]
     created = datetime.now(UTC)
     manifest: dict[str, Any] = {
-        "format": BUNDLE_FORMAT,
+        "format": fmt,
         "mode": mode,
         "created_at": created.isoformat(),
         "code_commit": _git_commit(),
         "n_files": len(entries),
         "total_bytes": sum(e["bytes"] for e in entries),
         "attribution": ATTRIBUTION,
-        "excluded": "HTTP cache, raw provider downloads, feature matrices, databases and credentials",
+        **extra,
         "files": entries,
     }
     out_dir.mkdir(parents=True, exist_ok=True)
-    name = f"market-almanac-{mode}-data-{created.strftime('%Y%m%dT%H%M%SZ')}.tar.gz"
+    name = f"{prefix}-{mode}-{created.strftime('%Y%m%dT%H%M%SZ')}.tar.gz"
     archive = out_dir / name
     with tarfile.open(archive, "w:gz") as tar:
         blob = json.dumps(manifest, indent=1).encode()
@@ -130,7 +151,70 @@ def build_bundle(data_dir: Path, mode: str, out_dir: Path) -> dict[str, Any]:
             tar.add(data_dir / f, arcname=PurePosixPath(*f.parts).as_posix(), recursive=False)
     digest = _sha256(archive)
     (out_dir / f"{name}.sha256").write_text(f"{digest}  {name}\n")
-    return {"archive": str(archive), "sha256": digest, "n_files": len(entries), "total_bytes": manifest["total_bytes"]}
+    return {
+        "archive": str(archive),
+        "sha256": digest,
+        "bytes": archive.stat().st_size,
+        "n_files": len(entries),
+        "total_bytes": manifest["total_bytes"],
+    }
+
+
+def build_bundle(data_dir: Path, mode: str, out_dir: Path) -> dict[str, Any]:
+    """Write ``market-almanac-<mode>-data-<stamp>.tar.gz`` and its ``.sha256`` to ``out_dir``."""
+    data_dir = Path(data_dir)
+    files = list(bundle_files(data_dir, mode))
+    if not any(str(f).startswith(f"lake/{mode}/") for f in files):
+        raise BundleError(f"no lake snapshots for mode {mode!r} under {data_dir}; ingest data first")
+    return _write_bundle(
+        data_dir,
+        files,
+        mode,
+        out_dir,
+        fmt=BUNDLE_FORMAT,
+        prefix="market-almanac",
+        extra={"excluded": "HTTP cache, raw provider downloads, feature matrices, databases and credentials"},
+    )
+
+
+def build_prices_bundle(data_dir: Path, mode: str, out_dir: Path) -> dict[str, Any]:
+    """Write ``market-almanac-global-prices-<mode>-<stamp>.tar.gz``: the data-only price artefact."""
+    import pandas as pd
+
+    from market_almanac.globaldata.prices import GLOBAL_CATALOG, GLOBAL_CATALOG_MANIFEST
+
+    data_dir = Path(data_dir)
+    files = list(prices_bundle_files(data_dir, mode))
+    names = {f.name for f in files}
+    if not {GLOBAL_CATALOG, GLOBAL_CATALOG_MANIFEST} <= names or not any(
+        "partitions/prices" in f.as_posix() for f in files
+    ):
+        raise BundleError("price partitions and the global catalog are required; run `market-almanac global catalog`")
+    cat_manifest = json.loads((data_dir / "public" / mode / GLOBAL_CATALOG_MANIFEST).read_text())
+    snaps = {f.parts[-2] for f in files if f.name == "manifest.json" and "partitions" in f.parts}
+    built = {c: v["snapshot_id"] for c, v in cat_manifest["countries"].items()}
+    in_bundle = {f.parts[-3]: f.parts[-2] for f in files if f.name == "data.parquet" and "partitions" in f.parts}
+    if in_bundle != built:
+        raise BundleError("the catalog was built from different snapshots than the newest partitions; rebuild it")
+    rows = sum(
+        int(pd.read_parquet(data_dir / f, columns=["series_id"]).shape[0]) for f in files if f.name == "data.parquet"
+    )
+    res = _write_bundle(
+        data_dir,
+        files,
+        mode,
+        out_dir,
+        fmt=PRICES_BUNDLE_FORMAT,
+        prefix="market-almanac-global-prices",
+        extra={
+            "countries": len(in_bundle),
+            "observations": rows,
+            "snapshots": dict(sorted(in_bundle.items())),
+            "excluded": "weather, macro, agriculture, experiments, studies, older snapshots, caches, credentials",
+        },
+    )
+    res.update(countries=len(in_bundle), observations=rows, partitions=len(snaps))
+    return res
 
 
 def _fetch(source: str, dest: Path) -> Path:
@@ -176,7 +260,7 @@ def install_bundle(source: str, data_dir: Path, expected_sha256: str | None = No
         if not man_path.is_file():
             raise BundleError("bundle has no manifest")
         manifest = json.loads(man_path.read_text())
-        if manifest.get("format") != BUNDLE_FORMAT:
+        if manifest.get("format") not in SUPPORTED_FORMATS:
             raise BundleError(f"unsupported bundle format {manifest.get('format')!r}")
         listed = {e["path"]: e for e in manifest["files"]}
         present = {p.relative_to(stage).as_posix() for p in stage.rglob("*") if p.is_file()} - {MANIFEST_NAME}
@@ -207,11 +291,13 @@ def install_bundle(source: str, data_dir: Path, expected_sha256: str | None = No
             written += 1
         record = data_dir / "bundles"
         record.mkdir(parents=True, exist_ok=True)
-        (record / f"{manifest['mode']}-installed.json").write_text(
+        marker = "installed" if manifest["format"] == BUNDLE_FORMAT else "global-prices-installed"
+        (record / f"{manifest['mode']}-{marker}.json").write_text(
             json.dumps({k: v for k, v in manifest.items() if k != "files"} | {"archive_sha256": digest}, indent=1)
         )
     return {
         "mode": manifest["mode"],
+        "format": manifest["format"],
         "archive_sha256": digest,
         "files": len(listed),
         "written": written,

@@ -52,6 +52,7 @@ FAOSTAT ───┘                   ▼
 | `…/reporting/` | Markdown reports and export bundles. |
 | `…/db/` | SQLAlchemy models, Alembic migrations, repository functions. |
 | `…/services.py` | Use-cases shared by CLI and API (ingest, validate, run, seed demo). |
+| `…/globaldata/prices.py`, `…/release.py` | Read-only global price layer (DuckDB over the partitioned lake, precomputed catalog) and the pinned, hash-verified data-only price artefact. See [ADR 0007](adr/0007-global-read-layer-and-price-artefact.md). |
 | `…/cli.py` | Typer CLI (`market-almanac …`). |
 | `apps/api/src/market_almanac_api/` | FastAPI app, routers, response schemas, middleware (rate limit, request log, safe errors). |
 | `apps/web/` | Next.js App Router UI. |

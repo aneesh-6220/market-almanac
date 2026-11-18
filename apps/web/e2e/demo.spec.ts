@@ -49,8 +49,10 @@ test.describe("Market Almanac (synthetic demo)", () => {
     ).json();
     const sid = list.items[0].series_id as string;
     await page.goto(`/market?series=${sid}`);
+    // the price-history export is the first CSV link; the observations panel has its own
     const href = await page
       .getByRole("link", { name: "CSV" })
+      .first()
       .getAttribute("href");
     const res = await request.get(href!);
     expect(res.status()).toBe(200);

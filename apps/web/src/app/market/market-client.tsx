@@ -2,12 +2,14 @@
 
 import { Download } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { baseOption, Chart, type ChartHandle, usePalette } from "@/components/chart";
 import { CopyButton, LinkButton, MONTH_SHORT, MovementTag, signedPct, z1 } from "@/components/market-bits";
 import { Empty, ErrorState, Field, Loading, Note, PageHeader, Panel, Select, Stat, Tag } from "@/components/ui";
+import { TierTag } from "@/app/explorer/explorer-client";
 import { fmt, month, pct } from "@/lib/format";
+import { exportUrl, useGlobalDetail, useObservations, type GlobalDetail } from "@/lib/global-api";
 import {
   historyCsvUrl,
   useBrief,
@@ -187,11 +189,133 @@ function MovementCard({ a, peers }: { a: Assessment; peers: Movement["peers"] })
   );
 }
 
+
+const OBS_PAGE = 24;
+
+const FLAG_TEXT: Record<string, string> = {
+  invalid_price: "price not a valid positive number",
+  duplicate_conflict: "conflicts with another record for the same month",
+  missing_price: "no price reported",
+};
+
+function Observations({ id, currency, unit }: { id: string; currency: string; unit: string }) {
+  const [offset, setOffset] = useState(0);
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const win = { start: /^\d{4}-\d{2}$/.test(start) ? start : undefined, end: /^\d{4}-\d{2}$/.test(end) ? end : undefined };
+  const obs = useObservations(id, { limit: OBS_PAGE, offset, ...win });
+  const total = obs.data?.total ?? 0;
+  return (
+    <Panel
+      title="Stored observations"
+      note="Every record stored for this series, newest last, including records that are not used in the price history. The export contains the same records."
+      actions={
+        <div className="flex flex-wrap items-end gap-2">
+          <Field label="From (YYYY-MM)" htmlFor="o-start">
+            <input id="o-start" value={start} onChange={(e) => (setStart(e.target.value), setOffset(0))} placeholder="2023-01" inputMode="numeric" className="h-9 w-28 rounded border border-line bg-surface px-2 text-sm text-ink" />
+          </Field>
+          <Field label="To (YYYY-MM)" htmlFor="o-end">
+            <input id="o-end" value={end} onChange={(e) => (setEnd(e.target.value), setOffset(0))} placeholder="2024-12" inputMode="numeric" className="h-9 w-28 rounded border border-line bg-surface px-2 text-sm text-ink" />
+          </Field>
+          <a href={exportUrl(id, "csv", win.start, win.end)} className="inline-flex h-9 items-center gap-1.5 rounded border border-line px-2.5 text-sm text-ink hover:bg-surface-2" download>
+            <Download className="h-3.5 w-3.5" aria-hidden /> CSV
+          </a>
+          <a href={exportUrl(id, "json", win.start, win.end)} className="inline-flex h-9 items-center gap-1.5 rounded border border-line px-2.5 text-sm text-ink hover:bg-surface-2" download>
+            <Download className="h-3.5 w-3.5" aria-hidden /> JSON
+          </a>
+        </div>
+      }
+    >
+      {obs.isLoading && <Loading label="Loading observations" />}
+      {obs.isError && <ErrorState error={obs.error} what="the stored observations" />}
+      {obs.data && obs.data.items.length === 0 && <Empty>No stored record falls in this period.</Empty>}
+      {obs.data && obs.data.items.length > 0 && (
+        <>
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Stored observations table">
+            <table className="w-full min-w-[560px] text-sm" data-testid="observations-table">
+              <thead>
+                <tr className="border-b border-line text-left text-xs text-ink-3">
+                  <th className="py-2 pr-3 font-medium">Month</th>
+                  <th className="py-2 pr-3 text-right font-medium">
+                    Price ({currency}/{unit})
+                  </th>
+                  <th className="py-2 pr-3 font-medium">Status</th>
+                  <th className="py-2 font-medium">Quality flags</th>
+                </tr>
+              </thead>
+              <tbody>
+                {obs.data.items.map((o, i) => (
+                  <tr key={`${o.period}-${offset + i}`} className="border-b border-line/60 align-top">
+                    <td className="whitespace-nowrap py-1.5 pr-3 text-ink">{month(o.period)}</td>
+                    <td className="py-1.5 pr-3 text-right text-ink">{o.price == null ? "—" : fmt(o.price)}</td>
+                    <td className="py-1.5 pr-3">
+                      {o.used_in_series ? <Tag tone="good">used</Tag> : o.valid ? <Tag tone="muted">duplicate, not used</Tag> : <Tag tone="warn">excluded</Tag>}
+                    </td>
+                    <td className="py-1.5 text-xs text-ink-3">
+                      {o.quality_flags.length ? o.quality_flags.map((f) => FLAG_TEXT[f] ?? f.replace(/_/g, " ")).join("; ") : "none"}
+                      {o.reference_period_start ? ` · reference ${o.reference_period_start.slice(0, 10)} to ${o.reference_period_end?.slice(0, 10) ?? "?"}` : ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-ink-3">
+            <span>
+              {offset + 1}–{Math.min(offset + OBS_PAGE, total)} of {total.toLocaleString()} records
+            </span>
+            <div className="flex gap-2">
+              <button type="button" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - OBS_PAGE))} className="rounded border border-line px-3 py-1 text-ink disabled:opacity-40">
+                Previous
+              </button>
+              <button type="button" disabled={offset + OBS_PAGE >= total} onClick={() => setOffset(offset + OBS_PAGE)} className="rounded border border-line px-3 py-1 text-ink disabled:opacity-40">
+                Next
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </Panel>
+  );
+}
+
+function Completeness({ g }: { g: GlobalDetail }) {
+  const c = g.completeness;
+  const flags = Object.entries(c.quality_flag_counts);
+  return (
+    <Panel title="Completeness and quality" note="What is stored for this series and what it can support.">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4" data-testid="completeness">
+        <Stat label="Months observed" value={`${c.valid_months} of ${c.months_spanned}`} hint={`${pct(c.coverage)} of the months in its span`} />
+        <Stat label="Missing months" value={c.missing_months} hint={c.missing_months ? `longest gap ${c.longest_gap_months} months` : "no gaps"} />
+        <Stat label="Records stored" value={c.records_stored} hint={`${c.records_not_valid} not valid${c.months_with_duplicate_records ? `, ${c.months_with_duplicate_records} months with duplicates` : ""}`} />
+        <Stat label="Coordinates" value={g.series.coordinate_status === "ok" ? "valid" : g.series.coordinate_status} hint={g.series.coordinate_status === "ok" ? undefined : "market is not plotted on maps"} />
+      </dl>
+      <ul className="mt-4 space-y-1.5 text-sm text-ink-2">
+        <li>
+          {c.usable ? "Enough history to describe (at least 12 monthly prices)." : "Too short to describe: fewer than 12 monthly prices, so movement assessments are withheld."}
+        </li>
+        <li>
+          {c.eligible
+            ? "Meets the completeness rules for forecast evaluation (48 prices, 80% coverage, no gap over 6 months, valid coordinates)."
+            : `Does not meet the forecast-evaluation rules: ${c.ineligible_reasons ?? "see coverage"}.`}
+        </li>
+        {flags.length > 0 && (
+          <li>
+            Quality flags on stored records:{" "}
+            {flags.map(([f, n]) => `${n} × ${(FLAG_TEXT[f] ?? f).replace(/_/g, " ")}`).join("; ")}. Flagged records are kept in the export and left out of the history.
+          </li>
+        )}
+      </ul>
+    </Panel>
+  );
+}
+
 export function MarketClient() {
   const { get, set } = useUrlState();
   const id = get("series") || undefined;
   const range = get("range") || "all";
   const detail = useSeriesDetail(id);
+  const global = useGlobalDetail(id);
   const history = useHistory(id);
   const movement = useMovement(id);
   const seasonality = useSeasonality(id);
@@ -229,6 +353,19 @@ export function MarketClient() {
         <LinkButton href={`/compare?s=${s.series_id}`}>Compare with other markets</LinkButton>
       </PageHeader>
 
+      {global.data && (
+        <p className="mb-4 flex flex-wrap items-center gap-2 text-sm text-ink-2" data-testid="data-tier">
+          <span className="text-ink-3">Country status</span>
+          <TierTag status={global.data.country.status} />
+          <span>
+            {global.data.country.status_note}.
+            {brief.data && !fc ? " This series is not itself covered by a forecast evaluation." : ""}
+          </span>
+          <Link className="underline" href={`/explorer?country=${s.country_iso3}`}>
+            More from {global.data.country.name}
+          </Link>
+        </p>
+      )}
       <div className="mb-5 grid grid-cols-2 gap-x-6 gap-y-4 rounded-md border border-line bg-surface p-5 md:grid-cols-5">
         <Stat label="Latest price" value={`${fmt(sum.latest_price)} ${s.currency}`} hint={`per ${s.unit}`} />
         <Stat label="Observed for" value={month(sum.latest_period)} hint={stale ? `${sum.months_behind_dataset} months behind the newest data` : "the month the price describes"} />
@@ -368,14 +505,44 @@ export function MarketClient() {
               </div>
             </div>
           ) : (
-            env.data && <Empty>No weather data are stored for this market. Weather context is available for Burkina Faso, Mali and Niger.</Empty>
+            env.data && <Empty>No weather data are stored for this market, so no weather context is shown. Weather is available only for markets in the countries covered by the weather studies.</Empty>
           )}
         </Panel>
       </div>
 
+      {global.data && (
+        <div className="mt-5">
+          <Completeness g={global.data} />
+        </div>
+      )}
+      <div className="mt-5">
+        <Observations id={s.series_id} currency={s.currency} unit={s.unit} />
+      </div>
+
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
         <Panel title="Forecast" note="Forecasts are shown only for series covered by an out-of-sample evaluation.">
-          {!fc && <Empty>No evaluated forecasting model covers this series, so no forecast is shown.</Empty>}
+          {!fc && (
+            <Empty>
+              No evaluated forecasting model covers this series, so no forecast is shown.
+              {global.data && global.data.country.evaluation_records.length > 0 ? (
+                <>
+                  {" "}
+                  {global.data.country.name} is covered by {global.data.country.evaluation_records.length} published evaluation
+                  {global.data.country.evaluation_records.length === 1 ? "" : "s"} of other series.{" "}
+                  <Link className="underline" href="/forecastability">
+                    Read the Forecastability Atlas
+                  </Link>{" "}
+                  or the{" "}
+                  <Link className="underline" href="/studies">
+                    study library
+                  </Link>
+                  .
+                </>
+              ) : (
+                global.data && " No published study evaluates forecasts for this country."
+              )}
+            </Empty>
+          )}
           {fc && (
             <div className="space-y-2 text-sm text-ink-2">
               <div className="flex flex-wrap items-center gap-2">
@@ -409,7 +576,16 @@ export function MarketClient() {
             <dt className="text-ink-3">Snapshot</dt>
             <dd className="break-all text-ink-2">
               <code className="code">{prov.snapshot_id}</code>
+              {global.data?.provenance.snapshot_revision ? ` (${global.data.provenance.snapshot_revision})` : ""}
             </dd>
+            {global.data?.provenance.observation_hash && (
+              <>
+                <dt className="text-ink-3">Observation hash</dt>
+                <dd className="break-all text-ink-2">
+                  <code className="code">{global.data.provenance.observation_hash}</code>
+                </dd>
+              </>
+            )}
             <dt className="text-ink-3">Source record</dt>
             <dd className="break-all text-ink-2">{prov.source_ref ?? "—"}</dd>
             <dt className="text-ink-3">Series ID</dt>

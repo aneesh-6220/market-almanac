@@ -23,14 +23,38 @@ class DataUnavailableError(Exception):
 
 
 class BootstrapState:
-    """Progress of the start-up data install (shared with the 503 message while it runs)."""
+    """Progress of the start-up data install (shared with the 503 message while it runs).
+
+    The research bundle and the global price artefact install independently: the price artefact is
+    ~30 MB and serves ``/api/v1/global`` and the series pages, so it must not wait for the larger bundle.
+    """
 
     installing = False
     error: str | None = None
+    prices_installing = False
+    prices_error: str | None = None
 
 
 def settings_dep() -> Settings:
     return get_settings()
+
+
+_global_prices: dict[tuple[str, str], Any] = {}
+
+
+def global_prices() -> Any:
+    """The shared query layer over the installed price data (one per data directory and mode)."""
+    from market_almanac.globaldata.prices import GlobalPrices
+
+    s = get_settings()
+    key = (str(s.data_dir), s.market_almanac_mode.value)
+    if key not in _global_prices:
+        _global_prices[key] = GlobalPrices(s)
+    return _global_prices[key]
+
+
+def reset_global_prices() -> None:
+    _global_prices.clear()
 
 
 def db_dep() -> Iterator[Session]:
@@ -237,6 +261,37 @@ class DataCache:
             self._peers[key] = panel
         return panel
 
+    def weather_locations(self) -> set[str]:
+        """Weather cells stored for the research lake (which series have weather context).
+
+        Reads only the ``location_id`` column of the newest snapshot, so browsing prices never loads the weather lake.
+        """
+        st = self.store()
+        latest = st.latest("weather_monthly")
+        if latest is None:
+            return set()
+        key = ("wxlocs", latest.snapshot_id)
+        with self._lock:
+            hit = self._memo.get(key)
+        if hit is not None:
+            return hit[1]  # type: ignore[no-any-return]
+        import pyarrow.parquet as pq
+
+        path = st.path("weather_monthly", latest.snapshot_id)
+        names = set(pq.ParquetFile(path).schema_arrow.names)
+        locs = (
+            {
+                str(v)
+                for v in pq.read_table(path, columns=["location_id"]).column(0).unique().to_pylist()
+                if v is not None
+            }
+            if "location_id" in names
+            else set()
+        )
+        with self._lock:
+            self._memo[key] = (time.monotonic(), locs)
+        return locs
+
     def production_features(self, country: str, commodity_code: str, commodity_name: str) -> tuple[pd.DataFrame, Any]:
         from market_almanac.features.production_weather import build_production_features
 
@@ -297,3 +352,80 @@ class DataCache:
 
 
 cache = DataCache()
+
+
+class ResolvedSeries:
+    """A series found in the global price layer or, failing that, in the research catalog.
+
+    ``row`` has the research-catalog columns whichever source answered, so the analytics built on it
+    (summary, movement, brief, comparison) are the same code for every country.
+    """
+
+    def __init__(
+        self, series_id: str, row: pd.Series, snapshot_id: str | None, dataset_last: pd.Timestamp, origin: str
+    ) -> None:
+        self.series_id = series_id
+        self.row = row
+        self.snapshot_id = snapshot_id
+        self.dataset_last = dataset_last
+        self.origin = origin  # "global" | "research"
+
+    @property
+    def country(self) -> str:
+        return str(self.row["country_iso3"])
+
+    def monthly(self) -> pd.Series:
+        if self.origin == "global":
+            return global_prices().monthly(self.country, self.series_id)  # type: ignore[no-any-return]
+        return cache.series_monthly(self.series_id)
+
+    def raw_count(self) -> int:
+        if self.origin == "global":
+            return len(global_prices().raw_rows(self.country, self.series_id))
+        return len(cache.series_rows(self.series_id))
+
+    def peer_panel(self) -> pd.DataFrame:
+        if self.origin == "research":
+            cat, _, _ = cache.catalog()
+            return cache.peer_panel(cat, self.series_id)
+        gp = global_prices()
+        r = self.row
+        key = (
+            "global",
+            self.country,
+            str(r["commodity_code"]),
+            str(r["unit"]),
+            str(r["price_type"]),
+            str(r["currency"]),
+            self.snapshot_id,
+        )
+        with cache._lock:
+            hit = cache._peers.get(key)
+        if hit is not None:
+            return hit
+        ids = gp.peer_ids({k: r[k] for k in ("country_iso3", "commodity_code", "unit", "price_type", "currency")})
+        panel = gp.clean_panel(self.country, ids)
+        with cache._lock:
+            if len(cache._peers) >= 512:
+                cache._peers.pop(next(iter(cache._peers)))
+            cache._peers[key] = panel
+        return panel
+
+
+def resolve_series(series_id: str) -> ResolvedSeries:
+    """Find a series: the global price layer first (every country, newest snapshot), then the research lake."""
+    gp = global_prices()
+    if gp.layout() == "partition" and gp.available():
+        row = gp.series_row_raw(series_id)
+        if row is not None:
+            last = gp.country_last_period(str(row["country_iso3"])) or pd.Timestamp(row["last_period"])
+            row = row.copy()
+            loc = row.get("weather_location_id")
+            row["has_weather"] = bool(loc) and not pd.isna(loc) and loc in cache.weather_locations()
+            return ResolvedSeries(series_id, row, str(row["snapshot_id"]), last, "global")
+    if gp.layout() == "partition" and gp.available():
+        raise HTTPException(404, f"unknown series {series_id}")  # the global catalog is authoritative: no fallback
+    cat, _, sid = cache.catalog()
+    if series_id not in cat.index:
+        raise HTTPException(404, f"unknown series {series_id}")
+    return ResolvedSeries(series_id, cat.loc[series_id], sid, cat["last_period"].max(), "research")

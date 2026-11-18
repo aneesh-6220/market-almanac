@@ -6,10 +6,18 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { MovementTag } from "@/components/market-bits";
-import { Empty, ErrorState, Field, inputClass, Loading, Note, PageHeader, Panel, Select } from "@/components/ui";
+import { Empty, ErrorState, Field, inputClass, Loading, Note, PageHeader, Panel, Select, Tag } from "@/components/ui";
 import type { Market } from "@/lib/api";
 import { fmt, month, pct } from "@/lib/format";
-import { useCatalog, useCatalogCommodities, useCatalogMarkets, useCoverageSummary } from "@/lib/market-api";
+import {
+  incompatibility,
+  TIER_LABEL,
+  useGlobalCommodities,
+  useGlobalCountries,
+  useGlobalMarkets,
+  useGlobalSeries,
+  type GlobalSeries,
+} from "@/lib/global-api";
 import { useUrlState } from "@/lib/url-state";
 
 const MarketMap = dynamic(() => import("@/components/market-map").then((m) => m.MarketMap), {
@@ -19,68 +27,95 @@ const MarketMap = dynamic(() => import("@/components/market-map").then((m) => m.
 
 const PAGE = 50;
 
+export function TierTag({ status }: { status: string }) {
+  const t = TIER_LABEL[status] ?? { text: status, tone: "muted" as const };
+  return <Tag tone={t.tone}>{t.text}</Tag>;
+}
+
 export function ExplorerClient() {
   const { get, set } = useUrlState();
-  const coverage = useCoverageSummary();
-  const countries = coverage.data?.countries ?? [];
-  const country = get("country") || countries[0]?.country_iso3 || "";
+  const countriesQ = useGlobalCountries();
+  const countries = useMemo(() => countriesQ.data?.countries ?? [], [countriesQ.data]);
+  const fallback = countries.find((c) => c.forecast_evaluated)?.country_iso3 ?? countries[0]?.country_iso3 ?? "";
+  const country = get("country") || fallback;
   const commodity = get("commodity");
   const market = get("market");
+  const unit = get("unit");
   const q = get("q");
   const sort = get("sort") || "name";
   const offset = Number(get("offset") || 0);
-  const [draft, setDraft] = useState(q);
+  const includeShort = get("short") === "1";
   const picked = (get("s") || "").split(",").filter(Boolean);
+  const [meta, setMeta] = useState<Record<string, GlobalSeries>>({});
 
-  const commodities = useCatalogCommodities(country || undefined);
-  const markets = useCatalogMarkets(country || undefined, commodity || undefined);
-  const series = useCatalog(
-    { country: country || undefined, commodity: commodity || undefined, market: market || undefined, q: q.length >= 2 ? q : undefined, sort, limit: PAGE, offset },
-    !!country,
-  );
+  const commodities = useGlobalCommodities(country || undefined, market || undefined);
+  const markets = useGlobalMarkets(country || undefined, commodity || undefined);
+  const series = useGlobalSeries(country || undefined, {
+    commodity: commodity || undefined,
+    market: market || undefined,
+    unit: unit || undefined,
+    q: q.length >= 2 ? q : undefined,
+    usable_only: !includeShort,
+    sort,
+    limit: PAGE,
+    offset,
+  });
   const cov = countries.find((c) => c.country_iso3 === country);
+  const chosen = (commodities.data?.items ?? []).find((c) => c.commodity_code === commodity);
 
   const mapMarkets: Market[] = useMemo(
     () =>
-      (markets.data ?? []).map((m) => ({
+      (markets.data?.items ?? []).map((m) => ({
         id: m.market_code,
         provider: "hdx_hapi",
         country_iso3: m.country_iso3,
         market_code: m.market_code,
         name: m.market_name,
         admin1: m.admin1_name,
-        admin2: null,
-        lat: m.lat,
-        lon: m.lon,
+        admin2: m.admin2_name ?? null,
+        // markets whose stored coordinates are missing or invalid are listed but never plotted
+        lat: m.coordinate_status === "ok" ? m.lat : null,
+        lon: m.coordinate_status === "ok" ? m.lon : null,
         weather_location_id: null,
         n_series: m.series,
-        first_period: null,
+        first_period: m.first_period,
         last_period: m.last_period,
         eligible_series: m.usable_series,
       })),
     [markets.data],
   );
+  const plotted = mapMarkets.filter((m) => m.lat !== null).length;
 
-  const toggle = (id: string) => {
+  const toggle = (s: GlobalSeries) => {
+    const id = s.series_id;
     const next = picked.includes(id) ? picked.filter((x) => x !== id) : [...picked, id].slice(-8);
+    setMeta((m) => ({ ...m, [id]: s }));
     set({ s: next.join(",") || null });
   };
-  const pickedRows = (series.data?.items ?? []).filter((s) => picked.includes(s.series_id));
-  const mixed = new Set(pickedRows.map((s) => `${s.commodity_name}|${s.unit}|${s.price_type}`)).size > 1;
+  const known = picked.map((id) => meta[id]).filter((s): s is GlobalSeries => !!s);
+  const problem = incompatibility(known);
+  const hardMix = problem !== null && !problem.startsWith("different currencies");
+
+  const commodityOptions = (commodities.data?.items ?? [])
+    .filter((c) => includeShort || c.usable_series > 0)
+    .map((c) => ({ value: c.commodity_code, label: `${c.commodity_name} (${includeShort ? c.series : c.usable_series})` }));
+  const marketOptions = (markets.data?.items ?? [])
+    .filter((m) => includeShort || m.usable_series > 0)
+    .map((m) => ({ value: m.market_code, label: m.admin1_name ? `${m.market_name} · ${m.admin1_name}` : m.market_name }));
 
   return (
     <div>
       <PageHeader
         title="Explore markets"
-        lede="Monthly food prices reported by the World Food Programme, by country, commodity and market. Every price is shown with the month it was observed."
+        lede="Monthly food prices reported by the World Food Programme, for every country with stored prices. Every price is shown with the month it describes, its currency and its reporting unit."
       />
 
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[12rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
-        <Field label="Country" htmlFor="f-country">
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[13rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
+        <Field label={`Country${countries.length ? ` (${countries.length})` : ""}`} htmlFor="f-country">
           <Select
             id="f-country"
             value={country}
-            onChange={(v) => set({ country: v, commodity: null, market: null, offset: null, s: null })}
+            onChange={(v) => set({ country: v, commodity: null, market: null, unit: null, offset: null, s: null, q: null })}
             options={countries.map((c) => ({ value: c.country_iso3, label: c.name }))}
           />
         </Field>
@@ -88,60 +123,102 @@ export function ExplorerClient() {
           <Select
             id="f-commodity"
             value={commodity}
-            onChange={(v) => set({ commodity: v || null, offset: null })}
+            onChange={(v) => set({ commodity: v || null, unit: null, offset: null })}
             placeholder="All commodities"
-            options={(commodities.data ?? []).filter((c) => c.usable_series > 0).map((c) => ({ value: c.commodity_code, label: `${c.commodity_name} (${c.usable_series})` }))}
+            options={commodityOptions}
           />
         </Field>
         <Field label="Market" htmlFor="f-market">
-          <Select
-            id="f-market"
-            value={market}
-            onChange={(v) => set({ market: v || null, offset: null })}
-            placeholder="All markets"
-            options={(markets.data ?? []).filter((m) => m.usable_series > 0).map((m) => ({ value: m.market_code, label: m.admin1_name ? `${m.market_name} · ${m.admin1_name}` : m.market_name }))}
-          />
+          <Select id="f-market" value={market} onChange={(v) => set({ market: v || null, offset: null })} placeholder="All markets" options={marketOptions} />
         </Field>
-        <Field label="Search markets and commodities" htmlFor="f-q">
+        <Field label="Search markets, regions and commodities" htmlFor="f-q">
           <form
+            key={q}
             className="flex gap-2"
             role="search"
             onSubmit={(e) => {
               e.preventDefault();
-              set({ q: draft.trim() || null, offset: null });
+              set({ q: String(new FormData(e.currentTarget).get("q") ?? "").trim() || null, offset: null });
             }}
           >
-            <input id="f-q" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="e.g. millet, Bamako" className={`${inputClass} w-full`} />
+            <input id="f-q" name="q" defaultValue={q} placeholder="e.g. millet, Bamako" className={`${inputClass} w-full`} />
             <button type="submit" className="inline-flex h-9 items-center gap-1 rounded border border-line px-3 text-sm text-ink hover:bg-surface-2" aria-label="Search">
               <Search className="h-4 w-4" aria-hidden />
             </button>
           </form>
         </Field>
       </div>
+      <div className="mb-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-ink-2">
+        {chosen && chosen.units.length > 1 && (
+          <Field label="Reporting unit" htmlFor="f-unit">
+            <Select id="f-unit" value={unit} onChange={(v) => set({ unit: v || null, offset: null })} placeholder="All units" options={chosen.units.map((u) => ({ value: u, label: u }))} />
+          </Field>
+        )}
+        <label className="inline-flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={includeShort}
+            onChange={(e) => set({ short: e.target.checked ? "1" : null, offset: null })}
+            className="h-4 w-4 accent-[var(--rain)]"
+          />
+          Include short histories (fewer than 12 monthly prices)
+        </label>
+        {chosen && chosen.units.length > 1 && (
+          <span className="text-xs text-ink-3">This commodity is reported in {chosen.units.length} units here; each unit is a separate series and they are never combined.</span>
+        )}
+      </div>
 
-      {coverage.isError && <ErrorState error={coverage.error} what="the coverage inventory" />}
+      {countriesQ.isError && <ErrorState error={countriesQ.error} what="the country inventory" />}
+      {countriesQ.isLoading && <Loading label="Loading countries" />}
       {cov && (
-        <p className="mb-5 text-sm text-ink-2">
-          <strong className="font-medium text-ink">{cov.name}</strong>: {cov.markets} markets, {cov.commodities} commodities,{" "}
-          {cov.usable_series.toLocaleString()} series with at least a year of prices, {month(cov.first_period)} to {month(cov.last_period)}.{" "}
-          {cov.forecast_evaluated_series > 0
-            ? `${cov.forecast_evaluated_series} series are covered by a forecast evaluation.`
-            : "No forecast evaluation covers this country; it is available for price history only."}{" "}
-          <Link href="/data" className="underline">
-            Coverage details
-          </Link>
-        </p>
+        <div className="mb-5 space-y-2 text-sm text-ink-2" data-testid="country-summary">
+          <p>
+            <strong className="font-medium text-ink">{cov.name}</strong> <TierTag status={cov.status} /> · {cov.markets.toLocaleString()} markets, {cov.commodities} commodities,{" "}
+            {cov.series.toLocaleString()} series ({cov.usable_series.toLocaleString()} with at least a year of prices), {cov.observations.toLocaleString()} stored records,{" "}
+            {month(cov.first_period)} to {month(cov.last_period)}. Currency: {cov.currencies.join(", ") || "not stated"}.
+          </p>
+          <p className="text-ink-3">
+            {cov.status_note}.{" "}
+            {cov.forecast_evaluated
+              ? `${cov.evaluations} published evaluation${cov.evaluations === 1 ? "" : "s"} cover this country.`
+              : "No forecast is shown for this country because no forecast evaluation covers it; price history only."}{" "}
+            <Link href={`/atlas?country=${cov.country_iso3}`} className="underline">
+              Coverage record
+            </Link>
+          </p>
+        </div>
       )}
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
-        <Panel title="Markets" note={markets.data ? `${markets.data.filter((m) => m.lat !== null).length} of ${markets.data.length} markets have coordinates` : undefined}>
-          {markets.isLoading ? <Loading label="Loading markets" /> : <MarketMap markets={mapMarkets} selected={market || undefined} onSelect={(id) => set({ market: id, offset: null })} />}
+        <Panel
+          title="Markets"
+          note={
+            markets.data
+              ? `${markets.data.total.toLocaleString()} markets · ${plotted.toLocaleString()} plotted${
+                  markets.data.markets_without_valid_coordinates ? ` · ${markets.data.markets_without_valid_coordinates} have missing or invalid coordinates and are listed but not plotted` : ""
+                }`
+              : undefined
+          }
+        >
+          {markets.isLoading ? (
+            <Loading label="Loading markets" />
+          ) : markets.isError ? (
+            <ErrorState error={markets.error} what="markets" />
+          ) : plotted === 0 ? (
+            <Empty>No market in this country has usable coordinates, so there is no map. Use the market filter or the table to browse its series.</Empty>
+          ) : (
+            <MarketMap markets={mapMarkets} selected={market || undefined} onSelect={(id) => set({ market: id, offset: null })} />
+          )}
           <p className="mt-2 text-xs text-ink-3">Select a marker to list that market&rsquo;s series. Filled markers have at least one series with a year of data.</p>
         </Panel>
 
         <Panel
           title="Price series"
-          note={series.data ? `${series.data.total.toLocaleString()} series match · one series = one market, commodity, unit, price type and currency` : undefined}
+          note={
+            series.data
+              ? `${series.data.total.toLocaleString()} series match · one series = one market, commodity, unit, price type and currency`
+              : undefined
+          }
           actions={
             <div className="flex items-end gap-2">
               <Field label="Sort" htmlFor="f-sort">
@@ -153,6 +230,7 @@ export function ExplorerClient() {
                     { value: "name", label: "Name" },
                     { value: "latest", label: "Most recent" },
                     { value: "observations", label: "Longest history" },
+                    { value: "coverage", label: "Most complete" },
                     { value: "movement", label: "Most unusual move" },
                   ]}
                 />
@@ -163,12 +241,18 @@ export function ExplorerClient() {
           {series.isLoading && <Loading label="Loading series" />}
           {series.isError && <ErrorState error={series.error} what="price series" />}
           {series.data && series.data.items.length === 0 && (
-            <Empty>No series match these filters. Clear the search or choose another commodity or market.</Empty>
+            <Empty>
+              No series match these filters.{" "}
+              {!includeShort
+                ? "Series with fewer than 12 monthly prices are hidden; tick “Include short histories” to list them. "
+                : ""}
+              Clear the search or choose another commodity or market.
+            </Empty>
           )}
           {series.data && series.data.items.length > 0 && (
             <>
               <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Price series table">
-                <table className="w-full min-w-[640px] text-sm">
+                <table className="w-full min-w-[720px] text-sm">
                   <thead>
                     <tr className="border-b border-line text-left text-xs text-ink-3">
                       <th className="w-8 py-2 pr-2 font-medium">
@@ -176,7 +260,7 @@ export function ExplorerClient() {
                       </th>
                       <th className="py-2 pr-3 font-medium">Commodity · market</th>
                       <th className="py-2 pr-3 text-right font-medium">Latest price</th>
-                      <th className="py-2 pr-3 text-right font-medium">1 month</th>
+                      <th className="py-2 pr-3 text-right font-medium">History</th>
                       <th className="py-2 pr-3 text-right font-medium">12 months</th>
                       <th className="py-2 font-medium">Latest move</th>
                     </tr>
@@ -188,7 +272,7 @@ export function ExplorerClient() {
                           <input
                             type="checkbox"
                             checked={picked.includes(s.series_id)}
-                            onChange={() => toggle(s.series_id)}
+                            onChange={() => toggle(s)}
                             aria-label={`Add ${s.commodity_name} in ${s.market_name} to comparison`}
                             className="h-4 w-4 accent-[var(--rain)]"
                           />
@@ -202,7 +286,8 @@ export function ExplorerClient() {
                             {s.admin1_name ? ` · ${s.admin1_name}` : ""}
                           </div>
                           <div className="text-xs text-ink-3">
-                            {s.price_type} · {s.n_observations} months since {month(s.first_period)}
+                            {s.price_type} · {s.unit}
+                            {s.coordinate_status !== "ok" ? ` · coordinates ${s.coordinate_status}` : ""}
                           </div>
                         </td>
                         <td className="whitespace-nowrap py-2 pr-3 text-right">
@@ -211,7 +296,16 @@ export function ExplorerClient() {
                           </div>
                           <div className={`text-xs ${s.months_behind_dataset > 3 ? "text-warn" : "text-ink-3"}`}>observed {month(s.last_period)}</div>
                         </td>
-                        <td className="py-2 pr-3 text-right text-ink-2">{s.change_1m == null ? "—" : `${s.change_1m > 0 ? "+" : ""}${pct(s.change_1m, 1)}`}</td>
+                        <td className="whitespace-nowrap py-2 pr-3 text-right text-ink-2">
+                          <div>
+                            {s.n_observations} of {s.months_spanned} months
+                          </div>
+                          <div className={`text-xs ${s.missing_months > 0 ? "text-ink-3" : "text-ink-3"}`}>
+                            {s.missing_months > 0 ? `${s.missing_months} missing · longest gap ${s.longest_gap_months}` : "no gaps"}
+                            {s.n_conflicting_duplicates > 0 ? ` · ${s.n_conflicting_duplicates} conflicting` : ""}
+                          </div>
+                          {!s.usable && <div className="text-xs text-warn">short history</div>}
+                        </td>
                         <td className="py-2 pr-3 text-right text-ink-2">{s.change_12m == null ? "—" : `${s.change_12m > 0 ? "+" : ""}${pct(s.change_12m, 1)}`}</td>
                         <td className="py-2">
                           <MovementTag label={s.movement_label} />
@@ -226,7 +320,7 @@ export function ExplorerClient() {
                   {offset + 1}–{Math.min(offset + PAGE, series.data.total)} of {series.data.total.toLocaleString()}
                 </span>
                 <div className="flex gap-2">
-                  <button type="button" disabled={offset === 0} onClick={() => set({ offset: String(Math.max(0, offset - PAGE)) || null })} className="rounded border border-line px-3 py-1 text-ink disabled:opacity-40">
+                  <button type="button" disabled={offset === 0} onClick={() => set({ offset: offset - PAGE > 0 ? String(offset - PAGE) : null })} className="rounded border border-line px-3 py-1 text-ink disabled:opacity-40">
                     Previous
                   </button>
                   <button type="button" disabled={offset + PAGE >= series.data.total} onClick={() => set({ offset: String(offset + PAGE) })} className="rounded border border-line px-3 py-1 text-ink disabled:opacity-40">
@@ -242,7 +336,8 @@ export function ExplorerClient() {
       {picked.length > 0 && (
         <div className="sticky bottom-3 z-10 mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface p-3 shadow-sm" role="status">
           <span className="text-sm text-ink-2">
-            {picked.length} series selected for comparison{mixed ? ". They differ in commodity, unit or price type, so they cannot be compared." : "."}
+            {picked.length} series selected for comparison
+            {problem ? `. They have ${problem}${hardMix ? ", so they cannot be compared." : "."}` : "."}
           </span>
           <div className="flex gap-2">
             <button type="button" onClick={() => set({ s: null })} className="rounded border border-line px-3 py-1.5 text-sm text-ink">
@@ -250,8 +345,8 @@ export function ExplorerClient() {
             </button>
             <Link
               href={`/compare?s=${picked.join(",")}`}
-              aria-disabled={picked.length < 2}
-              className={`inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-sm font-medium ${picked.length < 2 ? "pointer-events-none bg-surface-2 text-ink-3" : "bg-ink text-bg"}`}
+              aria-disabled={picked.length < 2 || hardMix}
+              className={`inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-sm font-medium ${picked.length < 2 || hardMix ? "pointer-events-none bg-surface-2 text-ink-3" : "bg-ink text-bg"}`}
             >
               <GitCompareArrows className="h-4 w-4" aria-hidden /> Compare
             </Link>
@@ -259,10 +354,14 @@ export function ExplorerClient() {
         </div>
       )}
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-3">
         <Note>
           &ldquo;Latest move&rdquo; compares the most recent monthly change with the same series&rsquo; earlier changes. It is a statistical description of one
           series, not a finding of a shortage or a crisis. The method is on each market page.
+        </Note>
+        <Note>
+          Prices are shown in the currency and unit in which they were reported. Series in different currencies or units are never added together or
+          converted; the comparison page indexes series to their own starting month and refuses incompatible commodities, units and price types.
         </Note>
       </div>
     </div>

@@ -8,7 +8,8 @@ import { baseOption, Chart, type ChartHandle, usePalette } from "@/components/ch
 import { CopyButton, signedPct } from "@/components/market-bits";
 import { Empty, ErrorState, Field, inputClass, Loading, Note, PageHeader, Panel, Select, Tag } from "@/components/ui";
 import { fmt, month, pct } from "@/lib/format";
-import { compareUrl, useCatalog, useCompare, useSeriesDetail, type CatalogSeries, type Compare } from "@/lib/market-api";
+import { useGlobalCountries, useGlobalSeries } from "@/lib/global-api";
+import { compareUrl, useCompare, useSeriesDetail, type CatalogSeries, type Compare } from "@/lib/market-api";
 import { useUrlState } from "@/lib/url-state";
 
 const MAX = 8;
@@ -56,29 +57,51 @@ function CompareChart({ data, mode, chartRef }: { data: Compare; mode: "index" |
 
 function AddSeries({ anchor, taken, onAdd }: { anchor: CatalogSeries; taken: string[]; onAdd: (id: string) => void }) {
   const [q, setQ] = useState("");
-  const [scope, setScope] = useState<"country" | "all">("country");
-  const found = useCatalog({ commodity: anchor.commodity_code, country: scope === "country" ? anchor.country_iso3 : undefined, q: q.trim().length >= 2 ? q.trim() : undefined, sort: "observations", limit: 60 });
-  const options = (found.data?.items ?? []).filter((s) => !taken.includes(s.series_id) && s.unit === anchor.unit && s.price_type === anchor.price_type);
+  const [iso, setIso] = useState(anchor.country_iso3);
+  const countries = useGlobalCountries();
+  const same = iso === anchor.country_iso3;
+  // the same commodity code identifies the commodity within a country; across countries match on its name
+  const found = useGlobalSeries(iso, {
+    commodity: same ? anchor.commodity_code : undefined,
+    unit: anchor.unit,
+    price_type: anchor.price_type,
+    q: same ? (q.trim().length >= 2 ? q.trim() : undefined) : anchor.commodity_name.length >= 2 ? anchor.commodity_name : undefined,
+    sort: "observations",
+    limit: same ? 60 : 100,
+  });
+  const needle = q.trim().toLowerCase();
+  const options = (found.data?.items ?? []).filter(
+    (s) =>
+      !taken.includes(s.series_id) &&
+      s.unit === anchor.unit &&
+      s.price_type === anchor.price_type &&
+      (same || s.commodity_name === anchor.commodity_name) &&
+      (same || !needle || `${s.market_name} ${s.admin1_name ?? ""}`.toLowerCase().includes(needle)),
+  );
   return (
     <div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_12rem]">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_14rem]">
         <Field label={`Find another market selling ${anchor.commodity_name} (${anchor.price_type.toLowerCase()}, per ${anchor.unit})`} htmlFor="c-q">
           <input id="c-q" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Market or region name" className={inputClass} />
         </Field>
-        <Field label="Search in" htmlFor="c-scope">
+        <Field label="Country" htmlFor="c-scope">
           <Select
             id="c-scope"
-            value={scope}
-            onChange={(v) => setScope(v as "country" | "all")}
-            options={[
-              { value: "country", label: "Same country" },
-              { value: "all", label: "All countries" },
-            ]}
+            value={iso}
+            onChange={setIso}
+            options={(countries.data?.countries ?? [{ country_iso3: anchor.country_iso3, name: anchor.country_iso3 }]).map((c) => ({ value: c.country_iso3, label: c.name }))}
           />
         </Field>
       </div>
+      {!same && (
+        <p className="mt-2 text-xs text-ink-3">
+          Series from another country are priced in another currency. They are compared only as indices; prices are never converted.
+        </p>
+      )}
       {found.isLoading && <Loading label="Searching" />}
-      {found.data && options.length === 0 && <p className="mt-3 text-sm text-ink-3">No further comparable series found. Only series with the same commodity, unit and price type are offered.</p>}
+      {found.data && options.length === 0 && (
+        <p className="mt-3 text-sm text-ink-3">No further comparable series found. Only series with the same commodity, unit and price type are offered.</p>
+      )}
       <ul className="mt-3 grid max-h-64 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2" aria-label="Comparable series">
         {options.map((s) => (
           <li key={s.series_id}>

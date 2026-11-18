@@ -13,7 +13,7 @@ const mode = process.env.E2E_MODE === "live" ? "live" : "demo";
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: mode === "live" ? /live\.spec\.ts/ : /demo\.spec\.ts/,
+  testMatch: mode === "live" ? /(live|global)\.spec\.ts/ : /demo\.spec\.ts/,
   timeout: 60_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,
