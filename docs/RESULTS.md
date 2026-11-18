@@ -53,6 +53,26 @@ protocol, not a re-analysis of this one.
 Full tables: [research/generated/forecastability_atlas_v1.md](research/generated/forecastability_atlas_v1.md)
 · web: `/forecastability`.
 
+> **Audit annotation (2026-11-18, v1.1; [full audit](audits/ATLAS_V1_INDEPENDENT_AUDIT.md)).** The
+> numbers above are unchanged and were independently reproduced from the raw snapshots. Four
+> statements need qualifying:
+>
+> 1. **Palestine (Gaza) drives the 1-month results.** It carries 46% of the country-balanced
+>    ridge-A loss at h = 1. Without it, H1 is 1.014, so real weather is slightly worse than price
+>    history.
+> 2. **The 0.858 placebo is not "regularised noise" in general.** It comes from one nested penalty
+>    choice (α = 100 instead of 10) in the 2026 refit of Gaza bread: 14 of 84,706 forecasts. With
+>    B held to A's penalty, real and both placebo ratios are 1.014–1.019, indistinguishable from
+>    each other.
+> 3. **Beating seasonal-naive is not evidence of skill here.** A no-change forecast beats
+>    seasonal-naive by about 40% in all 39 countries. At h = 1 the A/seasonal-naive interval
+>    (0.47–1.14) includes 1, so "clearly beats" overstates.
+> 4. **The run used an uncommitted tree.** The freeze was clean, but 457 of 565 experiment
+>    manifests record a dirty tree. Re-execution at the committed revision is bitwise identical for
+>    every group checked (13 runs), and confirmatory execution from a dirty tree is now refused.
+>
+> The verdicts ("not established") stand.
+
 ### Exploratory: staple price patterns (descriptive)
 
 `staple-price-patterns-v1` summarises trend, volatility, seasonal amplitude and co-movement for 107

@@ -353,6 +353,13 @@ def test_confirmatory_run_requires_an_unchanged_freeze(settings_factory, monkeyp
     with pytest.raises(ex.FreezeError, match="changed after it was frozen"):
         ex.execute(s, changed)
     monkeypatch.setattr(ex, "code_provenance", lambda: {"git_commit": "abc", "dirty": True})
+    # regression (audit v1.1): a frozen confirmatory study must not execute from an uncommitted tree
+    with pytest.raises(ex.FreezeError, match="executed from a committed, clean git tree"):
+        ex.execute(s, conf)
+    monkeypatch.setattr(ex, "code_provenance", lambda: {"git_commit": None, "dirty": None})
+    with pytest.raises(ex.FreezeError, match="executed from a committed, clean git tree"):
+        ex.execute(s, conf)
+    monkeypatch.setattr(ex, "code_provenance", lambda: {"git_commit": "abc", "dirty": True})
     with pytest.raises(ex.FreezeError, match="clean git tree"):
         ex.freeze(
             s,

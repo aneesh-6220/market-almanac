@@ -206,3 +206,68 @@ def test_pending_install_is_reported_before_the_thread_starts(empty_deployment, 
         assert r.status_code == 503 and "being installed" in r.json()["detail"]
     finally:
         BootstrapState.installing = False
+
+
+# Audit v1.1 (Render cold start): while the start-up bundle install is pending or running, data routes
+# answered 200 with empty lists or 404 ("no such study") instead of "not ready". Every data route must
+# now answer 503 with Retry-After until the install has finished; liveness (/health) stays 200.
+GATED = [
+    "/api/v1/studies",
+    "/api/v1/workbench/studies",
+    "/api/v1/workbench/studies/forecastability-atlas-v1",
+    "/api/v1/experiments",
+    "/api/v1/coverage/registry",
+    "/api/v1/catalog/series",
+]
+
+
+@pytest.mark.parametrize("empty_deployment", ["live"], indirect=True)
+@pytest.mark.parametrize("path", GATED)
+def test_data_routes_answer_503_while_install_runs(empty_deployment, path):
+    from market_almanac_api.deps import BootstrapState
+
+    assert empty_deployment.get(path).status_code != 404, "the gated route must exist"
+    BootstrapState.installing = True
+    try:
+        r = empty_deployment.get(path)
+        assert r.status_code == 503, (path, r.status_code, r.text[:200])
+        assert r.json()["error"] == "data_installing"
+        assert int(r.headers["retry-after"]) > 0
+    finally:
+        BootstrapState.installing = False
+
+
+@pytest.mark.parametrize("empty_deployment", ["live"], indirect=True)
+def test_health_live_and_ready_reflect_install(empty_deployment):
+    from market_almanac_api.deps import BootstrapState
+
+    BootstrapState.installing = True
+    try:
+        assert empty_deployment.get("/health").status_code == 200  # liveness: do not restart the instance
+        r = empty_deployment.get("/ready")
+        assert r.status_code == 503 and r.json()["status"] == "installing"
+    finally:
+        BootstrapState.installing = False
+
+
+@pytest.mark.parametrize("empty_deployment", ["live"], indirect=True)
+def test_failed_install_keeps_data_routes_unavailable(empty_deployment):
+    from market_almanac_api.deps import BootstrapState
+
+    BootstrapState.error = "FileNotFoundError: bundle not found"
+    try:
+        r = empty_deployment.get("/api/v1/workbench/studies")
+        assert r.status_code == 503 and r.json()["error"] == "data_unavailable"
+        assert "bundle not found" in r.json()["detail"]
+        assert empty_deployment.get("/ready").json()["status"] == "failed"
+    finally:
+        BootstrapState.error = None
+
+
+def test_ready_is_200_when_no_install_is_involved(seeded_env):
+    from fastapi.testclient import TestClient
+
+    from market_almanac_api.main import create_app
+
+    r = TestClient(create_app()).get("/ready")
+    assert r.status_code == 200 and r.json()["status"] == "ready"

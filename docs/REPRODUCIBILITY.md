@@ -68,6 +68,23 @@ live end-to-end suite passed against the same data.
 
 Before publishing a bundle, check the redistribution terms in [DATA_SOURCES.md](DATA_SOURCES.md).
 
+## Forecastability Atlas v1 (audit v1.1, 2026-11-18)
+
+The v1.0 public bundle predates the global ingest and contains **none** of the Atlas v1 inputs or
+outputs, so a fresh clone with that bundle cannot reproduce the Atlas. A separate, deterministic
+package holds exactly the 88 pinned snapshots, the pinned lake weather snapshot and the whole study
+directory:
+
+```bash
+uv run python scripts/audit/build_atlas_package.py build --data data --out dist   # maintainer
+uv run python scripts/audit/build_atlas_package.py verify dist/forecastability-atlas-v1-repro-<digest>.tar.gz
+```
+
+Verified in a fresh clone of `d802167`: `recompute_atlas.py` matches to 1.55 × 10⁻¹⁵, the
+independent trace passes, and the pipeline re-execution is bitwise identical. The package is
+**not yet published**. Until it is, the Atlas is reproducible only from the maintainers' archive.
+See [the audit](audits/ATLAS_V1_INDEPENDENT_AUDIT.md), section 8.
+
 ## Checking the study without trusting the pipeline
 
 ```bash

@@ -1,0 +1,89 @@
+{
+ "code": {
+  "git_commit": "d80216768d4f7dfc873871ce74909489980d951e",
+  "dirty": true
+ },
+ "rows": [
+  {
+   "group": "ARM_112_KG_R_AMD",
+   "variant": "primary",
+   "rows": 13266,
+   "config_hash_equal": true,
+   "same_keys": true,
+   "max_abs_pred_diff": 0.0,
+   "bitwise_identical": true
+  },
+  {
+   "group": "ARM_112_KG_R_AMD",
+   "variant": "weather_time_shift_60",
+   "rows": 13266,
+   "config_hash_equal": true,
+   "same_keys": true,
+   "max_abs_pred_diff": 0.0,
+   "bitwise_identical": true
+  },
+  {
+   "group": "ARM_112_KG_R_AMD",
+   "variant": "weather_permuted_cells",
+   "rows": 13266,
+   "config_hash_equal": true,
+   "same_keys": true,
+   "max_abs_pred_diff": 0.0,
+   "bitwise_identical": true
+  },
+  {
+   "group": "PSE_55_KG_R_ILS",
+   "variant": "primary",
+   "rows": 3726,
+   "config_hash_equal": true,
+   "same_keys": true,
+   "max_abs_pred_diff": 0.0,
+   "bitwise_identical": true
+  },
+  {
+   "group": "PSE_55_KG_R_ILS",
+   "variant": "weather_time_shift_60",
+   "rows": 3726,
+   "config_hash_equal": true,
+   "same_keys": true,
+   "max_abs_pred_diff": 0.0,
+   "bitwise_identical": true
+  },
+  {
+   "group": "PSE_55_KG_R_ILS",
+   "variant": "weather_permuted_cells",
+   "rows": 3726,
+   "config_hash_equal": true,
+   "same_keys": true,
+   "max_abs_pred_diff": 0.0,
+   "bitwise_identical": true
+  },
+  {
+   "group": "TCD_73_KG_R_XAF",
+   "variant": "primary",
+   "rows": 27117,
+   "config_hash_equal": true,
+   "same_keys": true,
+   "max_abs_pred_diff": 0.0,
+   "bitwise_identical": true
+  },
+  {
+   "group": "TCD_73_KG_R_XAF",
+   "variant": "weather_time_shift_60",
+   "rows": 27117,
+   "config_hash_equal": true,
+   "same_keys": true,
+   "max_abs_pred_diff": 0.0,
+   "bitwise_identical": true
+  },
+  {
+   "group": "TCD_73_KG_R_XAF",
+   "variant": "weather_permuted_cells",
+   "rows": 27117,
+   "config_hash_equal": true,
+   "same_keys": true,
+   "max_abs_pred_diff": 0.0,
+   "bitwise_identical": true
+  }
+ ]
+}

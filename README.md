@@ -54,6 +54,15 @@ least as well as real weather (0.858 at 1 month), and price history alone did no
 forecast on this estimand. [Tables](docs/research/generated/forecastability_atlas_v1.md) ·
 [results](docs/RESULTS.md). An independent script recomputes the headline numbers to 1.6 × 10⁻¹⁵.
 
+An [independent audit](docs/audits/ATLAS_V1_INDEPENDENT_AUDIT.md) (v1.1) rebuilt the predictions from
+the raw snapshots with separate code and confirmed the verdicts. It also qualifies three
+statements:
+
+* the 1-month figures and the placebo are dominated by Gaza (PSE) and one penalty choice;
+* beating seasonal-naive is not evidence of skill;
+* the Atlas is reproducible from the maintainers' archive and a verified package, but not yet from
+  public artefacts alone.
+
 ### Sahel production-weather study (Mali and Niger, confirmatory)
 
 Question: *does rainfall in the areas where a crop is grown help forecast staple prices, beyond

@@ -258,6 +258,12 @@ def execute(
             raise FreezeError("confirmatory study: freeze the specification first (market-almanac research freeze)")
         if fr["spec_hash"] != spec.spec_hash():
             raise FreezeError("the specification changed after it was frozen; a changed design needs a new study id")
+        # Audit v1.1: the atlas v1 run recorded `dirty: true` in 457 of 565 manifests, so the exact
+        # code behind those predictions was not identifiable from git alone. Confirmatory runs now
+        # require a committed, clean tree, as freezing already does.
+        code = code_provenance()
+        if code.get("dirty") is not False or not code.get("git_commit"):
+            raise FreezeError("a confirmatory specification must be executed from a committed, clean git tree")
     started = datetime.now(UTC)
     root = studies_dir(settings) / spec.id
     exp_dir = root / "experiments"

@@ -1,0 +1,387 @@
+[
+ {
+  "group": "ARM_112_KG_R_AMD",
+  "raw_rows": 1206,
+  "series_id_recomputed_equal": true,
+  "eligible_mine": 11,
+  "eligible_archived": 11,
+  "eligible_set_equal": true,
+  "feature_rows_mine": 1201,
+  "feature_rows_archived": 1201,
+  "feature_rows_matched": 1201,
+  "location_id_equal": true,
+  "max_abs_feature_diff": {
+   "p_dlog_1": 0.0,
+   "p_dlog_3": 0.0,
+   "p_dlog_12": 0.0,
+   "p_lag_dlog_1": 0.0,
+   "p_dev_12": 0.0,
+   "p_vol_6": 0.0,
+   "m_sin": 0.0,
+   "m_cos": 0.0,
+   "w_rain_anom_1": 1.3322676295501878e-15,
+   "w_rain_anom_3": 1.3877787807814457e-15,
+   "w_rain_anom_6": 1.3322676295501878e-15,
+   "w_rain_anom_3_lag1": 1.3877787807814457e-15,
+   "w_rain_anom_3_lag3": 1.3877787807814457e-15,
+   "w_temp_anom_1": 6.328271240363392e-15,
+   "w_tmax_anom_3": 9.658940314238862e-15,
+   "w_heat_days_3": 0.0,
+   "w_heat_anom_3": 8.881784197001252e-16,
+   "seasonal_naive_h1": 0.0,
+   "seasonal_naive_h3": 0.0,
+   "p_seas_hist_h1": 0.0,
+   "p_seas_hist_h3": 0.0,
+   "target_h1": 0.0,
+   "target_h3": 0.0
+  },
+  "predictions": {
+   "h1": {
+    "rows_mine": 748,
+    "rows_archived": 748,
+    "rows_matched": 748,
+    "max_abs_y_diff": 0.0,
+    "max_abs_pred_diff_naive": 0.0,
+    "max_abs_pred_diff_seasonal_naive": 0.0,
+    "max_abs_pred_diff_ridge_A": 1.3877787807814457e-17,
+    "max_abs_pred_diff_ridge_B": 2.2551405187698492e-17,
+    "alphas_A": [
+     100.0,
+     1000.0
+    ],
+    "alphas_B": [
+     1000.0
+    ]
+   },
+   "h3": {
+    "rows_mine": 726,
+    "rows_archived": 726,
+    "rows_matched": 726,
+    "max_abs_y_diff": 0.0,
+    "max_abs_pred_diff_naive": 0.0,
+    "max_abs_pred_diff_seasonal_naive": 0.0,
+    "max_abs_pred_diff_ridge_A": 2.7755575615628914e-17,
+    "max_abs_pred_diff_ridge_B": 8.326672684688674e-17,
+    "alphas_A": [
+     100.0,
+     1000.0
+    ],
+    "alphas_B": [
+     100.0,
+     1000.0
+    ]
+   }
+  },
+  "all_checks_pass": true
+ },
+ {
+  "group": "PSE_55_KG_R_ILS",
+  "raw_rows": 772,
+  "series_id_recomputed_equal": true,
+  "eligible_mine": 13,
+  "eligible_archived": 13,
+  "eligible_set_equal": true,
+  "feature_rows_mine": 787,
+  "feature_rows_archived": 787,
+  "feature_rows_matched": 787,
+  "location_id_equal": true,
+  "max_abs_feature_diff": {
+   "p_dlog_1": 0.0,
+   "p_dlog_3": 0.0,
+   "p_dlog_12": 0.0,
+   "p_lag_dlog_1": 0.0,
+   "p_dev_12": 0.0,
+   "p_vol_6": 0.0,
+   "m_sin": 0.0,
+   "m_cos": 0.0,
+   "w_rain_anom_1": 8.881784197001252e-16,
+   "w_rain_anom_3": 1.3322676295501878e-15,
+   "w_rain_anom_6": 1.3322676295501878e-15,
+   "w_rain_anom_3_lag1": 1.3322676295501878e-15,
+   "w_rain_anom_3_lag3": 1.3322676295501878e-15,
+   "w_temp_anom_1": 1.532107773982716e-14,
+   "w_tmax_anom_3": 1.8207657603852567e-14,
+   "w_heat_days_3": 0.0,
+   "w_heat_anom_3": 1.3322676295501878e-15,
+   "seasonal_naive_h1": 0.0,
+   "seasonal_naive_h3": 0.0,
+   "p_seas_hist_h1": 0.0,
+   "p_seas_hist_h3": 0.0,
+   "target_h1": 0.0,
+   "target_h3": 0.0
+  },
+  "predictions": {
+   "h1": {
+    "rows_mine": 220,
+    "rows_archived": 220,
+    "rows_matched": 220,
+    "max_abs_y_diff": 0.0,
+    "max_abs_pred_diff_naive": 0.0,
+    "max_abs_pred_diff_seasonal_naive": 0.0,
+    "max_abs_pred_diff_ridge_A": 4.440892098500626e-15,
+    "max_abs_pred_diff_ridge_B": 2.220446049250313e-15,
+    "alphas_A": [
+     0.1,
+     1.0,
+     1000.0
+    ],
+    "alphas_B": [
+     0.1,
+     10.0,
+     1000.0
+    ]
+   },
+   "h3": {
+    "rows_mine": 194,
+    "rows_archived": 194,
+    "rows_matched": 194,
+    "max_abs_y_diff": 0.0,
+    "max_abs_pred_diff_naive": 0.0,
+    "max_abs_pred_diff_seasonal_naive": 0.0,
+    "max_abs_pred_diff_ridge_A": 9.325873406851315e-15,
+    "max_abs_pred_diff_ridge_B": 8.881784197001252e-15,
+    "alphas_A": [
+     0.1,
+     10.0,
+     1000.0
+    ],
+    "alphas_B": [
+     0.1,
+     10.0,
+     1000.0
+    ]
+   }
+  },
+  "all_checks_pass": true
+ },
+ {
+  "group": "TCD_73_KG_R_XAF",
+  "raw_rows": 5028,
+  "series_id_recomputed_equal": true,
+  "eligible_mine": 30,
+  "eligible_archived": 30,
+  "eligible_set_equal": true,
+  "feature_rows_mine": 3082,
+  "feature_rows_archived": 3082,
+  "feature_rows_matched": 3082,
+  "location_id_equal": true,
+  "max_abs_feature_diff": {
+   "p_dlog_1": 0.0,
+   "p_dlog_3": 0.0,
+   "p_dlog_12": 0.0,
+   "p_lag_dlog_1": 0.0,
+   "p_dev_12": 0.0,
+   "p_vol_6": 0.0,
+   "m_sin": 0.0,
+   "m_cos": 0.0,
+   "w_rain_anom_1": 2.220446049250313e-15,
+   "w_rain_anom_3": 2.1094237467877974e-15,
+   "w_rain_anom_6": 3.1086244689504383e-15,
+   "w_rain_anom_3_lag1": 2.1094237467877974e-15,
+   "w_rain_anom_3_lag3": 2.1094237467877974e-15,
+   "w_temp_anom_1": 2.020605904817785e-14,
+   "w_tmax_anom_3": 2.942091015256665e-14,
+   "w_heat_days_3": 0.0,
+   "w_heat_anom_3": 5.773159728050814e-15,
+   "seasonal_naive_h1": 0.0,
+   "seasonal_naive_h3": 0.0,
+   "p_seas_hist_h1": 0.0,
+   "p_seas_hist_h3": 0.0,
+   "target_h1": 0.0,
+   "target_h3": 0.0
+  },
+  "predictions": {
+   "h1": {
+    "rows_mine": 1533,
+    "rows_archived": 1533,
+    "rows_matched": 1533,
+    "max_abs_y_diff": 0.0,
+    "max_abs_pred_diff_naive": 0.0,
+    "max_abs_pred_diff_seasonal_naive": 0.0,
+    "max_abs_pred_diff_ridge_A": 1.6653345369377348e-16,
+    "max_abs_pred_diff_ridge_B": 4.163336342344337e-16,
+    "alphas_A": [
+     0.1,
+     100.0,
+     1000.0
+    ],
+    "alphas_B": [
+     100.0,
+     1000.0
+    ]
+   },
+   "h3": {
+    "rows_mine": 1480,
+    "rows_archived": 1480,
+    "rows_matched": 1480,
+    "max_abs_y_diff": 0.0,
+    "max_abs_pred_diff_naive": 0.0,
+    "max_abs_pred_diff_seasonal_naive": 0.0,
+    "max_abs_pred_diff_ridge_A": 1.6653345369377348e-16,
+    "max_abs_pred_diff_ridge_B": 4.440892098500626e-16,
+    "alphas_A": [
+     0.1,
+     100.0,
+     1000.0
+    ],
+    "alphas_B": [
+     1000.0
+    ]
+   }
+  },
+  "all_checks_pass": true
+ },
+ {
+  "group": "NPL_58_KG_R_NPR",
+  "raw_rows": 2439,
+  "series_id_recomputed_equal": true,
+  "eligible_mine": 22,
+  "eligible_archived": 22,
+  "eligible_set_equal": true,
+  "feature_rows_mine": 2002,
+  "feature_rows_archived": 2002,
+  "feature_rows_matched": 2002,
+  "location_id_equal": true,
+  "max_abs_feature_diff": {
+   "p_dlog_1": 0.0,
+   "p_dlog_3": 0.0,
+   "p_dlog_12": 0.0,
+   "p_lag_dlog_1": 0.0,
+   "p_dev_12": 0.0,
+   "p_vol_6": 0.0,
+   "m_sin": 0.0,
+   "m_cos": 0.0,
+   "w_rain_anom_1": 8.881784197001252e-16,
+   "w_rain_anom_3": 1.7763568394002505e-15,
+   "w_rain_anom_6": 1.7763568394002505e-15,
+   "w_rain_anom_3_lag1": 1.7763568394002505e-15,
+   "w_rain_anom_3_lag3": 1.7763568394002505e-15,
+   "w_temp_anom_1": 1.6653345369377348e-14,
+   "w_tmax_anom_3": 1.509903313490213e-14,
+   "w_heat_days_3": 0.0,
+   "w_heat_anom_3": 1.3322676295501878e-15,
+   "seasonal_naive_h1": 0.0,
+   "seasonal_naive_h3": 0.0,
+   "p_seas_hist_h1": 0.0,
+   "p_seas_hist_h3": 0.0,
+   "target_h1": 0.0,
+   "target_h3": 0.0
+  },
+  "predictions": {
+   "h1": {
+    "rows_mine": 790,
+    "rows_archived": 790,
+    "rows_matched": 790,
+    "max_abs_y_diff": 0.0,
+    "max_abs_pred_diff_naive": 0.0,
+    "max_abs_pred_diff_seasonal_naive": 0.0,
+    "max_abs_pred_diff_ridge_A": 2.7755575615628914e-17,
+    "max_abs_pred_diff_ridge_B": 5.551115123125783e-17,
+    "alphas_A": [
+     1000.0
+    ],
+    "alphas_B": [
+     1000.0
+    ]
+   },
+   "h3": {
+    "rows_mine": 747,
+    "rows_archived": 747,
+    "rows_matched": 747,
+    "max_abs_y_diff": 0.0,
+    "max_abs_pred_diff_naive": 0.0,
+    "max_abs_pred_diff_seasonal_naive": 0.0,
+    "max_abs_pred_diff_ridge_A": 2.7755575615628914e-17,
+    "max_abs_pred_diff_ridge_B": 4.163336342344337e-17,
+    "alphas_A": [
+     1000.0
+    ],
+    "alphas_B": [
+     1000.0
+    ]
+   }
+  },
+  "all_checks_pass": true
+ },
+ {
+  "group": "SEN_73_KG_R_XOF",
+  "raw_rows": 4571,
+  "series_id_recomputed_equal": true,
+  "eligible_mine": 9,
+  "eligible_archived": 9,
+  "eligible_set_equal": true,
+  "feature_rows_mine": 1060,
+  "feature_rows_archived": 1060,
+  "feature_rows_matched": 1060,
+  "location_id_equal": true,
+  "max_abs_feature_diff": {
+   "p_dlog_1": 0.0,
+   "p_dlog_3": 0.0,
+   "p_dlog_12": 0.0,
+   "p_lag_dlog_1": 0.0,
+   "p_dev_12": 0.0,
+   "p_vol_6": 0.0,
+   "m_sin": 0.0,
+   "m_cos": 0.0,
+   "w_rain_anom_1": 1.7763568394002505e-15,
+   "w_rain_anom_3": 1.7763568394002505e-15,
+   "w_rain_anom_6": 1.7763568394002505e-15,
+   "w_rain_anom_3_lag1": 1.7763568394002505e-15,
+   "w_rain_anom_3_lag3": 1.7763568394002505e-15,
+   "w_temp_anom_1": 3.064215547965432e-14,
+   "w_tmax_anom_3": 3.674838211509268e-14,
+   "w_heat_days_3": 0.0,
+   "w_heat_anom_3": 1.7763568394002505e-15,
+   "seasonal_naive_h1": 0.0,
+   "seasonal_naive_h3": 0.0,
+   "p_seas_hist_h1": 0.0,
+   "p_seas_hist_h3": 0.0,
+   "target_h1": 0.0,
+   "target_h3": 0.0
+  },
+  "predictions": {
+   "h1": {
+    "rows_mine": 558,
+    "rows_archived": 558,
+    "rows_matched": 558,
+    "max_abs_y_diff": 0.0,
+    "max_abs_pred_diff_naive": 0.0,
+    "max_abs_pred_diff_seasonal_naive": 0.0,
+    "max_abs_pred_diff_ridge_A": 7.112366251504909e-17,
+    "max_abs_pred_diff_ridge_B": 4.0072112295064244e-16,
+    "alphas_A": [
+     0.1,
+     100.0,
+     1000.0
+    ],
+    "alphas_B": [
+     10.0,
+     100.0,
+     1000.0
+    ]
+   },
+   "h3": {
+    "rows_mine": 539,
+    "rows_archived": 539,
+    "rows_matched": 539,
+    "max_abs_y_diff": 0.0,
+    "max_abs_pred_diff_naive": 0.0,
+    "max_abs_pred_diff_seasonal_naive": 0.0,
+    "max_abs_pred_diff_ridge_A": 1.1102230246251565e-16,
+    "max_abs_pred_diff_ridge_B": 4.98732999343332e-16,
+    "alphas_A": [
+     0.1,
+     10.0,
+     100.0,
+     1000.0
+    ],
+    "alphas_B": [
+     10.0,
+     100.0,
+     1000.0
+    ]
+   }
+  },
+  "all_checks_pass": true
+ }
+]

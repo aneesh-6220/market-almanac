@@ -43,7 +43,19 @@ export function HomeCoverage() {
   const n = (k: string) => (typeof t[k] === "number" ? (t[k] as number).toLocaleString() : "—");
   return (
     <div className="rounded-md border border-line bg-surface p-5 md:p-7" data-testid="home-coverage">
-      <div className="text-sm text-ink-3">{status.data?.synthetic ? "Demo dataset (synthetic)" : "In this deployment"}</div>
+      <div className="text-sm text-ink-3">
+        {status.data?.synthetic ? (
+          "Demo dataset (synthetic)"
+        ) : (
+          <>
+            Market explorer: the original research lake. The global inventory of every ingested WFP country is on{" "}
+            <Link href="/atlas" className="underline">
+              the coverage atlas
+            </Link>
+            .
+          </>
+        )}
+      </div>
       <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
         {[
           ["Countries", n("countries")],

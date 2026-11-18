@@ -155,6 +155,52 @@ class RateLimiter(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+# Routes that answer without the research data (liveness, readiness and API documentation).
+UNGATED_PATHS = frozenset({"/health", "/ready", "/docs", "/docs/oauth2-redirect", "/redoc", "/openapi.json"})
+INSTALL_RETRY_AFTER_SECONDS = 30
+
+
+def readiness() -> tuple[str, str | None]:
+    """'installing', 'failed' (start-up install refused or failed) or 'ready'."""
+    from market_almanac_api.deps import BootstrapState
+
+    if BootstrapState.installing:
+        return "installing", None
+    if BootstrapState.error:
+        return "failed", BootstrapState.error
+    return "ready", None
+
+
+class InstallGate(BaseHTTPMiddleware):
+    """Answer data routes with 503 until the start-up data install has finished.
+
+    Without this gate, routes that read the database or study directories (studies, experiments,
+    markets) answered 200 with empty lists or 404 while Render was still installing the bundle,
+    which clients and caches cannot tell apart from "this does not exist".
+    """
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        if request.url.path in UNGATED_PATHS or request.method == "OPTIONS":
+            return await call_next(request)
+        state, err = readiness()
+        if state == "installing":
+            return JSONResponse(
+                {
+                    "error": "data_installing",
+                    "detail": "The research data bundle is being installed on this deployment; retry shortly.",
+                },
+                status_code=503,
+                headers={"Retry-After": str(INSTALL_RETRY_AFTER_SECONDS)},
+            )
+        if state == "failed":
+            return JSONResponse(
+                {"error": "data_unavailable", "detail": f"The research data could not be installed: {err}"},
+                status_code=503,
+                headers={"Retry-After": str(10 * INSTALL_RETRY_AFTER_SECONDS)},
+            )
+        return await call_next(request)
+
+
 class RequestLog(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         rid = request.headers.get("x-request-id", uuid.uuid4().hex[:12])[:64]
@@ -186,6 +232,7 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(GZipMiddleware, minimum_size=2048)
     app.add_middleware(RateLimiter, per_minute=settings.api_rate_limit_per_minute)  # type: ignore[arg-type]
+    app.add_middleware(InstallGate)
     app.add_middleware(RequestLog)
     app.add_middleware(
         CORSMiddleware,
@@ -213,6 +260,13 @@ def create_app() -> FastAPI:
     async def unhandled(request: Request, exc: Exception) -> JSONResponse:
         log_event(log, "unhandled error", level=40, path=request.url.path, error=type(exc).__name__, message=str(exc))
         return JSONResponse({"error": "internal_error", "detail": "An unexpected error occurred."}, status_code=500)
+
+    @app.get("/ready", tags=["system"])
+    def ready() -> JSONResponse:
+        """Readiness: 200 once the research data is usable, 503 while it installs or after a failed install."""
+        state, err = readiness()
+        body = {"status": state, **({"detail": err} if err else {})}
+        return JSONResponse(body, status_code=200 if state == "ready" else 503)
 
     app.include_router(system.router)
     app.include_router(data.router)
