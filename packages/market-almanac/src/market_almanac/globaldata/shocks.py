@@ -28,7 +28,7 @@ from market_almanac.globaldata.prices import GlobalPrices, valid_mask
 
 SHOCK_CATALOG = "shock_catalog.parquet"
 SHOCK_MANIFEST = "shock_catalog_manifest.json"
-SHOCK_FORMAT = "shock-catalog-1"
+SHOCK_FORMAT = "shock-catalog-2"  # 2: series descriptors stored with each episode (filter without a join)
 MIN_SERIES_OBSERVATIONS = 12  # the catalog's "usable" threshold
 CATALOG_KINDS = ("unusual", "large_typical", "withheld")
 PEER_KEYS = ("country_iso3", "commodity_code", "unit", "price_type", "currency")
@@ -74,6 +74,20 @@ COLUMNS = [
     "peer_median_yoy_pct",
     "snapshot_id",
 ]
+# Descriptors copied from the series catalog of the same snapshot, so that discovery filters and sorts one table and
+# joins the catalog only for the (at most 100) rows it returns.
+DESCRIPTORS = (
+    "market_code",
+    "market_name",
+    "admin1_name",
+    "commodity_code",
+    "commodity_name",
+    "commodity_category",
+    "unit",
+    "price_type",
+    "currency",
+    "months_behind_dataset",
+)
 
 
 def monthly_frame(raw: pd.DataFrame) -> pd.Series:
@@ -149,6 +163,16 @@ def _typed(df: pd.DataFrame) -> pd.DataFrame:
     return out.sort_values(["country_iso3", "series_id", "start", "direction", "kind"]).reset_index(drop=True)
 
 
+def _with_descriptors(table: pd.DataFrame, desc: pd.DataFrame) -> pd.DataFrame:
+    out = table.merge(desc, on="series_id", how="left", validate="many_to_one")
+    for c in DESCRIPTORS:
+        if c == "months_behind_dataset":
+            out[c] = pd.to_numeric(out[c], errors="coerce").astype("Int32")
+        else:
+            out[c] = out[c].astype("string")
+    return out
+
+
 def _country_job(job: tuple[str, Any, pd.DataFrame]) -> tuple[str, pd.DataFrame, str]:
     iso3, snap, meta = job
     raw = pd.read_parquet(snap.path, columns=["series_id", "country_iso3", "period", "price", "quality_flags"])
@@ -170,6 +194,7 @@ def build_shock_catalog(
     if not src:
         raise RuntimeError("no price data is installed")
     cat = pd.read_parquet(gp.catalog_path(), columns=["series_id", *PEER_KEYS]).set_index("series_id")
+    desc = pd.read_parquet(gp.catalog_path(), columns=["series_id", *DESCRIPTORS])
     out_dir = Path(out_dir or gp.public_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     frames, pins = [], {}
@@ -191,6 +216,7 @@ def build_shock_catalog(
     log(f"{len(results)} countries in {time.monotonic() - t0:.0f} s")
     nonempty = [f for f in frames if len(f)]
     table = _typed(pd.concat(nonempty, ignore_index=True) if nonempty else pd.DataFrame(columns=COLUMNS))
+    table = _with_descriptors(table, desc)
     path = out_dir / SHOCK_CATALOG
     tmp = path.with_suffix(".tmp")
     table.to_parquet(tmp, index=False, compression="zstd")
@@ -235,7 +261,7 @@ def stale_countries(manifest: dict[str, Any], installed: dict[str, str]) -> list
 # --- serving (bounded queries; never a scan of price observations) ----------------------------------------
 
 MAX_PAGE = 100
-NON_FOOD_FILTER = "coalesce(c.commodity_category, '') <> 'non-food'"  # WFP's fuel, exchange rates, medicines, wages
+NON_FOOD_FILTER = "coalesce(s.commodity_category, '') <> 'non-food'"  # WFP's fuel, exchange rates, medicines, wages
 MAX_OFFSET = 10_000
 SORTS = {
     "unusual": "s.peak_z DESC NULLS LAST, s.peak_yoy_pct DESC",
@@ -245,6 +271,9 @@ SORTS = {
     "recent": "s.peak DESC, s.peak_z DESC NULLS LAST",
     "duration": "s.duration_months DESC, s.peak_z DESC NULLS LAST",
 }
+
+
+# Catalog fields returned with each discovery row (joined for the returned page only).
 META_FIELDS = (
     "market_code",
     "market_name",
@@ -273,7 +302,7 @@ def shock_catalog_path(gp: GlobalPrices) -> Path:
     src, layout, _ = gp.sources()
     if layout == "single_snapshot" and src:
         sid = next(iter(src.values())).snapshot_id
-        target = Path(gp.settings.cache_dir).resolve() / "shocks" / gp.mode / sid
+        target = Path(gp.settings.cache_dir).resolve() / "shocks" / SHOCK_FORMAT / gp.mode / sid
         if not (target / SHOCK_CATALOG).exists():
             build_shock_catalog(gp.settings, out_dir=target, log=lambda *_: None)
         return target / SHOCK_CATALOG
@@ -315,10 +344,10 @@ def query_shocks(
             params.append(val)
 
     eq("s.country_iso3", country)
-    eq("c.commodity_code", commodity)
-    eq("c.market_code", market)
-    eq("c.price_type", price_type)
-    eq("c.unit", unit)
+    eq("s.commodity_code", commodity)
+    eq("s.market_code", market)
+    eq("s.price_type", price_type)
+    eq("s.unit", unit)
     eq("s.kind", None if kind in (None, "all") else kind)
     eq("s.direction", None if direction in (None, "any") else direction)
     eq("s.extent", extent_class)
@@ -332,7 +361,7 @@ def query_shocks(
         where.append("s.window_coverage >= ?")
         params.append(float(min_window_coverage))
     if max_months_behind is not None:
-        where.append("c.months_behind_dataset <= ?")
+        where.append("s.months_behind_dataset <= ?")
         params.append(int(max_months_behind))
     if not include_data_concerns:
         where.append("NOT s.data_concern")
@@ -341,25 +370,31 @@ def query_shocks(
     if stable_only:
         where.append("s.stable")
     if q:
-        where.append("(lower(c.market_name) LIKE ? OR lower(c.commodity_name) LIKE ? OR lower(c.admin1_name) LIKE ?)")
+        where.append("(lower(s.market_name) LIKE ? OR lower(s.commodity_name) LIKE ? OR lower(s.admin1_name) LIKE ?)")
         like = "%" + q.lower().replace("\\", "").replace("%", "").replace("_", "") + "%"
         params += [like, like, like]
     order = SORTS.get(sort, SORTS["unusual"])
-    src = f"read_parquet('{str(path).replace(chr(39), chr(39) * 2)}') s JOIN {gp._catalog_sql()} c USING (series_id)"
+    src = f"read_parquet('{str(path).replace(chr(39), chr(39) * 2)}') s"
     sql_where = " AND ".join(where)
     total = int(gp._query(f"SELECT count(*) AS n FROM {src} WHERE {sql_where}", params)["n"].iloc[0])
-    cols = ", ".join(f"c.{f}" for f in META_FIELDS)
     lim, off = max(1, min(int(limit), MAX_PAGE)), max(0, min(int(offset), MAX_OFFSET))
     df = gp._query(
-        f"SELECT s.*, {cols} FROM {src} WHERE {sql_where} "
-        f"ORDER BY {order}, s.series_id, s.start LIMIT {lim} OFFSET {off}",
+        f"SELECT s.* FROM {src} WHERE {sql_where} ORDER BY {order}, s.series_id, s.start LIMIT {lim} OFFSET {off}",
         params,
     )
     from market_almanac.globaldata.prices import catalog_record
 
+    rows = df.to_dict("records")
+    ids = sorted({str(r["series_id"]) for r in rows})
+    meta: dict[str, dict[str, Any]] = {}
+    if ids:
+        marks = ", ".join("?" for _ in ids)
+        cols = ", ".join(META_FIELDS)
+        cat = gp._query(f"SELECT series_id, {cols} FROM {gp._catalog_sql()} WHERE series_id IN ({marks})", ids)
+        meta = {str(r["series_id"]): r for r in cat.to_dict("records")}
     items = []
-    for r in df.to_dict("records"):
-        rec = catalog_record(r)
+    for r in rows:
+        rec = catalog_record({**meta.get(str(r["series_id"]), {}), **r})  # the page only: at most 100 catalog rows
         for c in ("start", "peak", "end"):
             rec[c] = None if r.get(c) is None or pd.isna(r.get(c)) else pd.Timestamp(r[c]).strftime("%Y-%m")
         rec["flags"] = [f for f in str(r.get("flags") or "").split(";") if f]
@@ -379,7 +414,7 @@ def query_shocks(
 def shock_facets(gp: GlobalPrices, country: str) -> dict[str, Any]:
     """Filter options for one country, with episode counts (bounded: one country's rows)."""
     path = shock_catalog_path(gp)
-    src = f"read_parquet('{str(path).replace(chr(39), chr(39) * 2)}') s JOIN {gp._catalog_sql()} c USING (series_id)"
+    src = f"read_parquet('{str(path).replace(chr(39), chr(39) * 2)}') s"
 
     def counts(col: str, label: str | None = None) -> list[dict[str, Any]]:
         lab = f", any_value({label}) AS label" if label else ""
@@ -396,9 +431,9 @@ def shock_facets(gp: GlobalPrices, country: str) -> dict[str, Any]:
 
     return {
         "country_iso3": country,
-        "commodities": counts("c.commodity_code", "c.commodity_name"),
-        "markets": counts("c.market_code", "c.market_name"),
-        "price_types": counts("c.price_type"),
-        "units": counts("c.unit"),
+        "commodities": counts("s.commodity_code", "s.commodity_name"),
+        "markets": counts("s.market_code", "s.market_name"),
+        "price_types": counts("s.price_type"),
+        "units": counts("s.unit"),
         "years": counts("CAST(year(s.peak) AS VARCHAR)"),
     }

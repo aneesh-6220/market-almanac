@@ -421,6 +421,7 @@ function bandSeries(p: Palette, lo: (number | null)[], hi: (number | null)[], na
       symbol: "none",
       lineStyle: { opacity: 0 },
       areaStyle: { color: p.rainSoft, opacity: 0.6 },
+      itemStyle: { color: p.rainSoft },
       silent: true,
     },
   ];
@@ -472,7 +473,7 @@ function Peers({ d }: { d: Investigation }) {
       ) : (
         <>
           <p className="text-ink">
-            <strong>{EXTENT_LABEL[ex.class] ?? ex.class}.</strong> {extentSentence(ex, "comparable markets")}
+            <strong>{EXTENT_LABEL[ex.class] ?? ex.class}.</strong> {extentSentence(ex, "comparable markets", d.peers.n_available)}
           </p>
           <p className="mt-1 text-xs text-ink-3">Rule: {ex.rule}</p>
           {option && (
@@ -484,17 +485,18 @@ function Peers({ d }: { d: Investigation }) {
               </p>
             </div>
           )}
-          <PeerTable rows={d.peers.rows} label="Comparable markets" capped={d.peers.capped_at} total={ex.n_peers} first="market" />
+          <PeerTable rows={d.peers.rows} label="Comparable markets" capped={d.peers.capped_at} total={d.peers.n_available ?? ex.n_peers} first="market" />
         </>
       )}
     </Panel>
   );
 }
 
-function extentSentence(ex: Investigation["peers"]["extent"], what: string): string {
+function extentSentence(ex: Investigation["peers"]["extent"], what: string, available?: number): string {
+  const read = available != null && available > ex.n_peers ? `${ex.n_peers} best-observed of ${available} read` : `${ex.n_peers} in total`;
   if (ex.n_assessable === 0) return `None of the ${ex.n_peers} ${what} could be assessed at this time (too short or sparse a history).`;
   const med = ex.median_peer_yoy_pct != null ? ` Their median 12-month change was ${signedPct(ex.median_peer_yoy_pct)}.` : "";
-  return `${ex.n_elevated} of ${ex.n_assessable} assessable ${what} were also unusual in the same direction around the peak (${ex.n_peers} in total).${med}`;
+  return `${ex.n_elevated} of ${ex.n_assessable} assessable ${what} were also unusual in the same direction around the peak (${read}).${med}`;
 }
 
 function peerOption(p: Palette, d: Investigation) {

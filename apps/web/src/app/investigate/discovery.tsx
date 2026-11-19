@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 
 import { signedPct } from "@/components/market-bits";
 import { cn, Empty, ErrorState, Field, inputClass, Loading, Note, PageHeader, Panel, Select, Tag } from "@/components/ui";
-import { loadingLabel } from "@/lib/api";
+import { ApiError, loadingLabel } from "@/lib/api";
 import { month } from "@/lib/format";
 import { useGlobalCountries } from "@/lib/global-api";
 import {
@@ -182,6 +182,12 @@ export function Discovery() {
 
       {shocks.isPending ? (
         <Loading label={loadingLabel(shocks, "Loading price movements")} />
+      ) : shocks.isError && shocks.error instanceof ApiError && shocks.error.status === 501 ? (
+        <Empty>
+          The list of price movements is not installed on this deployment yet; it ships with the next price data release.
+          Investigations still work: open the <Link href={EXAMPLE.href} className="underline">worked example</Link>, or use
+          &ldquo;Investigate a price movement&rdquo; on any <Link href="/explorer" className="underline">market page</Link>.
+        </Empty>
       ) : shocks.isError ? (
         <ErrorState error={shocks.error} what="price movements" />
       ) : d && d.items.length === 0 ? (

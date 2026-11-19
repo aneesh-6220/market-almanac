@@ -200,3 +200,15 @@ def test_discovery_row_and_investigation_agree(client, unusual):
         n_all = unusual["peer_n"]
         if n_all <= 60:
             assert d["peers"]["extent"]["class"] == unusual["extent"]
+
+
+def test_a_deployment_without_the_episode_table_says_so_without_inviting_retries(client, monkeypatch):
+    import market_almanac.globaldata.shocks as shocks
+
+    def missing(_gp):  # type: ignore[no-untyped-def]
+        raise FileNotFoundError("The price-shock catalog is not installed on this deployment")
+
+    monkeypatch.setattr(shocks, "shock_catalog_path", missing)
+    for path, params in (("/api/v1/shocks", {}), ("/api/v1/shocks/facets", {"country": "TST"})):
+        r = client.get(path, params=params)
+        assert r.status_code == 501 and "not installed" in r.json()["detail"], path

@@ -153,3 +153,20 @@ def test_bundle_refuses_a_missing_or_stale_shock_catalog(tmp_path):
     build_catalog_for(src)
     with pytest.raises(BundleError, match="different snapshots"):
         build_prices_bundle(src, "live", tmp_path / "out")
+
+
+def test_episodes_carry_the_descriptors_of_their_series(artefact, tmp_path):
+    import duckdb
+
+    from market_almanac.globaldata.shocks import DESCRIPTORS
+
+    path, digest, _ = artefact
+    s = _settings(tmp_path / "data")
+    install_prices(s, str(path), digest)
+    pub = tmp_path / "data" / "public" / "live"
+    cols = ", ".join(f"e.{c} IS NOT DISTINCT FROM c.{c}" for c in DESCRIPTORS)
+    rows = duckdb.sql(
+        f"SELECT {cols} FROM read_parquet('{pub / SHOCK_CATALOG}') e "
+        f"JOIN read_parquet('{pub / 'global_series_catalog.parquet'}') c USING (series_id)"
+    ).fetchall()
+    assert all(all(r) for r in rows)

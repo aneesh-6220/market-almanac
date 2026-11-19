@@ -79,7 +79,8 @@ def shocks(
     (12-month change of 25% or more that is normal for that series) or ``withheld`` (large, but too little or too
     sparse history to assess). Episodes flagged as possible recording or unit changes are excluded unless
     ``include_data_concerns``; WFP's non-food items (fuel, exchange rates, medicines, wages) unless
-    ``include_non_food`` or a ``commodity`` is named.
+    ``include_non_food`` or a ``commodity`` is named. 501 when the episode table is not installed on this
+    deployment (it ships with the price data release).
     """
     gp = _gp()
     try:
@@ -105,8 +106,8 @@ def shocks(
             limit=limit,
             offset=offset,
         )
-    except FileNotFoundError as e:
-        raise HTTPException(503, str(e)) from e
+    except FileNotFoundError as e:  # not installed on this deployment: permanent until the next data release
+        raise HTTPException(501, str(e)) from e
     names = iso3_names()
     for it in out["items"]:
         it["country_name"] = names.get(it["country_iso3"], it["country_iso3"])
@@ -139,8 +140,8 @@ def facets(country: Annotated[str, Query(pattern=r"^[A-Z]{3}$")]) -> dict[str, A
     gp = _gp()
     try:
         return shock_facets(gp, country)
-    except FileNotFoundError as e:
-        raise HTTPException(503, str(e)) from e
+    except FileNotFoundError as e:  # not installed on this deployment: permanent until the next data release
+        raise HTTPException(501, str(e)) from e
 
 
 def _series_inputs(gp: Any, iso3: str, ids: list[str]) -> dict[str, tuple[dict[str, Any], pd.Series]]:
@@ -162,7 +163,8 @@ def build_investigation(series_id: str, event: str | None, start: str | None, en
     meta = gp.series_row(series_id) or {k: v for k, v in ref.row.to_dict().items()}
     meta["series_id"] = series_id
     iso3 = str(meta["country_iso3"])
-    peer_ids = [s for s in gp.peer_ids(meta) if s != series_id][:MAX_PEERS]
+    all_peers = [s for s in gp.peer_ids(meta) if s != series_id]
+    peer_ids = all_peers[:MAX_PEERS]
     market_ids = gp.market_series_ids(meta, limit=MAX_MARKET_SERIES) if meta.get("market_code") else []
     macro, _ = cache.frame("macro")
     try:
@@ -188,6 +190,7 @@ def build_investigation(series_id: str, event: str | None, start: str | None, en
     except InvestigationError as e:
         raise HTTPException(422, str(e)) from e
     doc["sources"] = SOURCES
+    doc["peers"]["n_available"] = len(all_peers)  # comparable markets in the country; at most MAX_PEERS are read
     doc = _clean(doc)
     with _DOCS_LOCK:
         _DOCS[key] = doc

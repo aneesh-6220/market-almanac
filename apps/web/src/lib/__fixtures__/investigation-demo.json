@@ -1209,6 +1209,7 @@
      }
     ]
    },
+   "n_available": 7,
    "rows": [
     {
      "admin1_name": "Drylands",
@@ -1469,7 +1470,7 @@
   }
  },
  "shocks": {
-  "built_at": "2026-11-19T16:44:53+00:00",
+  "built_at": "2026-11-19T16:57:30+00:00",
   "definitions": {
    "caution": "A statistical description of one market's prices compared with its own past. Not a finding of a shortage, a crisis or food insecurity, and not an explanation of causes.",
    "extent": "Whether comparable markets (same country, commodity, unit, price type and currency) were also elevated (robust z beyond 2 in 2 of the 3 months around the peak): widespread >= 50% of assessable ones, local < 25%, inconclusive with fewer than 3 assessable.",

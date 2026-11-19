@@ -120,7 +120,9 @@ configuration:
 - Override with `GLOBAL_PRICES_BUNDLE_URL` + `GLOBAL_PRICES_BUNDLE_SHA256` (the digest is mandatory) or
   disable with `GLOBAL_PRICES_AUTO_INSTALL=0` for a volume filled by hand:
   `market-almanac global install-prices [source] [--sha256 …]`.
-- **Publishing new data:** ingest, `market-almanac global catalog`,
+- **Publishing new data:** ingest, `market-almanac global catalog`, `market-almanac global shocks --workers 6`
+  (the Price Shock Investigator's episode table, about 10 minutes on 6 cores; the bundle refuses to build
+  without it or with one computed from other snapshots),
   `market-almanac global prices-bundle --out dist`, upload the archive as a GitHub release asset, and
   update `prices_release.json` (URL, SHA-256, per-country snapshot ids). Older snapshots stay in the
   partitions, so anything that cited them stays reproducible.

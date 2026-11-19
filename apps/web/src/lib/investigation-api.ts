@@ -263,6 +263,7 @@ export const InvestigationSchema = z.object({
       ),
     }),
     capped_at: z.number(),
+    n_available: z.number().optional(),
   }),
   breadth: z.object({ extent: Extent, rows: z.array(PeerRow), capped_at: z.number() }),
   context: z.object({

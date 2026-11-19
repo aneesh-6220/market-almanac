@@ -38,8 +38,10 @@ by chance but only 0.13% exceed 3, while a real shock keeps z above 2 for its wh
 therefore measured from where it crosses 2. One missing month inside a run does not break it. Its peak is the
 month with the largest 12-month change, and the peak is re-assessed against the changes recorded *before the
 episode began*, so an episode cannot dilute its own reference. Large nominal movements (|12-month change| >=
-LARGE_NOMINAL) that are not statistically unusual, or whose assessment is withheld, are listed separately so
-that the distinction stays visible.
+LARGE_NOMINAL) are listed separately so that the distinction stays visible: as *large but typical* when every
+month stays within Z_ELEVATED of the earlier changes and the peak within it of the changes before the movement
+began, and as *withheld* when they cannot be assessed. Large changes between the two thresholds that never reach
+the trigger are neither and are not listed.
 
 Everything here is descriptive. An episode says that prices in one market moved unusually compared with that
 market's own past. It is not a finding of a shortage, a crisis or food insecurity, and it identifies no cause.

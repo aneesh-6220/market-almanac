@@ -55,11 +55,15 @@ def sql(q: str, params: list | None = None) -> list[tuple]:
 
 def raw_price(iso3: str, sid: str, month: str) -> float:
     """The first valid record of the month, read straight from the partition (the API's monthly rule)."""
-    rows = duckdb.connect().execute(
-        f"SELECT price, quality_flags FROM read_parquet('{partition(iso3)}') "
-        "WHERE series_id = ? AND strftime(period, '%Y-%m') = ? ORDER BY period",
-        [sid, month],
-    ).fetchall()
+    rows = (
+        duckdb.connect()
+        .execute(
+            f"SELECT price, quality_flags FROM read_parquet('{partition(iso3)}') "
+            "WHERE series_id = ? AND strftime(period, '%Y-%m') = ? ORDER BY period",
+            [sid, month],
+        )
+        .fetchall()
+    )
     valid = [p for p, f in rows if p and p > 0 and not (f or "")]
     assert valid, (sid, month)
     return float(valid[0])
@@ -81,7 +85,7 @@ def test_catalog_is_consistent_with_the_method():
     # extent is only claimed with enough assessable peers
     bad = "SELECT count(*) FROM CATALOG WHERE extent IN ('widespread', 'local', 'mixed') AND peer_assessable < 3"
     assert sql(bad)[0][0] == 0
-    assert sql("SELECT count(*) FROM CATALOG WHERE start > peak OR peak > \"end\"")[0][0] == 0
+    assert sql('SELECT count(*) FROM CATALOG WHERE start > peak OR peak > "end"')[0][0] == 0
 
 
 def test_discovery_hides_data_concerns_and_non_food_unless_asked(client):
@@ -107,7 +111,7 @@ def test_discovery_is_bounded_and_fast(client):
         r = client.get("/api/v1/shocks", params=params)
         worst = max(worst, time.perf_counter() - t)
         assert r.status_code == 200, (params, r.text)
-        assert len(r.json()["items"]) <= 100 and len(r.content) < 120_000
+        assert len(r.json()["items"]) <= 100 and len(r.content) < 160_000  # ~1.3 kB a row; the UI asks for 25
     assert worst < 3.0, worst  # a laptop; Render's 0.1 vCPU is slower but the work is the same bounded query
 
 
