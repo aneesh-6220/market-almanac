@@ -79,7 +79,7 @@ def test_install_into_an_empty_directory_then_idempotent(artefact, tmp_path):
 
 
 def test_a_volume_with_prices_but_no_episode_table_is_not_current(artefact, tmp_path):
-    """An older artefact (global-prices-v1) left on a persistent volume must not suppress the install of the episodes."""
+    """An older artefact (v1) left on a persistent volume must not suppress the install of the episodes."""
     path, digest, _ = artefact
     s = _settings(tmp_path / "data")
     install_prices(s, str(path), digest)
