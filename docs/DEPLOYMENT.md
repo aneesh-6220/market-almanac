@@ -105,10 +105,11 @@ the `/lagged-relationships` endpoint, which loads the whole price table) can sti
 ## The price artefact (global explorer)
 
 The Market Explorer reads a **data-only price artefact**, not the research bundle: the newest
-partition of every country, their manifests and the precomputed series catalog (19.3 MB archive,
-about 24 MB installed; the 75 MB research bundle and the 242 MB Atlas package are not needed to browse
+partition of every country, their manifests, the precomputed series catalog and the Price Shock
+Investigator's episode table (29.5 MB archive, about 35 MB installed; the 75 MB research bundle and the
+242 MB Atlas package are not needed to browse
 prices). It is pinned in `packages/market-almanac/src/market_almanac/globaldata/prices_release.json`
-(release `global-prices-v1`, URL and SHA-256), so a live service installs it with no extra
+(release `global-prices-v2`, URL and SHA-256), so a live service installs it with no extra
 configuration:
 
 - At start-up, in a background thread, the API installs the artefact if the newest partitions or their

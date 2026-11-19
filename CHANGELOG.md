@@ -18,7 +18,8 @@ All notable changes to this project are documented here. The format follows
   causal and never makes causal claims. Permalinks name the month, window and price snapshot (the API answers
   409 rather than serve other data under a pinned link; plain addresses are live links); briefs export as
   Markdown, JSON and CSV. Episodes are precomputed offline (`market-almanac global shocks`, about 10 minutes
-  on 6 cores) and ship inside the price artefact, so the API only runs bounded queries. Method:
+  on 6 cores) and ship inside the price artefact (`global-prices-v2`: the v1 partitions byte for byte plus the shock catalog;
+  29.5 MB, SHA-256 pinned in `prices_release.json`), so the API only runs bounded queries. Method:
   [docs/PRICE_SHOCK_INVESTIGATOR.md](docs/PRICE_SHOCK_INVESTIGATOR.md).
 
 ### Changed

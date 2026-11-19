@@ -239,7 +239,7 @@ index (136) understates the rise from mid-2023 levels.
 
 ## Validation on the archived data
 
-Run on the pinned `global-prices-v1` snapshot (95 countries, 3.8 M observations), in
+Run on the pinned snapshots (`global-prices-v1`, whose price partitions `global-prices-v2` reproduces byte for byte) (95 countries, 3.8 M observations), in
 [`tests/integration/test_price_shocks_real.py`](../tests/integration/test_price_shocks_real.py) (skips without
 the data):
 

@@ -1,6 +1,6 @@
 """Price Shock Investigator over the archived global WFP data (95 countries, offline).
 
-Needs the pinned ``global-prices-v1`` snapshot and a shock catalog built from it (``market-almanac global shocks``)
+Needs the pinned ``global-prices-v2`` snapshot and a shock catalog built from it (``market-almanac global shocks``)
 in ``MARKET_ALMANAC_REAL_DATA_DIR`` or ``data/``; otherwise these tests skip. Expectations come from the Parquet
 files read independently of the API, or from fixed properties of the method, never from numbers copied from the
 API under test.
