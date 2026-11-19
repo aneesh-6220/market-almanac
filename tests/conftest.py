@@ -12,6 +12,20 @@ import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Never let the test suite reach a remote database.
+
+    Settings fall back to a developer's ``.env``, which may hold a production connection string. Any non-SQLite
+    ``DATABASE_URL`` is replaced by a throwaway SQLite file for the whole session (fixtures set their own anyway).
+    """
+    import tempfile
+
+    if not os.environ.get("DATABASE_URL", "").startswith("sqlite"):
+        os.environ["DATABASE_URL"] = f"sqlite:///{tempfile.mkdtemp(prefix='ma-tests-')}/tests.db"
+
+
 FIXTURES = ROOT / "data" / "fixtures"
 
 

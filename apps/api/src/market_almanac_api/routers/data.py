@@ -16,6 +16,7 @@ from market_almanac.data.quality import clean_monthly_series
 from market_almanac.db import models as m
 from market_almanac.features.weather import ClimatologyConfig, anomaly
 from market_almanac_api.deps import cache, db_dep, settings_dep
+from market_almanac_api.quality_store import quality_store
 from market_almanac_api.schemas import (
     AgricultureObs,
     CommodityOut,
@@ -40,9 +41,9 @@ def _synthetic(settings: Settings) -> bool:
     return settings.market_almanac_mode == RunMode.DEMO
 
 
-def _latest_quality(db: Session, mode: str) -> dict[str, Any] | None:
-    hit = cache.quality(db, mode)
-    return hit[0] if hit else None
+def _quality_id(db: Session, mode: str) -> str | None:
+    head = quality_store.head(db, mode)
+    return head[0] if head else None
 
 
 def _iso(v: Any) -> str | None:
@@ -120,17 +121,17 @@ def markets(
         except ValueError as exc:
             raise HTTPException(422, "bbox must be minLon,minLat,maxLon,maxLat") from exc
         rows = [r for r in rows if r.lat is not None and r.lon is not None and x0 <= r.lon <= x1 and y0 <= r.lat <= y1]
-    dq = _latest_quality(db, settings.market_almanac_mode.value) or {}
+    rid = _quality_id(db, settings.market_almanac_mode.value)
+    eligible_ids = quality_store.eligible_ids(db, rid) if rid else set()
     prices, _ = cache.frame("prices")
     if commodity:
         mk = set(prices.loc[prices["commodity_code"] == commodity, "market_code"].unique())
         rows = [r for r in rows if r.market_code in mk]
     sid_market = prices.drop_duplicates("series_id").set_index("series_id")["market_code"].to_dict()
     eligible: dict[str, int] = {}
-    for s in dq.get("series", []):
-        if s["eligible"]:
-            mc = sid_market.get(s["series_id"])
-            eligible[mc] = eligible.get(mc, 0) + 1
+    for sid in eligible_ids:
+        mc = sid_market.get(sid)
+        eligible[mc] = eligible.get(mc, 0) + 1
     return [
         MarketOut(
             id=r.id,
@@ -161,11 +162,13 @@ def series(
     db: Session = Depends(db_dep),
     settings: Settings = Depends(settings_dep),
 ) -> list[SeriesOut]:
-    dq = _latest_quality(db, settings.market_almanac_mode.value) or {}
+    rid = _quality_id(db, settings.market_almanac_mode.value)
+    # country and eligibility are filtered in the database; market and commodity come from the price snapshot below
+    entries = quality_store.series(db, rid, country=country, eligible_only=eligible_only)[1] if rid else []
     prices, _ = cache.frame("prices")
     meta = prices.drop_duplicates("series_id").set_index("series_id")[["market_code", "commodity_code"]]
     out = []
-    for s in dq.get("series", []):
+    for s in entries:
         if s["series_id"] not in meta.index:
             continue
         mc, cc = meta.loc[s["series_id"], "market_code"], meta.loc[s["series_id"], "commodity_code"]
@@ -406,31 +409,27 @@ def data_quality(
     settings: Settings = Depends(settings_dep),
 ) -> dict[str, Any]:
     """Latest quality report. Series and extremes are filtered and paginated (live reports are large)."""
-    hit = cache.quality(db, settings.market_almanac_mode.value)
-    if hit is None:
+    mode = settings.market_almanac_mode.value
+    head = quality_store.head(db, mode)
+    if head is None:
         raise HTTPException(404, "no data-quality report yet; run `market-almanac validate`")
-    body, rid, created = hit
-    rep = {k: v for k, v in body.items() if k not in ("series", "extremes", "consistency_issues")}
+    rid, created = head
+    rep = quality_store.meta(db, rid)
     rep["id"], rep["created_at"], rep["synthetic"] = rid, created, _synthetic(settings)
-    series = body.get("series", [])
-    extremes = body.get("extremes", [])
-    if series_id:
-        series = [s for s in series if s["series_id"] == series_id]
-    if country:
-        series = [s for s in series if s["country_iso3"] == country]
-    if eligible_only:
-        series = [s for s in series if s["eligible"]]
-    if series_id or country or eligible_only:
-        keep = {s["series_id"] for s in series}
-        extremes = [e for e in extremes if e["series_id"] in keep]
-    issues = body.get("consistency_issues", [])
+    series_total, series = quality_store.series(
+        db, rid, country=country, series_id=series_id, eligible_only=eligible_only, limit=limit, offset=offset
+    )
+    extremes_total, extremes = quality_store.extremes(
+        db, rid, country=country, series_id=series_id, eligible_only=eligible_only, limit=1000
+    )
+    issues = quality_store.issues(db, rid)
     if country:
         issues = [i for i in issues if f"{country}:" in i or f" {country} " in i]
-    rep["series_total"] = len(series)
-    rep["extremes_total"] = len(extremes)
+    rep["series_total"] = series_total
+    rep["extremes_total"] = extremes_total
     rep["consistency_issues_total"] = len(issues)
-    rep["series"] = series[offset : offset + limit]
-    rep["extremes"] = extremes[:1000]
+    rep["series"] = series
+    rep["extremes"] = extremes
     rep["consistency_issues"] = issues[:500]
     return rep
 

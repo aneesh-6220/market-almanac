@@ -1,6 +1,10 @@
 # Market Almanac developer commands. Run `make help` for a list.
 SHELL := /bin/bash
 WEB := apps/web
+# Development targets always use a local SQLite index, even when .env holds a remote (production) DATABASE_URL.
+# Override deliberately with `make api DEV_DATABASE_URL=...`.
+DEV_DATABASE_URL ?= sqlite:///./data/market-almanac.db
+DEV_DB := DATABASE_URL="$(DEV_DATABASE_URL)"
 
 .PHONY: help setup demo api web dev test test-live test-web e2e e2e-live bundle lint format typecheck build docker-up docker-down doctor clean
 
@@ -12,11 +16,11 @@ setup: ## Install Python (uv) and web (npm) dependencies
 	npm --prefix $(WEB) ci
 
 demo: ## Initialise the database and seed the SYNTHETIC demo (offline)
-	MARKET_ALMANAC_MODE=demo uv run market-almanac db-init
-	uv run market-almanac demo-seed
+	$(DEV_DB) MARKET_ALMANAC_MODE=demo uv run market-almanac db-init
+	$(DEV_DB) uv run market-almanac demo-seed
 
 api: ## Run the API on :8000 (mode from MARKET_ALMANAC_MODE, default demo)
-	uv run uvicorn market_almanac_api.main:app --reload --port 8000
+	$(DEV_DB) uv run uvicorn market_almanac_api.main:app --reload --port 8000
 
 web: ## Run the web app on :3000
 	npm --prefix $(WEB) run dev -- --port 3000
@@ -28,7 +32,7 @@ doctor: ## Check configuration, storage, database and live provider health
 	uv run market-almanac doctor --live
 
 test: ## Python unit, integration and scientific-correctness tests (offline)
-	uv run pytest
+	$(DEV_DB) uv run pytest
 
 test-live: ## Opt-in tests against the real provider APIs (needs network and credentials)
 	uv run pytest -m live

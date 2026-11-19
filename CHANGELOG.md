@@ -6,6 +6,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **The production database was running out of egress, not compute.** The Neon free plan's 5 GB monthly network
+  transfer stood at 4.70 GB (94%) three days after the project was created; compute had used about 1.9 of 100
+  CU-hours. The live data-quality report is one 20.9 MB JSON row, and every read of it is transferred whole:
+  `/api/v1/status` read it on every page load until `bad3491`, and `/data-quality`, `/series` and `/markets` still
+  read it once per fresh API process (every deploy and restart on the free tier). Those endpoints now filter and
+  page inside the database (`apps/api/src/market_almanac_api/quality_store.py`, same SQL on SQLite and
+  PostgreSQL); the data page's default request moves about 0.9 MB instead of 20.9 MB, slices are cached per
+  report id, and the API no longer holds the >100 MB decoded document in memory. Responses are identical to the
+  previous whole-document logic (tested across filters, pages and edge cases).
+- **Local development could silently use the production database.** `.env` fallbacks meant `make demo`,
+  `make api`, Playwright's API server and some tests connected to whatever `DATABASE_URL` `.env` held; the
+  production database contains two demo-mode quality reports written that way. These now default to local
+  SQLite (see [Development](docs/DEVELOPMENT.md#never-develop-against-the-production-database)), and `dev/*` and
+  `fix/*` branches no longer create Vercel previews.
+
 ### Performance
 
 - **Market pages are about 4x cheaper to serve (measured CPU, same responses).** A page's eight API calls

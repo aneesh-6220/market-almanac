@@ -35,7 +35,15 @@ export default defineConfig({
           cwd: "../..",
           url: "http://localhost:8000/health",
           reuseExistingServer: true,
-          env: { MARKET_ALMANAC_MODE: mode, API_RATE_LIMIT_PER_MINUTE: "100000" },
+          // Always a local SQLite index: without this the API falls back to a developer's .env, which may point at
+          // the production database (the suite then spent that database's metered egress on every run).
+          env: {
+            MARKET_ALMANAC_MODE: mode,
+            API_RATE_LIMIT_PER_MINUTE: "100000",
+            DATABASE_URL:
+              process.env.E2E_DATABASE_URL ??
+              (mode === "live" ? "sqlite:///./data/live_local.db" : "sqlite:///./data/market-almanac.db"),
+          },
           timeout: 120_000,
         },
         {
