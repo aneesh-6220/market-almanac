@@ -53,7 +53,7 @@ def _median_clause(ext: dict[str, Any]) -> str:
     return clause + ")"
 
 
-def population(ext: dict[str, Any], available: int | None = None) -> dict[str, int | None]:
+def population(ext: dict[str, Any], available: int | None = None) -> dict[str, Any]:
     """The comparator population as four nested counts, which must never be confused with one another.
 
     ``found``: every comparable series that exists (before the cap on how many an investigation reads);
