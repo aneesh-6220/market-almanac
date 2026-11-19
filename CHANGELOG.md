@@ -19,6 +19,14 @@ All notable changes to this project are documented here. The format follows
 - **The market page orders its requests**: headline, price history and movement first; brief, seasonality,
   weather and the stored observations start when those have answered.
 
+- **Measured in a real browser on production (Render Free + Vercel):** one visitor 6.9 s to 1.8 s median; two
+  simultaneous visitors 13.3 s to 3.0 s; peak resident memory 293 MB (636 MB when it was killed). A consolidated
+  page endpoint and request-priority classes were evaluated and rejected with evidence; see
+  [docs/PERFORMANCE.md](docs/PERFORMANCE.md), which also holds the concurrency and resource budget.
+- **Tools**: `scripts/ops/benchmark_market_page.mjs` (real-browser page timing, paced under the rate limit),
+  `scripts/ops/benchmark_throttled.py` (a local server throttled like the free tier) and
+  `scripts/ops/overload_test.py` (deliberate overload; must reject, never crash).
+
 ### Changed
 
 - **The client retries a busy or starting service and always ends.** Every query used `retry: false`, so one 503
@@ -26,6 +34,10 @@ All notable changes to this project are documented here. The format follows
   error, 408/425/429/502/503/504) now retry up to six times, honouring `Retry-After` (1-30 s) and otherwise backing
   off 1-10 s; other 4xx are not retried; a request that stalls for 60 s becomes an error. Panels say when they are
   retrying. `Retry-After` and `Server-Timing` are exposed to the browser through CORS.
+
+- **Production browser tests are paced, not given longer timeouts.** Against a deployed API the live Playwright
+  suite runs with one worker and `e2e/fixtures.ts` keeps it under the per-IP rate limit
+  (`E2E_API_BUDGET_PER_MINUTE`, default 100); direct API calls wait out 429/503 as the web app does.
 
 ### Fixed
 

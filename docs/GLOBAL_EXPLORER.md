@@ -102,11 +102,8 @@ Since the final fix there have been no OOM events and no `memory high` lines acr
 heavy test load. Resident memory on Render stays around 240–320 MB (the old instance peaked at 636 MB).
 Locally, a real server under an 18-page fan-out peaks at 340 MB (392 MB before the gate).
 
-**Known limitation: latency under concurrency on the free tier.** A market page makes about ten data
-requests. The host has roughly 0.1 vCPU, so warm and sequential they take about 12 s in total, and each
-takes 13–18 s when several browsers load pages at once. The slowest are the pre-v1.2 legacy computations,
-which v1.2 deliberately leaves unchanged. Nothing fails, but pages are slow when busy. A full live
-Playwright run against production with two parallel workers passed 16 of 18 tests; the other two (an
-Ethiopia journey and the phone-width explorer) hit the timeout while the host was contended and pass when
-run alone (12 s and 2 s). Use `E2E_TEST_TIMEOUT_MS` and `E2E_EXPECT_TIMEOUT_MS` (defaults 60 s and 15 s)
-when running the suite against a free-tier deployment, for example 240000 and 90000.
+**Latency under concurrency on the free tier (addressed after 1.2.0).** In 1.2.0 a market page made nine data
+requests that each repeated the same DuckDB lookups, so a page took about 7 s alone and 13 s with two visitors.
+The next release caches those immutable lookups per snapshot and orders the client's requests: 1.8 s and 3.0 s in a
+real browser on production, with no failed pages. Measurements, the concurrency and resource budget, the supported
+workload and how the production browser tests are paced are in [PERFORMANCE.md](PERFORMANCE.md).

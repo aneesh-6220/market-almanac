@@ -25,8 +25,14 @@ const API = (args.api ?? "http://localhost:8000").replace(/\/$/, "");
 const countries = (args.countries ?? "ARM,ETH").split(",");
 const visitors = Number(args.visitors ?? 1);
 const rounds = Number(args.rounds ?? 3);
+const passes = Number(args.passes ?? 1); // pass 1 loads each series for the first time (cold server caches); later passes repeat them (warm)
 const timeoutMs = Number(args.timeout ?? 120) * 1000;
 const label = args.label ?? "run";
+// The API allows 120 requests a minute per client address and a page makes about 9, so back-to-back rounds from one
+// machine would measure the rate limiter (429 + Retry-After), not the page. --pause is the idle time between rounds
+// (default 8 s keeps one machine under about 70 requests a minute with one visitor, 100 with two).
+const pauseMs = Number(args.pause ?? 8) * 1000;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function pickSeries(iso) {
   const r = await fetch(`${API}/api/v1/global/countries/${iso}/series?limit=1&sort=observations`);
@@ -42,7 +48,12 @@ async function visit(browser, seriesId) {
   page.on("requestfinished", async (req) => {
     const url = new URL(req.url());
     if (!url.pathname.startsWith("/api/")) return;
-    const res = await req.response();
+    let res;
+    try {
+      res = await req.response();
+    } catch {
+      return; // the context was closed while this request was still being recorded
+    }
     if (!res) return;
     const timing = req.timing();
     calls.push({
@@ -53,6 +64,7 @@ async function visit(browser, seriesId) {
       total_ms: Math.round(timing.responseEnd > 0 ? timing.responseEnd - timing.requestStart : 0),
       bytes: Number(res.headers()["content-length"] ?? 0),
       retried_after: res.headers()["retry-after"] ?? null,
+      server_timing: res.headers()["server-timing"] ?? null, // queue = waiting for a slot, app = running the handler
     });
   });
   const failures = [];
@@ -93,26 +105,37 @@ const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
 const ids = await Promise.all(countries.map(pickSeries));
 const browser = await chromium.launch();
 const out = [];
-for (let round = 0; round < rounds; round++) {
-  const picks = Array.from({ length: visitors }, (_, i) => ids[(round + i) % ids.length]);
-  const results = await Promise.all(picks.map((id) => visit(browser, id)));
-  out.push({ round: round + 1, results });
-  console.error(`round ${round + 1}: ` + results.map((r) => `${r.ok ? "ok" : "FAIL: " + r.reason} ${(r.total_ms / 1000).toFixed(1)}s (${r.api_requests} api requests)`).join(" | "));
+for (let pass = 1; pass <= passes; pass++) {
+  for (let round = 0; round < rounds; round++) {
+    const picks = Array.from({ length: visitors }, (_, i) => ids[(round * visitors + i) % ids.length]);
+    const results = await Promise.all(picks.map((id) => visit(browser, id)));
+    out.push({ pass, round: round + 1, results });
+    console.error(`pass ${pass} round ${round + 1}: ` + results.map((r) => `${r.ok ? "ok" : "FAIL: " + r.reason} ${(r.total_ms / 1000).toFixed(1)}s (${r.api_requests} api requests)`).join(" | "));
+    await sleep(pauseMs);
+  }
 }
 await browser.close();
-const times = out.flatMap((r) => r.results.filter((x) => x.ok).map((x) => x.total_ms));
+const okTimes = (rs) => rs.flatMap((r) => r.results.filter((x) => x.ok).map((x) => x.total_ms));
+const stat = (xs) => (xs.length ? { n: xs.length, median_s: +(median(xs) / 1000).toFixed(1), max_s: +(Math.max(...xs) / 1000).toFixed(1) } : null);
+const all = out.flatMap((r) => r.results);
 const summary = {
   label,
   web: WEB,
   api: API,
   visitors,
   rounds,
-  completed: times.length,
-  failed: out.flatMap((r) => r.results).length - times.length,
-  first_load_s: out[0].results.map((r) => +(r.total_ms / 1000).toFixed(1)),
-  median_s: times.length ? +(median(times) / 1000).toFixed(1) : null,
-  max_s: times.length ? +(Math.max(...times) / 1000).toFixed(1) : null,
+  passes,
+  completed: all.filter((x) => x.ok).length,
+  failed: all.filter((x) => !x.ok).length,
+  first_pass: stat(okTimes(out.filter((r) => r.pass === 1))),
+  repeat_passes: stat(okTimes(out.filter((r) => r.pass > 1))),
   api_requests_per_page: out[0].results[0].api_requests,
+  // responses that were not 200 (429 rate limit, 503 busy or installing): each one was retried by the page
+  non200_responses: all.flatMap((x) => x.calls).filter((c) => c.status !== 200).map((c) => c.status),
+  // anything that took more than 10 s or made extra requests (retries): what happened, request by request
+  anomalies: all
+    .filter((x) => x.total_ms > 10_000 || x.failed_requests.length || x.api_requests > 9 || x.calls.some((c) => c.status !== 200))
+    .map((x) => ({ series: x.series, total_ms: x.total_ms, failed_requests: x.failed_requests, calls: x.calls.sort((a, b) => a.start_ms - b.start_ms) })),
   waterfall_first_visitor_last_round: out.at(-1).results[0].calls.sort((a, b) => a.start_ms - b.start_ms),
 };
 console.log(JSON.stringify(summary, null, 2));

@@ -130,6 +130,7 @@ configuration:
   data requests execute at once and the rest wait in the event loop (`/health` and `/ready` never wait;
   a request that waits longer than `API_QUEUE_TIMEOUT_SECONDS`, default 30, gets 503 with `Retry-After`);
   and the weather table is held column-projected. On a larger host raise the first two.
+  The measured budget, supported workload and the decisions behind them are in [PERFORMANCE.md](PERFORMANCE.md).
   Measure with `python scripts/ops/benchmark_global_prices.py --data-dir data` (or `--url` against a
   running API).
 

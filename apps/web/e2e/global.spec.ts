@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 import { API, noHorizontalScroll, selectByText, trackPageErrors, waitForContent } from "./helpers";
 
@@ -118,7 +118,7 @@ test.describe("Global Market Explorer", () => {
     await page.goto(`/market?series=${short.series_id}`);
     await expect(page.getByTestId("completeness")).toContainText("Months observed");
     await expect(page.getByText(/Too short to describe/)).toBeVisible();
-    await expect(page.getByText(/No evaluated forecasting model covers this series/)).toBeVisible();
+    await expect(page.getByRole("region", { name: "Forecast" }).getByText(/No evaluated forecasting model covers this series/)).toBeVisible();
   });
 
   test("a cross-country comparison is allowed only as indices, with prices never converted", async ({ page, request }) => {
