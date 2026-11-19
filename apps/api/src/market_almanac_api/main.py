@@ -294,18 +294,27 @@ class ConcurrencyGate(BaseHTTPMiddleware):
         if not request.url.path.startswith("/api/") or request.method == "OPTIONS":
             return await call_next(request)
         slots = self._semaphore()
+        queued = time.perf_counter()
         try:
             await asyncio.wait_for(slots.acquire(), timeout=self._timeout)
         except TimeoutError:
+            request.state.queue_ms = round((time.perf_counter() - queued) * 1000, 1)
             return JSONResponse(
                 {"error": "busy", "detail": "The server is busy with other requests; retry shortly."},
                 status_code=503,
                 headers={"Retry-After": "5"},
             )
         path = request.url.path
+        started = time.perf_counter()
+        request.state.queue_ms = round((started - queued) * 1000, 1)
         INFLIGHT[path] = INFLIGHT.get(path, 0) + 1
         try:
-            return await call_next(request)
+            response = await call_next(request)
+            # Where the time went: waiting for a slot vs running the handler (visible in the browser's network panel).
+            response.headers["server-timing"] = (
+                f"queue;dur={request.state.queue_ms}, app;dur={round((time.perf_counter() - started) * 1000, 1)}"
+            )
+            return response
         finally:
             INFLIGHT[path] -= 1
             if not INFLIGHT[path]:
@@ -328,6 +337,7 @@ class RequestLog(BaseHTTPMiddleware):
             path=request.url.path,
             status=response.status_code,
             ms=round((time.perf_counter() - t0) * 1000, 1),
+            queue_ms=getattr(request.state, "queue_ms", None),
             request_id=rid,
         )
         return response
@@ -358,7 +368,7 @@ def create_app() -> FastAPI:
         allow_origins=settings.cors_origin_list,
         allow_methods=["GET", "POST"],  # POST only for specification validation (no execution)
         allow_headers=["*"],
-        expose_headers=["Content-Disposition", "x-request-id"],
+        expose_headers=["Content-Disposition", "x-request-id", "server-timing", "retry-after"],
     )
 
     @app.exception_handler(HTTPException)

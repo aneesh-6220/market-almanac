@@ -6,6 +6,27 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Performance
+
+- **Market pages are about 4x cheaper to serve (measured CPU, same responses).** A page's eight API calls
+  each opened new DuckDB connections for the same lookups (the series' catalog row, the country's last
+  period, the series' records, its peer panel): 70% of the page's CPU, about 7 ms of it per connection here
+  and roughly 20x that on the 0.1-vCPU free tier. Those immutable lookups are now cached per snapshot in
+  small bounded LRUs (entries and bytes, single-flight so a cold series is read once however many panels ask),
+  keyed by snapshot id so a new snapshot is never answered from old entries. Warm page CPU 324 ms to 70 ms, cold
+  407 ms to 188 ms; 4,004 responses across 364 real series in all 95 countries are byte-identical to before.
+- **Responses report where the time went**: `Server-Timing: queue;dur=…, app;dur=…` and `queue_ms` in the request log.
+- **The market page orders its requests**: headline, price history and movement first; brief, seasonality,
+  weather and the stored observations start when those have answered.
+
+### Changed
+
+- **The client retries a busy or starting service and always ends.** Every query used `retry: false`, so one 503
+  from the concurrency gate (or the Render cold start) showed "Could not load". Transient failures (network
+  error, 408/425/429/502/503/504) now retry up to six times, honouring `Retry-After` (1-30 s) and otherwise backing
+  off 1-10 s; other 4xx are not retried; a request that stalls for 60 s becomes an error. Panels say when they are
+  retrying. `Retry-After` and `Server-Timing` are exposed to the browser through CORS.
+
 ### Fixed
 
 - **Out-of-memory kills under concurrent load (found in production verification of 1.2.0).** A dozen

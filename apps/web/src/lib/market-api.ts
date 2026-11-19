@@ -406,19 +406,20 @@ export const useCoverageSummary = () =>
 export const useMovers = (params: { country?: string; commodity?: string; limit?: number } = {}) =>
   useQuery({ queryKey: ["movers", params], queryFn: () => apiGet("/api/v1/movers", z.array(MoverSchema), params), ...long });
 
-const one = (id?: string) => ({ enabled: !!id, retry: false, ...long });
+/** `when` lets a page start a secondary panel only after the primary ones have answered (see MarketClient). */
+const one = (id?: string, when = true) => ({ enabled: !!id && when, ...long });
 export const useSeriesDetail = (id?: string) =>
   useQuery({ queryKey: ["series-detail", id], queryFn: () => apiGet(`/api/v1/series/${id}`, SeriesDetailSchema), ...one(id) });
 export const useHistory = (id?: string) =>
   useQuery({ queryKey: ["history", id], queryFn: () => apiGet(`/api/v1/series/${id}/history`, HistorySchema), ...one(id) });
 export const useMovement = (id?: string) =>
   useQuery({ queryKey: ["movement", id], queryFn: () => apiGet(`/api/v1/series/${id}/movement`, MovementSchema), ...one(id) });
-export const useSeasonality = (id?: string) =>
-  useQuery({ queryKey: ["seasonality", id], queryFn: () => apiGet(`/api/v1/series/${id}/seasonality`, SeasonalitySchema), ...one(id) });
-export const useEnvironment = (id?: string) =>
-  useQuery({ queryKey: ["environment", id], queryFn: () => apiGet(`/api/v1/series/${id}/environment`, EnvironmentSchema, { months: 120 }), ...one(id) });
-export const useBrief = (id?: string) =>
-  useQuery({ queryKey: ["brief", id], queryFn: () => apiGet(`/api/v1/series/${id}/brief`, BriefSchema), ...one(id) });
+export const useSeasonality = (id?: string, when = true) =>
+  useQuery({ queryKey: ["seasonality", id], queryFn: () => apiGet(`/api/v1/series/${id}/seasonality`, SeasonalitySchema), ...one(id, when) });
+export const useEnvironment = (id?: string, when = true) =>
+  useQuery({ queryKey: ["environment", id], queryFn: () => apiGet(`/api/v1/series/${id}/environment`, EnvironmentSchema, { months: 120 }), ...one(id, when) });
+export const useBrief = (id?: string, when = true) =>
+  useQuery({ queryKey: ["brief", id], queryFn: () => apiGet(`/api/v1/series/${id}/brief`, BriefSchema), ...one(id, when) });
 
 /** Query string for the comparison endpoint: `series_id` is repeated once per series. */
 export function compareQuery(ids: string[], start?: string, end?: string, format?: "csv"): string {
@@ -437,7 +438,6 @@ export const useCompare = (ids: string[], start?: string, end?: string) =>
     queryKey: ["compare", ids, start, end],
     queryFn: () => apiGet(`/api/v1/compare?${compareQuery(ids, start, end)}`, CompareSchema),
     enabled: ids.length >= 2,
-    retry: false,
     ...long,
   });
 
@@ -445,7 +445,6 @@ export const useStudy = (studyId: string, phase: "confirmatory" | "exploratory")
   useQuery({
     queryKey: ["study", studyId, phase],
     queryFn: () => apiGet(`/api/v1/studies/${studyId}`, StudySchema, { phase }),
-    retry: false,
     ...long,
   });
 

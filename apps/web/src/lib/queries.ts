@@ -66,7 +66,6 @@ export const useWeather = (locationId?: string | null) =>
     queryKey: ["weather", locationId],
     queryFn: () => apiGet("/api/v1/weather", WeatherSchema, { location_id: locationId ?? undefined }),
     enabled: !!locationId,
-    retry: false,
     ...long,
   });
 export const useIndicators = (country?: string) =>
@@ -88,7 +87,6 @@ export const useLags = (seriesId?: string) =>
     queryKey: ["lags", seriesId],
     queryFn: () => apiGet(`/api/v1/series/${seriesId}/lagged-relationships`, LagSchema, { max_lag: 6 }),
     enabled: !!seriesId,
-    retry: false,
     ...long,
   });
 export const useCoverage = (country?: string, commodity?: string) =>
@@ -129,7 +127,6 @@ export const useQuality = (params: { series_id?: string; country?: string; eligi
   useQuery({
     queryKey: ["quality", params],
     queryFn: () => apiGet("/api/v1/data-quality", QualitySchema, params),
-    retry: false,
     ...long,
   });
 export const useSnapshots = () =>

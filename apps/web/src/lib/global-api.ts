@@ -224,7 +224,6 @@ export const useGlobalCountry = (iso3?: string) =>
     queryKey: ["global-country", iso3],
     queryFn: () => apiGet(`/api/v1/global/countries/${iso3}`, GlobalCountryDetailSchema),
     enabled: !!iso3,
-    retry: false,
     ...long,
   });
 export const useGlobalMarkets = (iso3?: string, commodity?: string) =>
@@ -266,15 +265,19 @@ export const useGlobalSeries = (iso3: string | undefined, params: GlobalSeriesPa
     ...long,
   });
 
-const one = (id?: string) => ({ enabled: !!id, retry: false, ...long });
+const one = (id?: string, when = true) => ({ enabled: !!id && when, ...long });
 export const useGlobalDetail = (id?: string) =>
   useQuery({ queryKey: ["global-detail", id], queryFn: () => apiGet(`/api/v1/global/series/${id}`, GlobalDetailSchema), ...one(id) });
-export const useObservations = (id: string | undefined, params: { limit: number; offset: number; start?: string; end?: string }) =>
+export const useObservations = (
+  id: string | undefined,
+  params: { limit: number; offset: number; start?: string; end?: string },
+  when = true,
+) =>
   useQuery({
     queryKey: ["global-observations", id, params],
     queryFn: () => apiGet(`/api/v1/global/series/${id}/observations`, ObservationPageSchema, params),
     placeholderData: keepPreviousData,
-    ...one(id),
+    ...one(id, when),
   });
 
 /** Download URL for the stored observations of one series (every record, flags included). */

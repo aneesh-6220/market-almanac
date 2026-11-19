@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 import threading
 import time
+from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -54,6 +55,14 @@ DUCKDB_MEMORY = "128MB"
 # (observed in production under a dozen parallel requests). Queries take milliseconds, so they are run one at a time.
 MAX_CONCURRENT_QUERIES = 1
 SOURCE_TTL_SECONDS = 30.0
+# Per-series lookups (catalog row, raw rows) are immutable for a snapshot and a market page asks for the same ones
+# from every panel; each uncached lookup costs a DuckDB connection (about 7 ms of CPU here, about 150 ms on the
+# 0.1-vCPU free tier). The cache is bounded by entries and by rows per entry, so its memory is bounded too.
+SERIES_CACHE_ENTRIES = 192
+SERIES_CACHE_MAX_ROWS = 4_000
+# Peer panels (monthly prices of up to 400 comparable series) are the largest cached object: about 0.2-0.9 MB each.
+PEER_CACHE_ENTRIES = 64
+PEER_CACHE_BYTES = 16 * 1024 * 1024
 _QUERY_GATE = threading.BoundedSemaphore(MAX_CONCURRENT_QUERIES)
 
 OBSERVATION_COLUMNS = (
@@ -254,6 +263,79 @@ def _research_weather_locations(settings: Any) -> set[str]:
 # --- reading ------------------------------------------------------------------------------------------
 
 
+class _LRU:
+    """A small thread-safe least-recently-used map, bounded by entries and optionally by bytes.
+
+    Values are shared between callers: copy before mutating, or only read.
+    """
+
+    def __init__(self, capacity: int, max_bytes: int | None = None, weigh: Any = None) -> None:
+        self._cap = capacity
+        self._max_bytes = max_bytes
+        self._weigh = weigh
+        self._bytes = 0
+        self._data: OrderedDict[tuple[Any, ...], tuple[Any, int]] = OrderedDict()
+        self._lock = threading.Lock()
+        self._building: dict[tuple[Any, ...], threading.Lock] = {}
+
+    def get_or_compute(self, key: tuple[Any, ...], compute: Any, cacheable: Any = None) -> Any:
+        """The cached value, computing it once even if several threads miss at the same moment.
+
+        A market page asks for the same series from several requests at once; without this each of them would
+        run the same DuckDB query (a cache stampede on a cold series).
+        """
+        hit, value = self.get(key)
+        if hit:
+            return value
+        with self._lock:
+            gate = self._building.setdefault(key, threading.Lock())
+        with gate:
+            hit, value = self.get(key)
+            if hit:
+                return value
+            try:
+                value = compute()
+                if cacheable is None or cacheable(value):
+                    self.put(key, value)
+            finally:
+                with self._lock:
+                    self._building.pop(key, None)
+            return value
+
+    def get(self, key: tuple[Any, ...]) -> tuple[bool, Any]:
+        with self._lock:
+            if key in self._data:
+                self._data.move_to_end(key)
+                return True, self._data[key][0]
+        return False, None
+
+    def put(self, key: tuple[Any, ...], value: Any) -> None:
+        weight = int(self._weigh(value)) if self._weigh else 0
+        if self._max_bytes is not None and weight > self._max_bytes:
+            return  # larger than the whole budget: serve it, never retain it
+        with self._lock:
+            if key in self._data:
+                self._bytes -= self._data[key][1]
+            self._data[key] = (value, weight)
+            self._data.move_to_end(key)
+            self._bytes += weight
+            while len(self._data) > self._cap or (self._max_bytes is not None and self._bytes > self._max_bytes):
+                _, (_, w) = self._data.popitem(last=False)
+                self._bytes -= w
+
+    def clear(self) -> None:
+        with self._lock:
+            self._data.clear()
+            self._bytes = 0
+
+    @property
+    def nbytes(self) -> int:
+        return self._bytes
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+
 class GlobalPrices:
     """Read-only query layer over the installed price data. Cheap to construct; safe to share across threads."""
 
@@ -263,6 +345,10 @@ class GlobalPrices:
         self._lock = threading.Lock()
         self._sources: tuple[float, dict[str, CountrySnapshot], str, str] | None = None
         self._memo: dict[tuple[Any, ...], Any] = {}
+        self._series_cache = _LRU(SERIES_CACHE_ENTRIES)
+        self._peer_cache = _LRU(
+            PEER_CACHE_ENTRIES, max_bytes=PEER_CACHE_BYTES, weigh=lambda df: int(df.memory_usage(deep=False).sum())
+        )
 
     # -- sources ---------------------------------------------------------------------------------------
 
@@ -337,6 +423,8 @@ class GlobalPrices:
         with self._lock:
             self._sources = None
             self._memo.clear()
+        self._series_cache.clear()
+        self._peer_cache.clear()
 
     def layout(self) -> str:
         return self.sources()[1]
@@ -603,18 +691,36 @@ class GlobalPrices:
         return [catalog_record(r) for r in df.to_dict("records")], total
 
     def series_row(self, series_id: str) -> dict[str, Any] | None:
+        row = self.series_row_raw(series_id)
+        return None if row is None else catalog_record(row.to_dict())
+
+    def _series_row_query(self, series_id: str) -> dict[str, Any] | None:
+        """The uncached lookup (kept so tests can prove the cached path returns identical records)."""
         df = self._query(f"SELECT * FROM {self._catalog_sql()} WHERE series_id = ? LIMIT 1", [series_id])
         return catalog_record(df.to_dict("records")[0]) if len(df) else None
 
+    def _catalog_ident(self) -> tuple[Any, ...]:
+        """Identity of the installed catalog: changes whenever any country's snapshot or the catalog file does."""
+        src = self.sources()[0]
+        return (hash(tuple(sorted((c, s.snapshot_id) for c, s in src.items()))), self.catalog_path().stat().st_mtime)
+
     def series_row_raw(self, series_id: str) -> pd.Series | None:
         """The catalog row with native dtypes (Timestamps), shaped like a research-catalog row."""
-        df = self._query(f"SELECT * FROM {self._catalog_sql()} WHERE series_id = ? LIMIT 1", [series_id])
-        return df.iloc[0] if len(df) else None
+
+        def compute() -> pd.Series | None:
+            df = self._query(f"SELECT * FROM {self._catalog_sql()} WHERE series_id = ? LIMIT 1", [series_id])
+            return df.iloc[0] if len(df) else None
+
+        value = self._series_cache.get_or_compute(("row", series_id, *self._catalog_ident()), compute)
+        return None if value is None else value.copy()  # type: ignore[no-any-return]
 
     def country_last_period(self, iso3: str) -> pd.Timestamp | None:
-        df = self._query(f"SELECT max(last_period) AS m FROM {self._catalog_sql()} WHERE country_iso3 = ?", [iso3])
-        v = df["m"].iloc[0]
-        return None if pd.isna(v) else pd.Timestamp(v)
+        def compute() -> pd.Timestamp | None:
+            df = self._query(f"SELECT max(last_period) AS m FROM {self._catalog_sql()} WHERE country_iso3 = ?", [iso3])
+            v = df["m"].iloc[0]
+            return None if pd.isna(v) else pd.Timestamp(v)
+
+        return self._series_cache.get_or_compute(("last", iso3, *self._catalog_ident()), compute)  # type: ignore[no-any-return]
 
     def peer_ids(self, row: dict[str, Any], limit: int = 400) -> list[str]:
         """Series of the same country measuring the same thing (commodity, unit, price type, currency)."""
@@ -645,7 +751,21 @@ class GlobalPrices:
         )
 
     def raw_rows(self, iso3: str, series_id: str) -> pd.DataFrame:
-        """Every stored record of one series, in file order, with derived validity flags."""
+        """Every stored record of one series, in file order, with derived validity flags.
+
+        Cached per country snapshot (immutable); callers get their own copy.
+        """
+        snap = self.snapshot(iso3)
+        if snap is None:
+            return self._raw_rows_uncached(iso3, series_id)  # raises GlobalPricesUnavailable
+        df = self._series_cache.get_or_compute(
+            ("raw", iso3, series_id, snap.snapshot_id),
+            lambda: self._raw_rows_uncached(iso3, series_id),
+            cacheable=lambda frame: len(frame) <= SERIES_CACHE_MAX_ROWS,
+        )
+        return df.copy()  # type: ignore[no-any-return]
+
+    def _raw_rows_uncached(self, iso3: str, series_id: str) -> pd.DataFrame:
         df = self._read(iso3, [series_id], ["series_id", *OBSERVATION_COLUMNS])
         if df.empty:
             return df.assign(
@@ -668,6 +788,28 @@ class GlobalPrices:
         if rows.empty:
             return pd.Series(dtype="float64")
         return rows.set_index("period")["price"].astype("float64").sort_index()
+
+    def peer_panel(self, row: Any) -> pd.DataFrame:
+        """Monthly prices of every series measuring the same thing as ``row`` (same country, commodity, unit,
+        price type and currency). Cached per country snapshot with a byte budget; the frame is shared: read only."""
+        iso3 = str(row["country_iso3"])
+        snap = self.snapshot(iso3)
+        key = (
+            "peers",
+            iso3,
+            str(row["commodity_code"]),
+            str(row["unit"]),
+            str(row["price_type"]),
+            str(row["currency"]),
+            snap.snapshot_id if snap else None,
+        )
+
+        def compute() -> pd.DataFrame:
+            keys = ("country_iso3", "commodity_code", "unit", "price_type", "currency")
+            ids = self.peer_ids({k: row[k] for k in keys})
+            return self.clean_panel(iso3, ids)
+
+        return self._peer_cache.get_or_compute(key, compute)  # type: ignore[no-any-return]
 
     def clean_panel(self, iso3: str, series_ids: list[str]) -> pd.DataFrame:
         """Monthly prices of several series of one country (columns), for peer comparison."""

@@ -136,11 +136,50 @@ test.describe("Market Almanac (synthetic demo)", () => {
     page,
   }) => {
     const errors = trackPageErrors(page);
+    // A virtual clock lets the retry back-off (about 35 s in real time) run instantly.
+    await page.clock.install();
     await page.route(`${API}/**`, (route) => route.abort());
     await page.goto("/explorer");
-    await expect(page.getByRole("alert").first()).toContainText(
-      "Could not load",
-    );
+    // while the service looks temporarily unreachable the page says it is retrying, rather than failing at once
+    await expect(page.getByRole("status").filter({ hasText: "retrying" }).first()).toBeVisible();
+    // each retry needs real network time between timer ticks, so advance the clock in steps until it gives up
+    await expect(async () => {
+      await page.clock.runFor(11_000);
+      await expect(page.getByRole("alert").filter({ hasText: "Could not load" }).first()).toBeVisible({ timeout: 300 });
+    }).toPass({ timeout: 30_000 });
+    expect(errors).toEqual([]);
+  });
+
+  test("a busy server (503 with Retry-After) is retried and the page then loads", async ({
+    page,
+  }) => {
+    const errors = trackPageErrors(page);
+    await page.clock.install();
+    let busyFor = 2;
+    await page.route(`${API}/api/v1/global/countries`, (route) => {
+      if (busyFor-- > 0) {
+        return route.fulfill({
+          status: 503,
+          headers: {
+            "content-type": "application/json",
+            "retry-after": "5",
+            "access-control-allow-origin": "*",
+            "access-control-expose-headers": "retry-after",
+          },
+          body: JSON.stringify({ error: "busy", detail: "The server is busy with other requests; retry shortly." }),
+        });
+      }
+      return route.continue();
+    });
+    await page.goto("/explorer");
+    await expect(page.getByRole("status").filter({ hasText: "retrying" }).first()).toBeVisible();
+    await expect(async () => {
+      await page.clock.runFor(6_000);
+      expect(busyFor).toBeLessThan(0); // both 503s were served, and then the real answer was requested
+      await expect(page.getByRole("status").filter({ hasText: "Loading countries" })).toHaveCount(0, { timeout: 300 });
+    }).toPass({ timeout: 30_000 });
+    await expect(page.locator("#f-country option").first()).toBeAttached();
+    await expect(page.getByRole("alert").filter({ hasText: /./ })).toHaveCount(0); // the Next route announcer is an empty alert
     expect(errors).toEqual([]);
   });
 

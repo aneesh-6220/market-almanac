@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 
 import { MovementTag } from "@/components/market-bits";
 import { Empty, ErrorState, Field, inputClass, Loading, Note, PageHeader, Panel, Select, Tag } from "@/components/ui";
-import type { Market } from "@/lib/api";
+import { loadingLabel, type Market } from "@/lib/api";
 import { fmt, month, pct } from "@/lib/format";
 import {
   incompatibility,
@@ -169,7 +169,7 @@ export function ExplorerClient() {
       </div>
 
       {countriesQ.isError && <ErrorState error={countriesQ.error} what="the country inventory" />}
-      {countriesQ.isLoading && <Loading label="Loading countries" />}
+      {countriesQ.isLoading && <Loading label={loadingLabel(countriesQ, "Loading countries")} />}
       {cov && (
         <div className="mb-5 space-y-2 text-sm text-ink-2" data-testid="country-summary">
           <p>
@@ -201,7 +201,7 @@ export function ExplorerClient() {
           }
         >
           {markets.isLoading ? (
-            <Loading label="Loading markets" />
+            <Loading label={loadingLabel(markets, "Loading markets")} />
           ) : markets.isError ? (
             <ErrorState error={markets.error} what="markets" />
           ) : plotted === 0 ? (
@@ -238,7 +238,7 @@ export function ExplorerClient() {
             </div>
           }
         >
-          {series.isLoading && <Loading label="Loading series" />}
+          {series.isLoading && <Loading label={loadingLabel(series, "Loading series")} />}
           {series.isError && <ErrorState error={series.error} what="price series" />}
           {series.data && series.data.items.length === 0 && (
             <Empty>

@@ -8,6 +8,7 @@ import { baseOption, Chart, type ChartHandle, usePalette } from "@/components/ch
 import { CopyButton, LinkButton, MONTH_SHORT, MovementTag, signedPct, z1 } from "@/components/market-bits";
 import { Empty, ErrorState, Field, Loading, Note, PageHeader, Panel, Select, Stat, Tag } from "@/components/ui";
 import { TierTag } from "@/app/explorer/explorer-client";
+import { loadingLabel } from "@/lib/api";
 import { fmt, month, pct } from "@/lib/format";
 import { exportUrl, useGlobalDetail, useObservations, type GlobalDetail } from "@/lib/global-api";
 import {
@@ -198,12 +199,12 @@ const FLAG_TEXT: Record<string, string> = {
   missing_price: "no price reported",
 };
 
-function Observations({ id, currency, unit }: { id: string; currency: string; unit: string }) {
+function Observations({ id, currency, unit, ready }: { id: string; currency: string; unit: string; ready: boolean }) {
   const [offset, setOffset] = useState(0);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const win = { start: /^\d{4}-\d{2}$/.test(start) ? start : undefined, end: /^\d{4}-\d{2}$/.test(end) ? end : undefined };
-  const obs = useObservations(id, { limit: OBS_PAGE, offset, ...win });
+  const obs = useObservations(id, { limit: OBS_PAGE, offset, ...win }, ready);
   const total = obs.data?.total ?? 0;
   return (
     <Panel
@@ -226,7 +227,7 @@ function Observations({ id, currency, unit }: { id: string; currency: string; un
         </div>
       }
     >
-      {obs.isLoading && <Loading label="Loading observations" />}
+      {obs.isLoading && <Loading label={loadingLabel(obs, "Loading observations")} />}
       {obs.isError && <ErrorState error={obs.error} what="the stored observations" />}
       {obs.data && obs.data.items.length === 0 && <Empty>No stored record falls in this period.</Empty>}
       {obs.data && obs.data.items.length > 0 && (
@@ -318,9 +319,13 @@ export function MarketClient() {
   const global = useGlobalDetail(id);
   const history = useHistory(id);
   const movement = useMovement(id);
-  const seasonality = useSeasonality(id);
-  const env = useEnvironment(id);
-  const brief = useBrief(id);
+  // Priority: the headline, price history and movement load first. The brief, seasonality, weather and the stored
+  // observations (the heaviest response) start once those have answered, so they never delay the primary panels
+  // on a small server. The server gates concurrency; this orders what it is asked for.
+  const primaryDone = history.isFetched && movement.isFetched;
+  const seasonality = useSeasonality(id, primaryDone);
+  const env = useEnvironment(id, primaryDone);
+  const brief = useBrief(id, primaryDone);
   const chartRef = useRef<ChartHandle>(null);
 
   if (!id) {
@@ -333,7 +338,7 @@ export function MarketClient() {
       </div>
     );
   }
-  if (detail.isLoading) return <Loading label="Loading market" />;
+  if (detail.isLoading) return <Loading label={loadingLabel(detail, "Loading market")} />;
   if (detail.isError || !detail.data) return <ErrorState error={detail.error} what="this market series" />;
 
   const s = detail.data.series;
@@ -401,7 +406,7 @@ export function MarketClient() {
             </div>
           }
         >
-          {history.isLoading && <Loading label="Loading prices" />}
+          {history.isLoading && <Loading label={loadingLabel(history, "Loading prices")} />}
           {history.isError && <ErrorState error={history.error} what="price history" />}
           {history.data && <PriceHistory history={history.data} movement={movement.data} range={range} chartRef={chartRef} />}
           {history.data && (
@@ -413,7 +418,7 @@ export function MarketClient() {
         </Panel>
 
         <Panel title="How unusual is the latest movement?" note="Compared with this series' own earlier movements of the same length.">
-          {movement.isLoading && <Loading label="Assessing" />}
+          {movement.isLoading && <Loading label={loadingLabel(movement, "Assessing")} />}
           {movement.isError && <ErrorState error={movement.error} what="the movement assessment" />}
           {movement.data && <MovementCard a={movement.data.assessment} peers={movement.data.peers} />}
           {movement.data && <p className="mt-4 text-xs text-ink-3">{movement.data.disclaimer}</p>}
@@ -426,7 +431,7 @@ export function MarketClient() {
           note={brief.data ? `As of ${month(brief.data.as_of_period)} · generated from the statistics on this page` : undefined}
           actions={brief.data && <CopyButton label="Copy brief" text={() => `${brief.data!.title}\n\n${brief.data!.text}\n\nSource: Market Almanac, ${window.location.href}`} />}
         >
-          {brief.isLoading && <Loading label="Writing brief" />}
+          {brief.isLoading && <Loading label={loadingLabel(brief, "Writing brief")} />}
           {brief.isError && <ErrorState error={brief.error} what="the market brief" />}
           {brief.data && (
             <div className="space-y-3" data-testid="market-brief">
@@ -442,7 +447,7 @@ export function MarketClient() {
         </Panel>
 
         <Panel title="Seasonal pattern" note="Each month's price relative to the average of its calendar year, across years.">
-          {seasonality.isLoading && <Loading label="Loading" />}
+          {seasonality.isLoading && <Loading label={loadingLabel(seasonality, "Loading")} />}
           {seasonality.data?.status === "ok" ? (
             <>
               <SeasonalChart data={seasonality.data} />
@@ -460,7 +465,7 @@ export function MarketClient() {
 
       <div className="mt-5">
         <Panel title="Weather context" note="Observed weather shown next to prices. Co-movement here is a correlation, not a demonstrated cause.">
-          {env.isLoading && <Loading label="Loading weather" />}
+          {env.isLoading && <Loading label={loadingLabel(env, "Loading weather")} />}
           {env.isError && <ErrorState error={env.error} what="weather context" />}
           {env.data?.status === "ok" ? (
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
@@ -516,7 +521,7 @@ export function MarketClient() {
         </div>
       )}
       <div className="mt-5">
-        <Observations id={s.series_id} currency={s.currency} unit={s.unit} />
+        <Observations id={s.series_id} currency={s.currency} unit={s.unit} ready={primaryDone} />
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">

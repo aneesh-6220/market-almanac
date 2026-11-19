@@ -14,10 +14,49 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    /** From a Retry-After header: how long the server asked us to wait before trying again. */
+    public retryAfterMs?: number,
   ) {
     super(message);
   }
+
+  /**
+   * Worth trying again: the service is starting, busy or unreachable. A request the server understood and refused
+   * (400, 404, 422, ...) or a bug (500) will not change by waiting.
+   */
+  get transient(): boolean {
+    return this.status === 0 || [408, 425, 429, 502, 503, 504].includes(this.status);
+  }
 }
+
+/** Retry-After as milliseconds (seconds or an HTTP date), kept between 1 s and 30 s; undefined if absent or unusable. */
+export function parseRetryAfter(value: string | null | undefined, now = Date.now()): number | undefined {
+  if (!value) return undefined;
+  const secs = Number(value);
+  const ms = Number.isFinite(secs) ? secs * 1000 : Date.parse(value) - now;
+  return Number.isFinite(ms) ? Math.min(30_000, Math.max(1_000, ms)) : undefined;
+}
+
+/** Give up on a request after this long, so a stalled connection ends in an error message, not a spinner. */
+export const REQUEST_TIMEOUT_MS = 60_000;
+
+/** How many times a transient failure is retried, and how long to wait before each retry. */
+export const TRANSIENT_RETRIES = 6;
+export function retryDelayMs(attempt: number, error: unknown): number {
+  if (error instanceof ApiError && error.retryAfterMs) return error.retryAfterMs;
+  return Math.min(1_000 * 2 ** attempt, 10_000);
+}
+export function shouldRetry(count: number, error: unknown): boolean {
+  if (error instanceof ApiError) {
+    if (error.transient) return count < TRANSIENT_RETRIES;
+    if (error.status >= 400 && error.status < 500) return false;
+  }
+  return count < 1;
+}
+
+/** A loading label that says so when the request is being retried. */
+export const loadingLabel = (q: { failureCount: number }, base: string): string =>
+  q.failureCount > 0 ? `${base}: the data service is busy or starting up, retrying` : base;
 
 type Params = Record<string, string | number | boolean | undefined | null>;
 
@@ -32,8 +71,14 @@ export function apiUrl(path: string, params?: Params): string {
 export async function apiGet<S extends z.ZodTypeAny>(path: string, schema: S, params?: Params): Promise<z.output<S>> {
   let res: Response;
   try {
-    res = await fetch(apiUrl(path, params), { headers: { accept: "application/json" } });
-  } catch {
+    res = await fetch(apiUrl(path, params), {
+      headers: { accept: "application/json" },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (e) {
+    if (e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError")) {
+      throw new ApiError(0, "The data service took too long to answer. Please try again in a moment.");
+    }
     throw new ApiError(
       0,
       LOCAL_API
@@ -49,7 +94,7 @@ export async function apiGet<S extends z.ZodTypeAny>(path: string, schema: S, pa
     } catch {
       /* non-JSON error */
     }
-    throw new ApiError(res.status, detail);
+    throw new ApiError(res.status, detail, parseRetryAfter(res.headers.get("retry-after")));
   }
   const json = await res.json();
   const parsed = schema.safeParse(json);

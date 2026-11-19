@@ -436,28 +436,7 @@ class ResolvedSeries:
         if self.origin == "research":
             cat, _, _ = cache.catalog()
             return cache.peer_panel(cat, self.series_id)
-        gp = global_prices()
-        r = self.row
-        key = (
-            "global",
-            self.country,
-            str(r["commodity_code"]),
-            str(r["unit"]),
-            str(r["price_type"]),
-            str(r["currency"]),
-            self.snapshot_id,
-        )
-        with cache._lock:
-            hit = cache._peers.get(key)
-        if hit is not None:
-            return hit
-        ids = gp.peer_ids({k: r[k] for k in ("country_iso3", "commodity_code", "unit", "price_type", "currency")})
-        panel = gp.clean_panel(self.country, ids)
-        with cache._lock:
-            if len(cache._peers) >= 512:
-                cache._peers.pop(next(iter(cache._peers)))
-            cache._peers[key] = panel
-        return panel
+        return global_prices().peer_panel(self.row)  # type: ignore[no-any-return]
 
 
 def resolve_series(series_id: str) -> ResolvedSeries:
