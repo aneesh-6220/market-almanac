@@ -103,7 +103,7 @@ sources. Checked 2026-11-17; confirm before each publication:
 
 | Source | What the terms allow | Status |
 |---|---|---|
-| WFP food prices via HDX | HDX's licence guidance: CC BY-IGO permits copying, redistribution and adaptation, including commercially, if the licence is stated and notices kept | **Confirm the licence field on the HDX "Global WFP food prices" dataset page** before publishing (not verified from the page itself) |
+| WFP food prices via HDX | HDX's licence guidance: CC BY-IGO permits copying, redistribution and adaptation, including commercially, if the licence is stated and notices kept | **Verified 2026-11-19** from the HDX catalogue metadata (`package_show`): "Global Food Prices Database" (WFP-VAM) and "HDX HAPI - Food Security, Nutrition & Poverty: Food Prices" both carry `license_id: cc-by-igo`. The price artefact's manifest states the licence, names WFP only, and says the catalogs are adapted material not endorsed by WFP, HDX or OCHA |
 | NASA POWER | Public; cite NASA POWER | Allowed with citation |
 | World Bank WDI | CC BY 4.0 | Allowed with attribution |
 | IMF data | IMF copyright and usage terms (effective 11 Oct 2024): data may be copied, distributed and used to create derivative works; **commercial reuse needs written permission** (copyright@imf.org) | Allowed for this non-commercial project with attribution |

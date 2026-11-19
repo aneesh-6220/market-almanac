@@ -50,6 +50,23 @@ def test_artefact_holds_only_prices_and_is_small(artefact):
     assert path.stat().st_size < 1_000_000
 
 
+def test_manifest_names_only_what_the_artefact_contains_and_says_it_is_adapted(artefact):
+    import json
+
+    from market_almanac.data.public_bundle import MANIFEST_NAME
+
+    path, _digest, _res = artefact
+    with tarfile.open(path) as t:
+        manifest = json.loads(t.extractfile(MANIFEST_NAME).read())  # type: ignore[union-attr]
+    text = " ".join(manifest["attribution"])
+    assert "World Food Programme" in text and "CC BY-IGO" in text
+    for other in ("IMF", "NASA", "World Bank", "FAOSTAT", "MapSPAM"):  # none of these is in the price artefact
+        assert other not in text
+    assert manifest["adaptation_notice"].startswith("Adapted material")
+    assert "endorsed" in manifest["adaptation_notice"]
+    assert "code_commit" in manifest
+
+
 def test_install_into_an_empty_directory_then_idempotent(artefact, tmp_path):
     path, digest, _ = artefact
     s = _settings(tmp_path / "data")

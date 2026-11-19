@@ -222,6 +222,18 @@ def build_prices_bundle(data_dir: Path, mode: str, out_dir: Path) -> dict[str, A
             "observations": rows,
             "snapshots": dict(sorted(in_bundle.items())),
             "excluded": "weather, macro, agriculture, experiments, studies, older snapshots, caches, credentials",
+            # this artefact holds WFP prices and nothing else, so it names only that source (and what was changed)
+            "attribution": [
+                ATTRIBUTION[0],
+                "Licence: CC BY-IGO 3.0 (https://creativecommons.org/licenses/by/3.0/igo/). The licence notice and "
+                "this attribution must be kept when the data are redistributed.",
+            ],
+            "adaptation_notice": (
+                "Adapted material. The price partitions are normalised copies of WFP's monthly records (one record per "
+                "market, commodity, unit, price type, currency and month); global_series_catalog.parquet and "
+                "shock_catalog.parquet are statistics computed from them by Market Almanac. WFP, HDX and OCHA have not "
+                "reviewed or endorsed them."
+            ),
         },
     )
     res.update(countries=len(in_bundle), observations=rows, partitions=len(snaps))
