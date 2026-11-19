@@ -74,4 +74,39 @@ it now reads one column.
 
 ## Production
 
-_Filled in after deployment; see the last section of this file._
+Verified against the public deployment (Render Free API, Vercel frontend) on revision `bad3491`
+(Render deploy `dep-dbv3lu61egvs73eo90b0`, Vercel deployment `dpl_AVcJLHA7FLDx91rL6uGxxbg4jAo6`, READY).
+Later commits change documentation and test configuration only.
+
+**What works.** Cold start installs the pinned data-only artefact (192 files, about 5 s on Render) and the
+API reports ready. `/api/v1/global/prices/*` returns real observations for Armenia, Chad, Nepal, Ethiopia
+and Haiti; invalid and unsupported identifiers return the documented 4xx errors. Single-request latency
+from a workstation: `/api/v1/status` 0.3–0.7 s, observations about 0.6 s, the heavier pre-existing
+endpoints (movement, seasonality, environment, brief) 1–2.4 s.
+
+**Memory incident while shipping v1.2.0 (fixed).** The 512 MiB instance was OOM-killed three times
+(`server_failed`, `oomKilled`) when several browsers opened market pages at once. Three independent
+causes, each removed and verified:
+
+1. DuckDB queries ran in parallel, each with its own working set → one query at a time, 128 MB budget,
+   heap trimmed after each query (`globaldata/prices.py`).
+2. Unbounded concurrent API requests, each loading the full 19-column weather table → at most three
+   `/api/` requests run at once (`ConcurrencyGate`; the rest wait, then get 503 with `Retry-After`);
+   `/health` and `/ready` are never gated; weather consumers read a 9-column projection; glibc arenas
+   are capped.
+3. `/api/v1/status` decoded a 20.9 MB quality-report JSON column on every page load → it now selects only
+   id, timestamp and summary. This was found through the new memory telemetry (a `memory high` log line
+   with resident memory and in-flight paths at 380 MB or more).
+
+Since the final fix there have been no OOM events and no `memory high` lines across about 70 minutes of
+heavy test load. Resident memory on Render stays around 240–320 MB (the old instance peaked at 636 MB).
+Locally, a real server under an 18-page fan-out peaks at 340 MB (392 MB before the gate).
+
+**Known limitation: latency under concurrency on the free tier.** A market page makes about ten data
+requests. The host has roughly 0.1 vCPU, so warm and sequential they take about 12 s in total, and each
+takes 13–18 s when several browsers load pages at once. The slowest are the pre-v1.2 legacy computations,
+which v1.2 deliberately leaves unchanged. Nothing fails, but pages are slow when busy. A full live
+Playwright run against production with two parallel workers passed 16 of 18 tests; the other two (an
+Ethiopia journey and the phone-width explorer) hit the timeout while the host was contended and pass when
+run alone (12 s and 2 s). Use `E2E_TEST_TIMEOUT_MS` and `E2E_EXPECT_TIMEOUT_MS` (defaults 60 s and 15 s)
+when running the suite against a free-tier deployment, for example 240000 and 90000.

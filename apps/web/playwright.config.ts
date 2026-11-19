@@ -14,8 +14,10 @@ const mode = process.env.E2E_MODE === "live" ? "live" : "demo";
 export default defineConfig({
   testDir: "./e2e",
   testMatch: mode === "live" ? /(live|global)\.spec\.ts/ : /demo\.spec\.ts/,
-  timeout: 60_000,
-  expect: { timeout: 15_000 },
+  // Defaults suit a local stack. A free-tier deployment (about 0.1 vCPU) needs well over 15 s for a market page's ten
+  // data requests under load: set E2E_TEST_TIMEOUT_MS / E2E_EXPECT_TIMEOUT_MS when running against one.
+  timeout: Number(process.env.E2E_TEST_TIMEOUT_MS ?? 60_000),
+  expect: { timeout: Number(process.env.E2E_EXPECT_TIMEOUT_MS ?? 15_000) },
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"]],
