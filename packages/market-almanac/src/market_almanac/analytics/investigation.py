@@ -22,6 +22,7 @@ import pandas as pd
 
 from market_almanac.analytics.shocks import (
     BASELINE_MONTHS,
+    EPISODE_CAVEAT,
     METHOD,
     METHOD_VERSION,
     MIN_ASSESSABLE_PEERS,
@@ -375,6 +376,7 @@ def _persistence(ep: dict[str, Any] | None) -> dict[str, Any]:
         "qualifying_months": ep["qualifying_months"],
         "ongoing": ep["ongoing"],
         "retrace_6m_pct": ep.get("retrace_6m_pct"),
+        "note": EPISODE_CAVEAT,
     }
 
 
@@ -396,8 +398,14 @@ def investigate(
     start: str | None = None,
     end: str | None = None,
     country_name: str | None = None,
+    peers_available: int | None = None,
+    market_available: int | None = None,
 ) -> dict[str, Any]:
-    """Assemble the investigation document (see the module docstring)."""
+    """Assemble the investigation document (see the module docstring).
+
+    ``peers_available`` and ``market_available`` are how many comparable markets and other foods exist before the
+    caps on how many are read; they let the evidence say how many of the markets found were actually assessed.
+    """
     from market_almanac.analytics.evidence import build_evidence
 
     sig = compute_signals(prices)
@@ -512,8 +520,19 @@ def investigate(
         "unusualness": unusual,
         "persistence": _persistence(ep),
         "seasonality": seasonal,
-        "peers": {"extent": peer_extent, "rows": peer_rows, "index": index_panel, "capped_at": MAX_PEERS},
-        "breadth": {"extent": breadth, "rows": mk_rows, "capped_at": MAX_MARKET_SERIES},
+        "peers": {
+            "extent": peer_extent,
+            "rows": peer_rows,
+            "index": index_panel,
+            "capped_at": MAX_PEERS,
+            "n_available": peers_available,
+        },
+        "breadth": {
+            "extent": breadth,
+            "rows": mk_rows,
+            "capped_at": MAX_MARKET_SERIES,
+            "n_available": market_available,
+        },
         "context": {
             "weather": _weather(environment, ev),
             "macro": _macro(macro, str(meta.get("country_iso3")), ev, yoy),

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -238,29 +240,144 @@ def _meta(sid: str, commodity: str) -> dict:
     }
 
 
-def test_without_price_index_data_calm_local_foods_do_not_argue_against_inflation():
+def _doc_with_foods(others: dict, **kw):  # type: ignore[no-untyped-def]
     from market_almanac.analytics.investigation import investigate
 
     own = shock(series(132, seed=1), "2019-03-01", 9, 1.6)
-    others = {f"f{i}": (_meta(f"f{i}", f"Food {i}"), series(132, seed=40 + i)) for i in range(5)}
-    doc = investigate(
+    return investigate(
         series_id="s0",
         meta=_meta("s0", "Rice (imported)"),
         prices=own,
         snapshot_id="snap",
         raw=None,
-        peers={},
+        peers=kw.pop("peers", {}),
         market_series=others,
         macro=None,
         environment=None,
         event="2019-08",
         country_name="Testland",
+        **kw,
     )
+
+
+def _macro(doc: dict) -> dict:
+    return next(m for m in doc["evidence"]["mechanisms"] if m["key"] == "macro")
+
+
+def _group(m: dict, key: str) -> list[str]:
+    return next(g["items"] for g in m["evidence_groups"] if g["key"] == key)
+
+
+def test_without_price_index_data_calm_local_foods_do_not_argue_against_inflation():
+    others = {f"f{i}": (_meta(f"f{i}", f"Food {i}"), series(132, seed=40 + i)) for i in range(5)}
+    doc = _doc_with_foods(others)
     assert doc["breadth"]["extent"]["class"] == "narrow" and doc["context"]["macro"]["cpi"] is None
-    macro = next(m for m in doc["evidence"]["mechanisms"] if m["key"] == "macro")
-    assert macro["status"] == "not_indicated"
+    macro = _macro(doc)
+    # not "not indicated" / "less likely": with no CPI or exchange rate the mechanism cannot be tested either way
+    assert macro["status"] == "cannot_be_assessed"
     assert any("no consumer price index" in e for e in macro["evidence"])
     assert "higher than all" in doc["evidence"]["conclusion"]["text"]
+    assert any("absent or unlikely" in x["text"] for x in doc["evidence"]["unsupported"])
+
+
+def test_macro_evidence_keeps_nominal_increases_unusualness_mechanism_evidence_and_gaps_apart():
+    # five foods that rise ~34% every year: large in nominal terms, ordinary for each of them
+    others = {f"f{i}": (_meta(f"f{i}", f"Food {i}"), series(132, seed=40 + i, trend=0.025)) for i in range(5)}
+    doc = _doc_with_foods(others)
+    macro = _macro(doc)
+    assert [g["key"] for g in macro["evidence_groups"]] == ["nominal", "unusual", "mechanism", "missing"]
+    nominal, unusual_, mech, missing = (_group(macro, k) for k in ("nominal", "unusual", "mechanism", "missing"))
+    assert "5 of the 5 other foods" in nominal[0] and "25% or more in nominal terms" in nominal[0]
+    ex = doc["breadth"]["extent"]
+    assert ex["n_elevated"] < ex["n_assessable"] / 2  # mostly ordinary for their own histories
+    assert f"{ex['n_elevated']} of {ex['n_assessable']} assessable other foods were unusually high" in unusual_[0]
+    assert any("not evidence against inflation or depreciation" in x for x in unusual_)
+    assert mech[0].startswith("none:") and len(missing) == 2
+    assert macro["status"] == "cannot_be_assessed"
+    text = doc["evidence"]["conclusion"]["text"]
+    assert "Several rose substantially in nominal terms (5 of 5" in text and "within their own usual ranges" in text
+
+
+def test_foods_moving_together_is_not_evidence_for_inflation_without_a_price_index():
+    others = {
+        f"f{i}": (_meta(f"f{i}", f"Food {i}"), shock(series(132, seed=40 + i), "2019-03-01", 9, 1.6)) for i in range(5)
+    }
+    doc = _doc_with_foods(others)
+    assert doc["breadth"]["extent"]["class"] == "broad"
+    assert _macro(doc)["status"] == "cannot_be_assessed"  # it was "partly consistent" before
+    assert _group(_macro(doc), "mechanism")[0].startswith("none:")
+
+
+def test_with_a_price_index_the_macro_mechanism_is_assessed():
+    cpi = {"yoy_pct": 0.5, "provider": "imf", "period": "2019-08-01"}
+    doc = _doc_with_foods({})
+    from market_almanac.analytics.evidence import build_evidence
+
+    doc["context"]["macro"] = {"cpi": cpi, "fx": None, "real_yoy_pct": 0.05, "available": ["cpi"]}
+    doc["magnitude"]["event_yoy_pct"] = 0.6
+    macro = _macro({"evidence": build_evidence(doc)})
+    assert macro["status"] == "consistent" and _group(macro, "mechanism")[0].startswith("national CPI changed")
+    doc["context"]["macro"] = {"cpi": None, "fx": {"yoy_pct": 0.2}, "real_yoy_pct": None, "available": ["fx"]}
+    assert _macro({"evidence": build_evidence(doc)})["status"] == "context_only"
+
+
+def test_peer_population_is_reported_as_four_separate_counts():
+    from market_almanac.analytics.evidence import population, population_text
+
+    ext = {"n_peers": 60, "n_with_change": 41, "n_assessable": 22, "n_elevated": 18, "class": "widespread"}
+    assert population(ext, 71) == {"found": 71, "read": 60, "observed": 41, "assessable": 22, "elevated": 18}
+    t = population_text(ext, 71, "comparable markets", "high")
+    assert t == (
+        "71 comparable markets found (the 60 best observed were read); 41 reported a 12-month change within a month "
+        "of the peak; 22 had enough history to be assessed against their own past; 18 of those 22 were also "
+        "unusually high"
+    )
+    assert "(the" not in population_text({**ext, "n_peers": 71}, 71, "comparable markets", "high")
+
+
+def test_the_evidence_never_describes_the_whole_country_from_the_assessable_markets_alone():
+    peers = {
+        f"p{i}": (_meta(f"p{i}", "Rice (imported)"), shock(series(132, seed=60 + i), "2019-03-01", 9, 1.6))
+        for i in range(4)
+    }
+    doc = _doc_with_foods({}, peers=peers, peers_available=30)
+    px_text = next(x["text"] for x in doc["evidence"]["quantitative"] if x["text"].startswith("Comparable markets"))
+    assert "30 comparable markets found (the 4 best observed were read)" in px_text
+    assert "describes only the 4 assessable markets, not every market in the country" in px_text
+    concl = doc["evidence"]["conclusion"]["text"]
+    assert "assessable comparable markets (of 30 found)" in concl
+    assert doc["peers"]["n_available"] == 30
+
+
+def test_robust_z_thresholds_are_described_as_screening_rules_not_probabilities():
+    from market_almanac.analytics import shocks as sh
+
+    others = {f"f{i}": (_meta(f"f{i}", f"Food {i}"), series(132, seed=40 + i)) for i in range(5)}
+    doc = _doc_with_foods(others)
+    blob = json.dumps(doc) + sh.__doc__ + sh.METHOD
+    for banned in ("2.3%", "0.13%", "by chance", "normal distribution", "false-positive rate is"):
+        assert banned not in blob.replace("no false-positive rate is claimed", ""), banned
+    assert "screening rules, not calibrated significance tests" in doc["method"]["text"]
+    assert doc["evidence"]["rules"]["screening"] == sh.SCREENING_CAVEAT
+    assert any(
+        "is a probability, significance level or false-positive rate" in x["text"]
+        for x in doc["evidence"]["unsupported"]
+    )
+
+
+def test_an_episode_is_labelled_as_where_the_rule_fired_not_the_length_of_a_real_event():
+    from market_almanac.analytics.shocks import EPISODE_CAVEAT
+
+    others = {f"f{i}": (_meta(f"f{i}", f"Food {i}"), series(132, seed=40 + i)) for i in range(5)}
+    doc = _doc_with_foods(others)
+    assert doc["episode"] and doc["persistence"]["note"] == EPISODE_CAVEAT
+    ev = doc["evidence"]
+    assert any(EPISODE_CAVEAT in x["text"] for x in ev["quantitative"])
+    assert any("full duration of a real-world disruption" in x["text"] for x in ev["unsupported"])
+    assert "not the full duration of any event" in ev["conclusion"]["text"]
+    assert "persisted for" not in ev["conclusion"]["text"] and "It lasted" not in ev["conclusion"]["text"]
+    persistence = next(c for c in ev["assessment"] if c["key"] == "persistence")
+    assert persistence["detail"].startswith("detected ") and "split or truncate" in persistence["detail"]
 
 
 def test_large_but_ordinary_moves_of_other_foods_are_still_reported():

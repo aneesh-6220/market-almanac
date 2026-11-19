@@ -235,6 +235,7 @@ export const InvestigationSchema = z.object({
     duration_months: num.optional(),
     ongoing: z.boolean().optional(),
     retrace_6m_pct: num.optional(),
+    note: str.optional(),
   }),
   seasonality: z.object({
     status: z.string(),
@@ -263,9 +264,14 @@ export const InvestigationSchema = z.object({
       ),
     }),
     capped_at: z.number(),
-    n_available: z.number().optional(),
+    n_available: z.number().nullish(),
   }),
-  breadth: z.object({ extent: Extent, rows: z.array(PeerRow), capped_at: z.number() }),
+  breadth: z.object({
+    extent: Extent,
+    rows: z.array(PeerRow),
+    capped_at: z.number(),
+    n_available: z.number().nullish(),
+  }),
   context: z.object({
     weather: z.object({
       status: z.string(),
@@ -312,12 +318,15 @@ export const InvestigationSchema = z.object({
         status_text: z.string(),
         evidence: z.array(z.string()),
         needed: z.array(z.string()),
+        // evidence kept apart by kind (macro: nominal increases, historical unusualness, mechanism evidence, missing)
+        evidence_groups: z.array(z.object({ key: z.string(), label: z.string(), items: z.array(z.string()) })).optional(),
       }),
     ),
     gaps: z.array(z.string()),
     unsupported: z.array(Inference),
     conclusion: z.object({ text: z.string(), inference: z.string() }),
     assessment: z.array(z.object({ key: z.string(), label: z.string(), value: z.string(), tone: z.string(), detail: str })),
+    rules: z.object({ screening: str.optional(), episode: str.optional() }).passthrough().optional(),
   }),
   sources: z.array(z.object({ name: z.string(), use: z.string(), licence: z.string(), url: z.string() })),
 });
@@ -359,7 +368,8 @@ export const useShockFacets = (country?: string) =>
     ...long,
   });
 
-export type InvestigationParams = { event?: string; start?: string; end?: string };
+/** `snapshot` pins the price snapshot: the API answers 409 rather than serve different data under that link. */
+export type InvestigationParams = { event?: string; start?: string; end?: string; snapshot?: string };
 
 export const useInvestigation = (id: string | undefined, params: InvestigationParams) =>
   useQuery({
@@ -374,17 +384,28 @@ export const zText = (z: number | null | undefined): string =>
   z == null || !Number.isFinite(z) ? "—" : Math.abs(z) >= 10 ? `beyond ${z > 0 ? "+" : "−"}10` : `${z > 0 ? "+" : ""}${z.toFixed(1)}`;
 
 /** The configuration that reproduces a document exactly (snapshot aside, which the document records). */
-export const configParams = (d: Investigation): Required<InvestigationParams> => ({
+export const configParams = (d: Investigation): Required<Omit<InvestigationParams, "snapshot">> => ({
   event: d.config.event,
   start: d.config.window.start,
   end: d.config.window.end,
 });
 
-export function permalink(origin: string, d: Investigation): string {
+/**
+ * A link that names the price snapshot it was made from. Only the newest snapshot of a country is served, so after a
+ * data revision the link reports the mismatch instead of silently showing different numbers. Without `pinned` it is
+ * a live link: it loads whatever the site serves when it is opened.
+ */
+export function permalink(origin: string, d: Investigation, pinned = true): string {
   const p = configParams(d);
-  return `${origin}/investigate?series=${d.config.series_id}&event=${p.event}&start=${p.start}&end=${p.end}`;
+  const base = `${origin}/investigate?series=${d.config.series_id}&event=${p.event}&start=${p.start}&end=${p.end}`;
+  return pinned ? `${base}&snapshot=${d.config.snapshot_id}` : base;
 }
 
 export function exportUrl(d: Investigation, format: "md" | "json" | "csv", opts: { table?: string; link?: string } = {}): string {
-  return apiUrl(`/api/v1/investigations/${d.config.series_id}/export`, { ...configParams(d), format, ...opts });
+  return apiUrl(`/api/v1/investigations/${d.config.series_id}/export`, {
+    ...configParams(d),
+    snapshot: d.config.snapshot_id,
+    format,
+    ...opts,
+  });
 }

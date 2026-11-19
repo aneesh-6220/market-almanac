@@ -49,7 +49,7 @@ const SORT_OPTIONS = [
   { value: "unusual_down", label: "Most unusual fall" },
   { value: "change", label: "Largest 12-month rise" },
   { value: "change_down", label: "Largest 12-month fall" },
-  { value: "duration", label: "Longest" },
+  { value: "duration", label: "Longest run flagged" },
 ];
 const COVERAGE_OPTIONS = [
   { value: "0.5", label: "At least 50% observed" },
@@ -104,7 +104,10 @@ export function Discovery() {
         <Note>
           A movement is <strong>unusual</strong> when its 12-month change sits at least 2 robust standard deviations from that
           series&apos; own earlier 12-month changes. A large change is not automatically unusual: in a market with high
-          inflation, +40% a year can be ordinary. Series without enough history are listed as <em>not assessable</em>, never scored.
+          inflation, +40% a year can be ordinary. Series without enough history are listed as <em>not assessable</em>, never scored.{" "}
+          The thresholds are screening rules, not significance tests, so some listed movements will be chance: treat the list as
+          candidates to investigate. The months flagged are where the rule fired; they can split or cut short a longer real-world
+          disruption.
         </Note>
         <Link
           href={EXAMPLE.href}
@@ -228,7 +231,9 @@ function ShockTable({ items }: { items: Shock[] }) {
             <th scope="col" className="py-2 pr-3 text-right font-medium" title="Robust z-score against the series' own earlier 12-month changes">
               Unusualness
             </th>
-            <th scope="col" className="py-2 pr-3 text-right font-medium">Months</th>
+            <th scope="col" className="py-2 pr-3 text-right font-medium" title="Months in which the screening rule fired; not the full length of a real-world disruption">
+                Months flagged
+              </th>
             <th scope="col" className="py-2 pr-3 font-medium">Comparable markets</th>
             <th scope="col" className="py-2 font-medium">
               <span className="sr-only">Open</span>

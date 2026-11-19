@@ -21,16 +21,38 @@ describe("schemas accept what the API returns", () => {
 
 describe("reproducibility", () => {
   const d = InvestigationSchema.parse(fixture.investigation);
-  it("builds a permalink that pins the month and the window", () => {
-    const p = configParams(d);
-    expect(permalink("https://example.org", d)).toBe(
-      `https://example.org/investigate?series=${d.config.series_id}&event=${p.event}&start=${p.start}&end=${p.end}`,
-    );
+  const p = configParams(d);
+  const live = `https://example.org/investigate?series=${d.config.series_id}&event=${p.event}&start=${p.start}&end=${p.end}`;
+  it("builds a permalink that pins the month, the window and the price snapshot", () => {
+    expect(permalink("https://example.org", d)).toBe(`${live}&snapshot=${d.config.snapshot_id}`);
   });
-  it("exports with the same configuration", () => {
+  it("can still build a live link, which names no snapshot and so loads whatever the site serves", () => {
+    expect(permalink("https://example.org", d, false)).toBe(live);
+    expect(new URL(permalink("https://example.org", d, false)).searchParams.has("snapshot")).toBe(false);
+  });
+  it("exports with the same configuration and snapshot", () => {
     const u = new URL(exportUrl(d, "csv", { table: "peers" }));
     expect(u.pathname).toBe(`/api/v1/investigations/${d.config.series_id}/export`);
-    expect(Object.fromEntries(u.searchParams)).toMatchObject({ ...configParams(d), format: "csv", table: "peers" });
+    expect(Object.fromEntries(u.searchParams)).toMatchObject({
+      ...p,
+      snapshot: d.config.snapshot_id,
+      format: "csv",
+      table: "peers",
+    });
+  });
+});
+
+describe("evidence keeps kinds of evidence apart", () => {
+  const d = InvestigationSchema.parse(fixture.investigation);
+  it("carries the macro evidence as four separate groups", () => {
+    const macro = d.evidence.mechanisms.find((m) => m.key === "macro");
+    expect(macro?.evidence_groups?.map((g) => g.key)).toEqual(["nominal", "unusual", "mechanism", "missing"]);
+  });
+  it("carries the comparator population and the episode caveat", () => {
+    expect(d.peers.n_available).toBeGreaterThanOrEqual(d.peers.extent.n_peers);
+    expect(d.breadth.n_available).not.toBeUndefined();
+    if (d.episode) expect(d.persistence.note).toMatch(/not the duration of any real-world event/);
+    expect(d.evidence.rules?.screening).toMatch(/not calibrated significance tests/);
   });
 });
 

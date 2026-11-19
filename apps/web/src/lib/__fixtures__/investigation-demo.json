@@ -13,6 +13,7 @@
     "share_elevated": 0.0,
     "share_same_direction": 1.0
    },
+   "n_available": 1,
    "rows": [
     {
      "admin1_name": "Drylands",
@@ -523,14 +524,14 @@
      "value": "Yes"
     },
     {
-     "detail": "January 2020 to March 2020",
+     "detail": "detected January 2020 to March 2020 (may split or truncate a longer event)",
      "key": "persistence",
      "label": "Persistence",
      "tone": "neutral",
      "value": "3 months"
     },
     {
-     "detail": "1 of 7 assessable comparable markets also unusual",
+     "detail": "1 of 7 assessable comparable markets also unusual (7 found)",
      "key": "extent",
      "label": "Other markets",
      "tone": "neutral",
@@ -560,7 +561,7 @@
    ],
    "conclusion": {
     "inference": "descriptive and associational; no causal claim",
-    "text": "In February 2020 the price of Maize (white) in Quarry Gate (no coordinates) had risen 57.2% over 12 months, which is unusual for this market (robust z +3.6; higher than all 84 earlier 12-month changes). It lasted 3 months. Few comparable markets were unusually high at the time. Too few other foods in the same market could be assessed. This pattern is consistent with local supply or market-access disruption, but the data integrated here cannot establish which, if any, was responsible. It cannot assess weather-related production shock, policy intervention or transmission of international prices."
+    "text": "In February 2020 the price of Maize (white) in Quarry Gate (no coordinates) had risen 57.2% over 12 months, which is unusual for this market (robust z +3.6; higher than all 84 earlier 12-month changes). The screening rule flagged 3 months. The episode dates show where the screening rule fired, not the full duration of any event. Few of the 7 assessable comparable markets were unusually high at the time. Too few other foods in the same market could be assessed against their own past. This pattern is consistent with local supply or market-access disruption, but the data integrated here cannot establish which, if any, was responsible. It cannot assess weather-related production shock, policy intervention or transmission of international prices."
    },
    "gaps": [
     "the original survey records or enumerator notes",
@@ -608,7 +609,8 @@
     {
      "description": "A shock to national supply or demand moves the price in most markets that trade the commodity.",
      "evidence": [
-      "1 of 7 assessable comparable markets were unusually high at the same time"
+      "7 comparable markets found; 7 reported a 12-month change within a month of the peak; 7 had enough history to be assessed against their own past; 1 of those 7 were also unusually high",
+      "the classification (local) describes only the 7 assessable markets; the others could not be judged either way"
      ],
      "key": "national_commodity",
      "name": "Country-wide supply or demand change for this commodity (harvest shortfall, import or trade disruption)",
@@ -622,7 +624,7 @@
     {
      "description": "A disruption that affects one market or area raises prices there but not elsewhere.",
      "evidence": [
-      "1 of 7 assessable comparable markets were unusually high at the same time",
+      "7 comparable markets found; 7 reported a 12-month change within a month of the peak; 7 had enough history to be assessed against their own past; 1 of those 7 were also unusually high",
       "the episode lasted 3 months"
      ],
      "key": "local_disruption",
@@ -635,10 +637,43 @@
      "status_text": "Consistent with the available evidence"
     },
     {
-     "description": "When the currency loses value or inflation is high, most prices rise together, imported foods first.",
+     "description": "When the currency loses value or inflation is high, most prices rise together, imported foods first. Without a price index and an exchange rate, a broad nominal rise cannot be told apart from any other shock that moves many foods at once, and prices that look calm cannot rule inflation or depreciation out.",
      "evidence": [
+      "0 of the 1 other foods in the same market with a 12-month change rose by 25% or more in nominal terms around the peak (median +7.8%)",
+      "0 of 1 assessable other foods were unusually high against their own past",
+      "foods staying within their usual ranges is not evidence against inflation or depreciation, which can be habitual in a market",
       "national CPI changed +6.2% over the same 12 months",
       "the exchange rate to the US dollar changed +4.1%"
+     ],
+     "evidence_groups": [
+      {
+       "items": [
+        "0 of the 1 other foods in the same market with a 12-month change rose by 25% or more in nominal terms around the peak (median +7.8%)"
+       ],
+       "key": "nominal",
+       "label": "Broad nominal price increases (descriptive; not evidence of a mechanism)"
+      },
+      {
+       "items": [
+        "0 of 1 assessable other foods were unusually high against their own past",
+        "foods staying within their usual ranges is not evidence against inflation or depreciation, which can be habitual in a market"
+       ],
+       "key": "unusual",
+       "label": "Historically unusual (against each food's own past)"
+      },
+      {
+       "items": [
+        "national CPI changed +6.2% over the same 12 months",
+        "the exchange rate to the US dollar changed +4.1%"
+       ],
+       "key": "mechanism",
+       "label": "Evidence for a macroeconomic mechanism"
+      },
+      {
+       "items": [],
+       "key": "missing",
+       "label": "Missing evidence"
+      }
      ],
      "key": "macro",
      "name": "General inflation or currency depreciation",
@@ -748,7 +783,7 @@
       "persistence"
      ],
      "inference": "descriptive",
-     "text": "The 12-month change met the episode rule (|z| >= 2) from January 2020 to March 2020 (3 months)."
+     "text": "The screening rule (|robust z| >= 2, reaching 3 at least once) flagged the 12-month change from January 2020 to March 2020 (3 months). A detected episode is the run of months in which the screening rule fired. It can split one longer disruption into several episodes (a single month just below the threshold ends a run) or cut it short (the rule needs earlier history and observed months), so its dates and length are not the duration of any real-world event."
     },
     {
      "evidence": [
@@ -769,7 +804,14 @@
       "peers.extent"
      ],
      "inference": "associational",
-     "text": "1 of 7 assessable comparable markets were also unusually high within a month of the peak (median 12-month change across comparable markets +32.7%)."
+     "text": "Comparable markets (same commodity, unit, price type and currency): 7 comparable markets found; 7 reported a 12-month change within a month of the peak; 7 had enough history to be assessed against their own past; 1 of those 7 were also unusually high. The extent (local) describes only the 7 assessable markets, not every market in the country; the median 12-month change across the comparable markets with a change was +32.7%."
+    },
+    {
+     "evidence": [
+      "breadth.extent"
+     ],
+     "inference": "associational",
+     "text": "Other foods in the same market: 1 other foods found; 1 reported a 12-month change within a month of the peak; 1 had enough history to be assessed against their own past; 0 of those 1 were also unusually high (their median 12-month change was +7.8%). Too few could be assessed to classify the breadth of the movement."
     },
     {
      "evidence": [
@@ -787,6 +829,8 @@
     }
    ],
    "rules": {
+    "episode": "A detected episode is the run of months in which the screening rule fired. It can split one longer disruption into several episodes (a single month just below the threshold ends a run) or cut it short (the rule needs earlier history and observed months), so its dates and length are not the duration of any real-world event.",
+    "screening": "The robust z-score thresholds are screening rules, not calibrated significance tests: food-price changes are heavy-tailed and overlap from month to month, so a z-score is not a probability and no false-positive rate is claimed.",
     "statuses": {
      "cannot_be_assessed": "Cannot be assessed with the data integrated here",
      "consistent": "Consistent with the available evidence",
@@ -817,6 +861,16 @@
      "evidence": [],
      "inference": "descriptive",
      "text": "That prices of this commodity rose across the country."
+    },
+    {
+     "evidence": [],
+     "inference": "descriptive",
+     "text": "That a robust z-score is a probability, significance level or false-positive rate. The robust z-score thresholds are screening rules, not calibrated significance tests: food-price changes are heavy-tailed and overlap from month to month, so a z-score is not a probability and no false-positive rate is claimed."
+    },
+    {
+     "evidence": [],
+     "inference": "descriptive",
+     "text": "That the detected episode is the full duration of a real-world disruption. A detected episode is the run of months in which the screening rule fired. It can split one longer disruption into several episodes (a single month just below the threshold ends a run) or cut it short (the rule needs earlier history and observed months), so its dates and length are not the duration of any real-world event."
     }
    ]
   },
@@ -837,7 +891,7 @@
    "peak_price": 87.23
   },
   "method": {
-   "text": "12-month log price change compared with the same series' earlier 12-month changes (robust z-score: median and 1.4826 x MAD, scale floor 0.01; rank: share of earlier changes below it). Assessed only with at least 36 earlier changes from 4+ calendar years and at least 50% of the last 24 months observed. Episode: consecutive months with |z| >= 2.0 that reaches |z| >= 3.0 at least once; its peak is re-assessed against changes recorded before it began.",
+   "text": "12-month log price change compared with the same series' earlier 12-month changes (robust z-score: median and 1.4826 x MAD, scale floor 0.01; rank: share of earlier changes below it). Assessed only with at least 36 earlier changes from 4+ calendar years and at least 50% of the last 24 months observed. Episode: consecutive months with |z| >= 2.0 that reaches |z| >= 3.0 at least once; its peak is re-assessed against changes recorded before it began. The thresholds are screening rules, not calibrated significance tests, and an episode is where the rule fired: it can split or truncate a longer real-world disruption, so its length is not the duration of any event.",
    "version": "shock-1"
   },
   "observation_quality": {
@@ -1257,6 +1311,7 @@
   },
   "persistence": {
    "duration_months": 3,
+   "note": "A detected episode is the run of months in which the screening rule fired. It can split one longer disruption into several episodes (a single month just below the threshold ends a run) or cut it short (the rule needs earlier history and observed months), so its dates and length are not the duration of any real-world event.",
    "ongoing": false,
    "qualifying_months": 3,
    "retrace_6m_pct": -0.07566204287515776,

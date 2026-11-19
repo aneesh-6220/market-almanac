@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from market_almanac.analytics.evidence import STATUS_TEXT, month_name, pct
+from market_almanac.analytics.evidence import STATUS_TEXT, month_name, nominal_breadth, pct, population_text
+from market_almanac.analytics.shocks import EPISODE_CAVEAT, SCREENING_CAVEAT
 
 TABLES = ("signals", "peers", "market", "index")
 INFERENCE = {
@@ -109,8 +110,19 @@ def render_markdown(doc: dict[str, Any], link: str | None = None) -> str:
         "",
     ]
     if link:
-        q = f"series={s['series_id']}&event={cfg['event']}&start={cfg['window']['start']}&end={cfg['window']['end']}"
-        L += [f"Reproduce this investigation: {link.rstrip('/')}/investigate?{q}", ""]
+        q = (
+            f"series={s['series_id']}&event={cfg['event']}&start={cfg['window']['start']}&end={cfg['window']['end']}"
+            f"&snapshot={cfg['snapshot_id']}"
+        )
+        L += [
+            f"Reproduce this investigation: {link.rstrip('/')}/investigate?{q}",
+            "",
+            f"*This link names price snapshot `{cfg['snapshot_id']}`. The site serves only the newest snapshot of "
+            "each country, so if the data have been revised since, the link reports the mismatch instead of showing "
+            "different numbers. The snapshot id, configuration id and method version above identify the data this "
+            "brief was written from.*",
+            "",
+        ]
     L += ["## Research question", "", doc["question"], ""]
     L += ["## Summary", "", ev["conclusion"]["text"], "", f"*Inference: {ev['conclusion']['inference']}.*", ""]
     L += _table(
@@ -148,9 +160,12 @@ def render_markdown(doc: dict[str, Any], link: str | None = None) -> str:
 
     L += ["", "## Comparison with other markets", ""]
     px = doc["peers"]["extent"]
+    hl = "high" if doc["direction"] == "up" else "low"
     L += [
         f"Comparable markets: same commodity, unit ({unit}), price type and currency ({cur}) in {s['country_name']}. "
-        f"{px['n_peers']} found, {px['n_assessable']} assessable; classification **{px['class']}** ({px['rule']}).",
+        + population_text(px, doc["peers"].get("n_available"), "comparable markets", hl)
+        + f". Classification **{px['class']}**, which describes only the {px['n_assessable']} assessable markets "
+        f"({px['rule']}).",
         "",
     ]
     if doc["peers"]["rows"]:
@@ -171,11 +186,24 @@ def render_markdown(doc: dict[str, Any], link: str | None = None) -> str:
         if len(doc["peers"]["rows"]) > 30:
             L += ["", f"({len(doc['peers']['rows']) - 30} more in the CSV export.)"]
     br = doc["breadth"]["extent"]
+    nb = nominal_breadth(doc)
     L += [
         "",
-        f"Other foods in the same market and currency: {br['n_peers']} found, {br['n_assessable']} assessable; "
-        f"classification **{br['class']}**. Only relative (percentage) changes are compared across different foods.",
+        "Other foods in the same market and currency: "
+        + population_text(br, doc["breadth"].get("n_available"), "other foods", hl)
+        + f". Classification **{br['class']}**, which describes only the {br['n_assessable']} assessable foods. "
+        "Only relative (percentage) changes are compared across different foods.",
     ]
+    if nb["n_with_change"]:
+        L += [
+            "",
+            f"In nominal terms, {nb['n_large']} of the {nb['n_with_change']} other foods with a 12-month change "
+            f"around the peak {'rose' if hl == 'high' else 'fell'} by 25% or more "
+            f"(median {pct(nb['median_yoy_pct'])}). "
+            "A food that moved a lot but stayed within its own historical range is *not unusual* by this method; that "
+            "is a statement about its history, not about whether its price rose, and it is not evidence for or "
+            "against any macroeconomic mechanism.",
+        ]
 
     L += ["", "## Seasonality", ""]
     se = doc["seasonality"]
@@ -219,15 +247,17 @@ def render_markdown(doc: dict[str, Any], link: str | None = None) -> str:
         L += [f"- Exchange rate, local currency per US dollar: {pct(mac['fx']['yoy_pct'])} over 12 months."]
     else:
         L += ["- Exchange rate: not integrated for this country."]
+    if not mac.get("cpi") and not mac.get("fx"):
+        L += [
+            "- Without a price index or an exchange rate, an inflation or currency mechanism **cannot be assessed**: "
+            "other foods rising together, or staying within their usual ranges, neither supports nor argues against it."
+        ]
     L += ["- Missing context is reported as missing; it is never treated as zero."]
 
     L += ["", "## Possible mechanisms", ""]
     L += _table(
         ["Mechanism", "Assessment", "What the available data show", "What would be needed"],
-        [
-            [m["name"], STATUS_TEXT[m["status"]], "; ".join(m["evidence"]), "; ".join(m["needed"])]
-            for m in ev["mechanisms"]
-        ],
+        [[m["name"], STATUS_TEXT[m["status"]], _mech_evidence(m), "; ".join(m["needed"])] for m in ev["mechanisms"]],
     )
     L += ["", "## Evidence gaps", ""] + [f"- {g}" for g in ev["gaps"]]
     L += ["", "## What this evidence does not establish", ""]
@@ -266,6 +296,10 @@ def render_markdown(doc: dict[str, Any], link: str | None = None) -> str:
         "a year earlier, so a regular seasonal pattern does not by itself look unusual. Consecutive 12-month changes "
         "overlap: the effective number of independent observations is roughly the number of years.",
         "",
+        SCREENING_CAVEAT,
+        "",
+        EPISODE_CAVEAT,
+        "",
         "Prices are nominal and in local currency; nothing is converted between currencies or deflated unless a "
         "consumer price index is shown above. Comparisons across markets use only series with the same commodity, "
         "unit, price type and currency.",
@@ -286,10 +320,18 @@ def render_markdown(doc: dict[str, Any], link: str | None = None) -> str:
         "```",
         "",
         "Retrieve the same analysis from the API: `GET /api/v1/investigations/"
-        f"{s['series_id']}?event={cfg['event']}&start={cfg['window']['start']}&end={cfg['window']['end']}`.",
+        f"{s['series_id']}?event={cfg['event']}&start={cfg['window']['start']}&end={cfg['window']['end']}"
+        f"&snapshot={cfg['snapshot_id']}` (add the snapshot to be told if the data have since been revised).",
         "",
     ]
     return "\n".join(L)
+
+
+def _mech_evidence(m: dict[str, Any]) -> str:
+    """Evidence of a mechanism; where it is grouped, the groups are named so they cannot be mistaken for one another."""
+    if m.get("evidence_groups"):
+        return " ".join(f"**{g['label']}:** " + "; ".join(g["items"]) + "." for g in m["evidence_groups"])
+    return "; ".join(m["evidence"])
 
 
 def _json(v: Any) -> str:

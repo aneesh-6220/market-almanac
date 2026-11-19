@@ -43,7 +43,12 @@ const SECTIONS = [
 
 export function InvestigationView({ seriesId }: { seriesId: string }) {
   const { get, set } = useUrlState();
-  const params = { event: get("event") || undefined, start: get("start") || undefined, end: get("end") || undefined };
+  const params = {
+    event: get("event") || undefined,
+    start: get("start") || undefined,
+    end: get("end") || undefined,
+    snapshot: get("snapshot") || undefined,
+  };
   const q = useInvestigation(seriesId, params);
 
   return (
@@ -56,20 +61,35 @@ export function InvestigationView({ seriesId }: { seriesId: string }) {
       ) : q.isError ? (
         <div className="space-y-4">
           <ErrorState error={q.error} what="this investigation" />
+          {params.snapshot && (
+            <button type="button" className="mr-4 text-sm text-rain underline" onClick={() => set({ snapshot: null })}>
+              Open it with the data now served (the numbers may differ)
+            </button>
+          )}
           {(params.event || params.start || params.end) && (
-            <button type="button" className="text-sm text-rain underline" onClick={() => set({ event: null, start: null, end: null })}>
+            <button type="button" className="text-sm text-rain underline" onClick={() => set({ event: null, start: null, end: null, snapshot: null })}>
               Use the default month and window instead
             </button>
           )}
         </div>
       ) : (
-        <Document d={q.data} onConfig={(p) => set(p)} refreshing={q.isFetching} />
+        <Document d={q.data} onConfig={(p) => set({ ...p, snapshot: null })} refreshing={q.isFetching} pinned={!!params.snapshot} />
       )}
     </div>
   );
 }
 
-function Document({ d, onConfig, refreshing }: { d: Investigation; onConfig: (p: Record<string, string | null>) => void; refreshing: boolean }) {
+function Document({
+  d,
+  onConfig,
+  refreshing,
+  pinned,
+}: {
+  d: Investigation;
+  onConfig: (p: Record<string, string | null>) => void;
+  refreshing: boolean;
+  pinned: boolean;
+}) {
   const s = d.subject;
   const ep = d.episode;
   return (
@@ -94,6 +114,20 @@ function Document({ d, onConfig, refreshing }: { d: Investigation; onConfig: (p:
           {ep?.data_concern && <Tag tone="warn">Possible recording or unit error</Tag>}
         </div>
         <ConfigBar key={d.config_id} d={d} onConfig={onConfig} />
+        <p className="mt-2 max-w-3xl text-xs text-ink-3" data-testid="snapshot-note">
+          {pinned ? (
+            <>
+              This page was opened from a link pinned to price snapshot <code>{d.config.snapshot_id}</code>, which is the snapshot served now.
+            </>
+          ) : (
+            <>
+              This address is a <strong>live link</strong>: it loads whatever data the site serves when it is opened, currently price snapshot{" "}
+              <code>{d.config.snapshot_id}</code>, and could show different numbers after a data revision.
+            </>
+          )}{" "}
+          “Copy permalink” pins the snapshot: only the newest snapshot of each country is installed, so a pinned link reports a mismatch
+          instead of showing different data. Exports always record the snapshot.
+        </p>
       </header>
 
       <nav aria-label="Sections" className="flex flex-wrap gap-x-4 gap-y-1 text-sm print:hidden">
@@ -145,7 +179,7 @@ function ConfigBar({ d, onConfig }: { d: Investigation; onConfig: (p: Record<str
         <button type="submit" className="h-9 rounded bg-ink px-3 text-sm font-medium text-bg hover:bg-ink-2">
           Update
         </button>
-        <CopyButton label="Copy permalink" icon="share" text={() => permalink(window.location.origin, d)} />
+        <CopyButton label="Copy permalink" icon="share" text={() => permalink(window.location.origin, d, true)} />
       </form>
       {others.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-sm">
@@ -343,6 +377,11 @@ function OwnPast({ d }: { d: Investigation }) {
       <div className="mt-4">
         <h3 className="text-sm font-semibold text-ink">Persistence</h3>
         <p className="mt-1 text-sm text-ink-2">{persistenceText(d)}</p>
+        {d.episode && (
+          <p className="mt-1 text-xs text-ink-3" data-testid="episode-caveat">
+            {d.persistence.note ?? "A detected episode is where the screening rule fired; it can split or truncate a longer disruption, so its length is not the duration of a real-world event."}
+          </p>
+        )}
       </div>
     </Panel>
   );
@@ -362,10 +401,10 @@ function persistenceText(d: Investigation): string {
   const span = `${month(ep.start)} to ${month(ep.end)}`;
   const base =
     ps.verdict === "ongoing"
-      ? `Ongoing at the last observation (${ep.duration_months} months since ${month(ep.start)}).`
+      ? `The screening rule flagged ${ep.duration_months} months since ${month(ep.start)} and the change was still elevated at the last observation.`
       : ps.verdict === "single_month"
-        ? `A single month (${month(ep.start)}).`
-        : `${ep.duration_months} months, ${span}${ps.verdict === "persistent" ? " — persistent" : ""}.`;
+        ? `The screening rule flagged a single month (${month(ep.start)}).`
+        : `The screening rule flagged ${ep.duration_months} consecutive months, ${span}${ps.verdict === "persistent" ? " (persistent)" : ""}.`;
   const retrace =
     ep.retrace_6m_pct != null ? ` Six months after the peak the price was ${signedPct(ep.retrace_6m_pct)} relative to the peak.` : "";
   return base + retrace;
@@ -492,11 +531,18 @@ function Peers({ d }: { d: Investigation }) {
   );
 }
 
-function extentSentence(ex: Investigation["peers"]["extent"], what: string, available?: number): string {
-  const read = available != null && available > ex.n_peers ? `${ex.n_peers} best-observed of ${available} read` : `${ex.n_peers} in total`;
-  if (ex.n_assessable === 0) return `None of the ${ex.n_peers} ${what} could be assessed at this time (too short or sparse a history).`;
-  const med = ex.median_peer_yoy_pct != null ? ` Their median 12-month change was ${signedPct(ex.median_peer_yoy_pct)}.` : "";
-  return `${ex.n_elevated} of ${ex.n_assessable} assessable ${what} were also unusual in the same direction around the peak (${read}).${med}`;
+/**
+ * The comparator population as four nested counts (found, reported a change, assessable, unusual). The class
+ * (widespread, local, ...) describes only the assessable ones, and the text says so.
+ */
+function extentSentence(ex: Investigation["peers"]["extent"], what: string, available?: number | null): string {
+  const found = Math.max(available ?? ex.n_peers, ex.n_peers);
+  const read = found > ex.n_peers ? ` (the ${ex.n_peers} best observed were read)` : "";
+  const observed = ex.n_with_change != null ? `${ex.n_with_change} reported a 12-month change within a month of the peak; ` : "";
+  const med = ex.median_peer_yoy_pct != null ? ` The median 12-month change was ${signedPct(ex.median_peer_yoy_pct)}.` : "";
+  const head = `${found} ${what} found${read}; ${observed}`;
+  if (ex.n_assessable === 0) return `${head}none had enough history to be assessed against its own past.${med}`;
+  return `${head}${ex.n_assessable} had enough history to be assessed, and ${ex.n_elevated} of those ${ex.n_assessable} were also unusual in the same direction. The class describes only these ${ex.n_assessable} assessable ones.${med}`;
 }
 
 function peerOption(p: Palette, d: Investigation) {
@@ -595,10 +641,10 @@ function Breadth({ d }: { d: Investigation }) {
       ) : (
         <>
           <p className="text-ink">
-            <strong>{EXTENT_LABEL[ex.class] ?? ex.class}.</strong> {extentSentence(ex, "other foods")}
+            <strong>{EXTENT_LABEL[ex.class] ?? ex.class}.</strong> {extentSentence(ex, "other foods", d.breadth.n_available)}
           </p>
           <p className="mt-1 text-xs text-ink-3">Rule: {ex.rule}</p>
-          <PeerTable rows={d.breadth.rows} label="Other foods in the same market" capped={d.breadth.capped_at} total={ex.n_peers} first="commodity" />
+          <PeerTable rows={d.breadth.rows} label="Other foods in the same market" capped={d.breadth.capped_at} total={d.breadth.n_available ?? ex.n_peers} first="commodity" />
         </>
       )}
     </Panel>
@@ -717,12 +763,27 @@ function Evidence({ d }: { d: Investigation }) {
                 <Tag tone={MECH_TONE[m.status] ?? "muted"}>{m.status_text}</Tag>
               </div>
               <p className="mt-0.5 text-sm text-ink-2">{m.description}</p>
-              {m.evidence.length > 0 && (
-                <ul className="mt-1 list-disc pl-5 text-sm text-ink-2">
-                  {m.evidence.map((x, i) => (
-                    <li key={i}>{x}</li>
+              {m.evidence_groups && m.evidence_groups.length > 0 ? (
+                <div className="mt-2 space-y-2" data-testid={`evidence-groups-${m.key}`}>
+                  {m.evidence_groups.map((g) => (
+                    <div key={g.key}>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-3">{g.label}</h4>
+                      <ul className="list-disc pl-5 text-sm text-ink-2">
+                        {g.items.map((x, i) => (
+                          <li key={i}>{x}</li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
+              ) : (
+                m.evidence.length > 0 && (
+                  <ul className="mt-1 list-disc pl-5 text-sm text-ink-2">
+                    {m.evidence.map((x, i) => (
+                      <li key={i}>{x}</li>
+                    ))}
+                  </ul>
+                )
               )}
               {m.needed.length > 0 && <p className="mt-1 text-xs text-ink-3">Would need: {m.needed.join("; ")}.</p>}
             </li>
@@ -755,6 +816,7 @@ function Method({ d }: { d: Investigation }) {
   return (
     <Panel id="method" title="8. Method, reproducibility and export">
       <p className="text-sm text-ink-2">{d.method.text}</p>
+      {d.evidence.rules?.screening && <p className="mt-2 text-sm text-ink-2" data-testid="screening-caveat">{d.evidence.rules.screening}</p>}
       <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
         <Def label="Configuration id" value={<code className="text-sm">{d.config_id}</code>} hint="same configuration and snapshot, same document" />
         <Def label="Price snapshot" value={<code className="text-sm">{d.config.snapshot_id}</code>} />

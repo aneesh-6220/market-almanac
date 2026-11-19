@@ -32,10 +32,16 @@ Eligibility. An assessment is withheld, with the reason, when
 A z-score is never computed on a shorter or sparser record, however large the movement.
 
 Episodes. A run of consecutive assessable months with z >= Z_ELEVATED (2; <= -2 for falls) is an *unusual
-episode* if z reaches Z_TRIGGER (3, the Hampel identifier's threshold) in at least one of its months. The
-two thresholds (hysteresis) keep ordinary noise out: under a normal distribution about 2.3% of months exceed 2
-by chance but only 0.13% exceed 3, while a real shock keeps z above 2 for its whole duration, which is
-therefore measured from where it crosses 2. One missing month inside a run does not break it. Its peak is the
+episode* if z reaches Z_TRIGGER (3, the Hampel identifier's conventional threshold) in at least one of its
+months. The two thresholds (hysteresis) are a screening rule: a single month beyond 2 is common in noisy
+series, so a run must also reach 3 before it is listed, and it is measured from where it crosses 2. They are
+conventions, not calibrated significance tests. Food-price changes are heavy-tailed and overlap from month to
+month (consecutive 12-month changes share eleven months), so the share of ordinary months that cross either
+threshold is not a Gaussian tail probability, and no false-positive rate is claimed or estimated; the catalog
+is a list of candidates to investigate. The episode is where the rule fired: it can split one longer
+disruption in two (one month just below 2 ends a run) or cut it short (it needs earlier history and
+observed months), so its length is not the duration of any real-world event. One missing month inside a run
+does not break it. Its peak is the
 month with the largest 12-month change, and the peak is re-assessed against the changes recorded *before the
 episode began*, so an episode cannot dilute its own reference. Large nominal movements (|12-month change| >=
 LARGE_NOMINAL) are listed separately so that the distinction stays visible: as *large but typical* when every
@@ -74,6 +80,17 @@ MIN_BASELINE_OBS = 6
 REVERSAL_SHARE = 0.8
 IMPLAUSIBLE_MONTHLY_FACTOR = 4.0  # a price x4 or /4 within one month: more often a unit or recording change
 
+EPISODE_CAVEAT = (
+    "A detected episode is the run of months in which the screening rule fired. It can split one longer disruption "
+    "into several episodes (a single month just below the threshold ends a run) or cut it short (the rule needs "
+    "earlier history and observed months), so its dates and length are not the duration of any real-world event."
+)
+SCREENING_CAVEAT = (
+    "The robust z-score thresholds are screening rules, not calibrated significance tests: food-price changes are "
+    "heavy-tailed and overlap from month to month, so a z-score is not a probability and no false-positive rate is "
+    "claimed."
+)
+
 WITHHELD_TEXT = {
     "short_history": "fewer than {n} earlier 12-month changes to compare with (it has {have})",
     "few_years": "earlier 12-month changes come from only {have} calendar years (at least {n} are needed)",
@@ -88,7 +105,9 @@ METHOD = (
     f"least {MIN_REFERENCE} earlier changes from {MIN_REFERENCE_YEARS}+ calendar years and at least "
     f"{MIN_RECENT_COVERAGE:.0%} of the last {COVERAGE_WINDOW} months observed. Episode: consecutive months with "
     f"|z| >= {Z_ELEVATED} that reaches |z| >= {Z_TRIGGER} at least once; its peak is re-assessed against "
-    "changes recorded before it began."
+    "changes recorded before it began. The thresholds are screening rules, not calibrated significance tests, and "
+    "an episode is where the rule fired: it can split or truncate a longer real-world disruption, so its length is "
+    "not the duration of any event."
 )
 
 SIGNAL_COLUMNS = [

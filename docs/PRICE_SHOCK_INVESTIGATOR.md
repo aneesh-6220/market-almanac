@@ -52,8 +52,13 @@ every earlier one and further digits would be false precision.
 | earlier changes not degenerate (MAD at least the 0.01 floor) | prices carried forward for years give no estimate of normal variability (on the real data such series produced z ≈ 350 before this rule) |
 
 **Episodes.** A run of assessable months with z ≥ 2 (≤ −2 for falls) is an *unusual episode* if it reaches
-z ≥ 3 at least once (Hampel hysteresis: about 2.3% of months exceed 2 by chance, 0.13% exceed 3, while a real
-shock stays above 2 for its whole duration). A run never bridges an assessed month below the threshold. The peak
+z ≥ 3 at least once (Hampel hysteresis: one month beyond 2 is common in noisy series, so a run must also reach 3 to
+be listed). **These thresholds are screening rules, not calibrated significance tests.** Food-price changes are
+heavy-tailed and consecutive 12-month changes share eleven months, so the share of ordinary months that cross
+them is not a Gaussian tail probability and no false-positive rate is claimed or estimated. **An episode is where
+the rule fired, not the full duration of a real-world disruption**: it can split one longer disruption into
+several episodes (a single month just under 2 ends a run) or cut it short (the rule needs earlier history and
+observed months). A run never bridges an assessed month below the threshold. The peak
 is the month with the largest change, re-assessed against changes recorded before the episode began, so that an
 episode does not dilute its own reference.
 
@@ -83,12 +88,23 @@ Of the assessable comparable markets: **widespread** ≥ 50% elevated, **local**
 **inconclusive** with fewer than 3 assessable. An investigation reads at most the 60 best-observed comparable
 markets; the catalog's classification uses all of them.
 
+**Four counts, never one.** The comparator population is always reported as nested counts, because the class
+describes only the last-but-one of them: *found* (every comparable series that exists), *read* (the best observed,
+at most 60), *reported a 12-month change within a month of the peak*, and *assessable* (enough history to be judged
+against their own past), of which *unusual* is the count that drives the class. "Widespread" therefore means "most
+of the assessable markets", not "most markets in the country": in the worked example 67 comparable markets exist in
+Niger, the 60 best observed were read, 44 of them reported a 12-month change around the peak, 22 could be assessed and
+18 of those 22 were unusual. Markets that are not assessable are neither counted for nor against the movement being
+shared.
+
 **Price index.** The series and the median and middle half of comparable markets, each indexed to its own average
 over the 12 months before the episode (100). Indexing within a series keeps currency and unit semantics intact.
 
 **Other foods in the same market** (same currency, at most 40): the same rule gives **broad**, **narrow**,
 **mixed** or **inconclusive**. Their median 12-month change is always reported, because "not unusual" is not
-"flat": in the worked example other cereals rose 33–60% while staying within their own usual ranges.
+"flat": in the worked example other cereals rose 33–60% while staying within their own usual ranges. That is a
+broad **nominal** increase. It is reported separately from whether the foods were unusual, and from any evidence for
+a macroeconomic mechanism (below).
 
 **Seasonality.** The usual within-year profile from years **before** the episode (median of price / calendar-year
 mean by month); the change it predicts over the episode is compared with the observed change: largely, partly or
@@ -123,9 +139,17 @@ Every statement carries an inference label and the document fields it rests on.
 Mechanism statuses: *consistent*, *partly consistent*, *less likely* ("the available evidence argues against
 this being the main explanation"), *not indicated*, *context only*, *cannot be assessed*. Policy and
 international-price transmission are always *cannot be assessed*, because no policy records or world reference
-prices are integrated. Without CPI or exchange-rate data, other foods standing still does not count against
-general inflation (a currency effect reaches imported and traded foods first): the status is *not indicated*,
-not *less likely*.
+prices are integrated.
+
+**General inflation or currency depreciation** keeps four kinds of evidence apart and shows them separately
+(`evidence_groups`): *broad nominal price increases* (how many other foods in the market rose by 25% or more,
+which is description), *historically unusual* (how many were unusual against their own past), *evidence for the
+mechanism* (a price index or exchange rate, where integrated) and *missing evidence*. A broad nominal rise fits
+general inflation, but equally any shock that moves many foods; foods that stay within their usual ranges do not
+argue against inflation or depreciation either (inflation can be habitual, and a currency effect reaches imported and
+traded foods first). So **without a price index and an exchange rate the status is always *cannot be assessed***,
+whatever the other foods did; with only one of them it is *context only*; with a price index it is graded by the
+share of the rise the index accounts for.
 
 ## Reproducibility
 
@@ -139,8 +163,22 @@ An investigation is fully determined by its configuration:
 
 `config_id` is the first 16 hex digits of the SHA-256 of its canonical JSON. The same configuration on the same
 snapshot returns a byte-identical document (tested); a data revision changes the snapshot id and therefore the
-`config_id`. The permalink `/investigate?series=…&event=…&start=…&end=…` pins everything but the snapshot, which
-the document and brief record. Defaults: the most recent unusual rise without a data concern, a window from 24
+`config_id`.
+
+**Permalinks: live or pinned.** A deployment installs only the newest price snapshot of each country, so an
+older snapshot cannot be served and an immutable view of past data is not possible here. What is possible, and
+done, is to refuse to show different data under a link that names a snapshot:
+
+- `/investigate?series=…&event=…&start=…&end=…` is a **live link**. It loads whatever the site serves when it is
+  opened and can show different numbers after a data revision. The page says so.
+- *Copy permalink* adds `&snapshot=<id>`. The API (`snapshot` query parameter, also on the exports) then answers
+  **409** with the snapshot being served, and the page offers to open the current data, instead of silently
+  returning another dataset.
+- The exports always record the snapshot, the configuration id and the method version, so a brief or JSON file
+  identifies exactly which data it was written from even after the site has moved on. Older snapshots stay in the
+  research lake and in earlier data releases.
+
+Defaults: the most recent unusual rise without a data concern, a window from 24
 months before to 12 months after (at most 240 months).
 
 Exports: the research brief (Markdown, with question, findings, history and comparisons, method and eligibility,
@@ -173,15 +211,18 @@ for a shared movement; for contrast, a **local** episode from the first set:
 | 12-month change, June 2024 | +53.3% (690 against 450 XOF/kg) |
 | Unusual for this market? | yes: robust z +3.7, higher than all 71 earlier 12-month changes (6 years) |
 | Persistence | 8 months above the threshold, December 2023 to July 2024; 6 months after the peak the price was 5.8% lower |
-| Comparable markets | **widespread**: 18 of 22 assessable markets also unusual; median 12-month change +50% |
-| Other foods in Maradi | narrow by the rule (0 of 3 assessable unusual), but millet, sorghum and maize rose 33–60% within their own usual ranges |
+| Comparable markets | **widespread**, among the assessable ones only: 67 found, 60 read, 44 with a 12-month change, 22 assessable, 18 of those unusual; median 12-month change +50% |
+| Other foods in Maradi | narrow by the rule (8 found, 3 with a change, 3 assessable, 0 unusual), but all 3 (millet, sorghum, maize) rose 33–60% in nominal terms, within their own usual ranges |
 | Seasonal? | no: the usual pattern implies −2.8% over those months |
 | Data | 37 of 37 months observed, no flagged records |
 
 **What the investigator concludes.** The pattern is consistent with a country-wide change in the supply of or
 demand for imported rice; a recording error and a purely local disruption are less likely; the usual seasonal
-pattern runs the other way. General inflation or currency effects are *not indicated* (no CPI or exchange-rate
-series is integrated for Niger). Policy measures and international price transmission *cannot be assessed*.
+pattern runs the other way. **General inflation or currency depreciation cannot be assessed**: no CPI or
+exchange-rate series is integrated for Niger. Several other foods in Maradi did rise substantially in nominal terms
+(millet, sorghum and maize by 33–60%), so the rise is not confined to imported rice; but they stayed within their own
+usual ranges, and neither their broad nominal increase nor their not being unusual is evidence for or against an
+inflation or currency mechanism. Policy measures and international price transmission also *cannot be assessed*.
 
 **What it deliberately does not say.** Niger's borders with neighbouring ECOWAS states were closed under
 sanctions after the July 2023 coup, which is a plausible country-wide mechanism for imported goods. The
@@ -269,7 +310,14 @@ market-almanac global prices-bundle  <──────────────
 - The reference is the series' own past. A market that has been in turmoil for its whole record has a wide
   reference, so a later shock looks less unusual.
 - Robust z on 12-month changes is a screening statistic, not a test with a calibrated false-positive rate across
-  125,000 series: some unusual episodes are chance, and the catalog is a list of candidates to investigate.
+  125,000 series: some unusual episodes are chance, and the catalog is a list of candidates to investigate. The
+  thresholds (2 and 3) are conventions. Food-price changes are heavy-tailed and consecutive 12-month changes
+  overlap, so a z-score is not a Gaussian tail probability, and no probability or error rate is stated anywhere.
+- A detected episode is where the screening rule fired. It can split a longer disruption into several episodes or
+  cut it short, so its dates and length are never presented as the duration of a real-world event.
+- Without a price index and an exchange rate, general inflation or currency depreciation cannot be assessed, and
+  neither a broad nominal rise nor calm prices elsewhere changes that.
+- Links name a price snapshot only if copied as a permalink; only the newest snapshot is served (see Reproducibility).
 - Comparable markets are defined administratively (same country), not by trade links or distance.
 - Episodes split when one month dips below the threshold (see the worked example).
 - Weather and macro context are contextual only; policy, trade flows, conflict and world prices are not integrated.

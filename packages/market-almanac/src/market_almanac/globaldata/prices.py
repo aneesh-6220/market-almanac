@@ -742,6 +742,16 @@ class GlobalPrices:
         by_id = {str(r["series_id"]): catalog_record(r) for r in df.to_dict("records")}
         return [by_id[s] for s in series_ids if s in by_id]
 
+    def market_series_count(self, row: Any, min_observations: int = 12) -> int:
+        """How many other foods of the same market and currency :meth:`market_series_ids` can choose from."""
+        df = self._query(
+            f"""SELECT count(*) AS n FROM {self._catalog_sql()}
+                WHERE country_iso3 = ? AND market_code = ? AND currency = ? AND commodity_code <> ?
+                  AND n_observations >= ?""",
+            [row["country_iso3"], row["market_code"], row["currency"], row["commodity_code"], int(min_observations)],
+        )
+        return int(df["n"].iloc[0])
+
     def market_series_ids(self, row: Any, limit: int = 40, min_observations: int = 12) -> list[str]:
         """Other foods in the same market and currency (different commodity), for breadth comparisons."""
         df = self._query(

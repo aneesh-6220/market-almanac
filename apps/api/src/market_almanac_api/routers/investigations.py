@@ -35,6 +35,10 @@ router = APIRouter(prefix="/api/v1", tags=["investigations"])
 ISO3 = Annotated[str | None, Query(pattern=r"^[A-Z]{3}$")]
 CODE = Annotated[str | None, Query(pattern=r"^[A-Za-z0-9._:\- ]{1,80}$")]
 Month = Annotated[str | None, Query(pattern=MONTH)]
+SnapshotId = Annotated[
+    str | None,
+    Query(pattern=r"^[A-Za-z0-9_.\-]{1,64}$", description="require this price snapshot (409 if another is served)"),
+]
 LINK = r"^https?://[A-Za-z0-9.:\-]+(/[A-Za-z0-9._\-/]*)?$"
 
 _DOCS: OrderedDict[tuple[Any, ...], dict[str, Any]] = OrderedDict()
@@ -152,9 +156,25 @@ def _series_inputs(gp: Any, iso3: str, ids: list[str]) -> dict[str, tuple[dict[s
     return {sid: (meta.get(sid, {}), panel[sid].dropna()) for sid in ids if sid in panel.columns}
 
 
-def build_investigation(series_id: str, event: str | None, start: str | None, end: str | None) -> dict[str, Any]:
+def build_investigation(
+    series_id: str,
+    event: str | None,
+    start: str | None,
+    end: str | None,
+    snapshot: str | None = None,
+) -> dict[str, Any]:
+    """The investigation document. ``snapshot`` pins the price snapshot: only the newest snapshot of a country is
+    installed here, so a different one cannot be served, and the request fails with 409 naming the one that is,
+    instead of silently returning a different dataset under a link that promised another."""
     ref = resolve_series(series_id)
     gp = _gp()
+    if snapshot is not None and snapshot != str(ref.snapshot_id):
+        raise HTTPException(
+            409,
+            f"This link pins price snapshot {snapshot}, but this deployment serves {ref.snapshot_id} for this "
+            "country (older snapshots are not installed). The numbers may differ from the ones the link was made "
+            "for; open it without the snapshot to see the current data.",
+        )
     key = (series_id, ref.snapshot_id, event, start, end)
     with _DOCS_LOCK:
         if key in _DOCS:
@@ -166,6 +186,7 @@ def build_investigation(series_id: str, event: str | None, start: str | None, en
     all_peers = [s for s in gp.peer_ids(meta) if s != series_id]
     peer_ids = all_peers[:MAX_PEERS]
     market_ids = gp.market_series_ids(meta, limit=MAX_MARKET_SERIES) if meta.get("market_code") else []
+    market_available = gp.market_series_count(meta) if meta.get("market_code") else 0
     macro, _ = cache.frame("macro")
     try:
         raw = gp.raw_rows(iso3, series_id)
@@ -186,11 +207,12 @@ def build_investigation(series_id: str, event: str | None, start: str | None, en
             start=start,
             end=end,
             country_name=iso3_names().get(iso3, iso3),
+            peers_available=len(all_peers),
+            market_available=market_available,
         )
     except InvestigationError as e:
         raise HTTPException(422, str(e)) from e
     doc["sources"] = SOURCES
-    doc["peers"]["n_available"] = len(all_peers)  # comparable markets in the country; at most MAX_PEERS are read
     doc = _clean(doc)
     with _DOCS_LOCK:
         _DOCS[key] = doc
@@ -229,14 +251,16 @@ def investigation(
     ] = None,
     start: Annotated[str | None, Query(pattern=MONTH, description="window start (default: 24 months before)")] = None,
     end: Annotated[str | None, Query(pattern=MONTH, description="window end (default: 12 months after)")] = None,
+    snapshot: SnapshotId = None,
 ) -> dict[str, Any]:
     """A reproducible investigation of one series around one month: magnitude, unusualness, persistence,
     seasonality, comparable markets, other foods in the market, available context, and structured evidence.
 
     The returned ``config`` (with its ``config_id``) reproduces the analysis; the same configuration on the same
-    snapshot always returns the same document.
+    snapshot always returns the same document. With ``snapshot`` the request succeeds only if that is the snapshot
+    being served (409 otherwise): a link that names a snapshot never silently shows another.
     """
-    return build_investigation(series_id, event, start, end)
+    return build_investigation(series_id, event, start, end, snapshot)
 
 
 @router.get("/investigations/{series_id}/export", response_model=None)
@@ -247,12 +271,13 @@ def export(
     event: Month = None,
     start: Month = None,
     end: Month = None,
+    snapshot: SnapshotId = None,
     link: Annotated[
         str | None, Query(max_length=300, pattern=r"^https?://[A-Za-z0-9.:\-]+(/[A-Za-z0-9._\-/]*)?$")
     ] = None,
 ) -> Response:
     """The research brief (Markdown), the full investigation (JSON) or one of its tables (CSV), as a download."""
-    doc = build_investigation(series_id, event, start, end)
+    doc = build_investigation(series_id, event, start, end, snapshot)
     stem = f"price-shock-{series_id}-{doc['config']['event']}"
     if format == "json":
         body = json.dumps(doc, indent=1, sort_keys=True, default=str)

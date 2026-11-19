@@ -212,3 +212,44 @@ def test_a_deployment_without_the_episode_table_says_so_without_inviting_retries
     for path, params in (("/api/v1/shocks", {}), ("/api/v1/shocks/facets", {"country": "TST"})):
         r = client.get(path, params=params)
         assert r.status_code == 501 and "not installed" in r.json()["detail"], path
+
+
+def test_a_snapshot_pin_is_verified_and_never_silently_ignored(client, unusual):
+    sid = unusual["series_id"]
+    base = client.get(f"/api/v1/investigations/{sid}").json()
+    snap = base["config"]["snapshot_id"]
+    ok = client.get(f"/api/v1/investigations/{sid}", params={"snapshot": snap})
+    assert ok.status_code == 200 and ok.json()["config_id"] == base["config_id"]
+    stale = client.get(f"/api/v1/investigations/{sid}", params={"snapshot": "19990101T000000_deadbe"})
+    assert stale.status_code == 409
+    detail = stale.json()["detail"]
+    assert "19990101T000000_deadbe" in detail and snap in detail and "without the snapshot" in detail
+    # the exports are pinned the same way, so a brief cannot be written from a different dataset than the link names
+    exp = f"/api/v1/investigations/{sid}/export"
+    assert client.get(exp, params={"format": "json", "snapshot": snap}).status_code == 200
+    assert client.get(exp, params={"format": "md", "snapshot": "19990101T000000_deadbe"}).status_code == 409
+    assert client.get(f"/api/v1/investigations/{sid}", params={"snapshot": "not a snapshot!"}).status_code == 422
+
+
+def test_the_brief_carries_the_snapshot_and_keeps_the_corrected_caveats(client, unusual):
+    sid = unusual["series_id"]
+    d = client.get(f"/api/v1/investigations/{sid}").json()
+    snap = d["config"]["snapshot_id"]
+    md = client.get(
+        f"/api/v1/investigations/{sid}/export", params={"format": "md", "link": "https://example.org", "snapshot": snap}
+    ).text
+    assert f"&snapshot={snap}" in md and "instead of showing different numbers" in md
+    assert f"price snapshot `{snap}`" in md
+    assert "screening rules, not calibrated significance tests" in md
+    assert "not the duration of any real-world event" in md
+    macro = next(m for m in d["evidence"]["mechanisms"] if m["key"] == "macro")
+    assert [g["key"] for g in macro["evidence_groups"]] == ["nominal", "unusual", "mechanism", "missing"]
+    for label in ("Broad nominal price increases", "Historically unusual", "Missing evidence"):
+        assert label in md
+    if not d["context"]["macro"]["cpi"] and not d["context"]["macro"]["fx"]:
+        assert macro["status"] == "cannot_be_assessed"
+        assert "cannot be assessed" in md
+    px = d["peers"]["extent"]
+    if px["n_peers"]:
+        assert f"{px['n_assessable']} had enough history to be assessed" in md
+    assert "n_available" in d["peers"] and "n_available" in d["breadth"]

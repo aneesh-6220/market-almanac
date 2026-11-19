@@ -20,9 +20,17 @@ from __future__ import annotations
 
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
-from market_almanac.analytics.shocks import LARGE_NOMINAL, MIN_REFERENCE, Z_ELEVATED
+from market_almanac.analytics.shocks import (
+    EPISODE_CAVEAT,
+    LARGE_NOMINAL,
+    MIN_REFERENCE,
+    SCREENING_CAVEAT,
+    Z_ELEVATED,
+    Z_TRIGGER,
+)
 
 STATUS_TEXT = {
     "consistent": "Consistent with the available evidence",
@@ -43,6 +51,55 @@ def _median_clause(ext: dict[str, Any]) -> str:
     if abs(med) >= LARGE_NOMINAL and ext.get("n_elevated", 0) < ext.get("n_assessable", 0) / 2:
         clause += ", large but mostly within their own usual ranges"
     return clause + ")"
+
+
+def population(ext: dict[str, Any], available: int | None = None) -> dict[str, int | None]:
+    """The comparator population as four nested counts, which must never be confused with one another.
+
+    ``found``: every comparable series that exists (before the cap on how many an investigation reads);
+    ``read``: the ones this investigation read (the best observed); ``observed``: those with a 12-month change
+    within a month of the peak; ``assessable``: those with enough history to be judged against their own past
+    (``elevated`` of them were unusual). Extent classes describe only the assessable ones.
+    """
+    read = int(ext["n_peers"])
+    return {
+        "found": max(int(available), read) if available is not None else read,
+        "read": read,
+        "observed": ext.get("n_with_change"),
+        "assessable": int(ext["n_assessable"]),
+        "elevated": int(ext["n_elevated"]),
+    }
+
+
+def population_text(ext: dict[str, Any], available: int | None, what: str, hl: str) -> str:
+    p = population(ext, available)
+    first = f"{p['found']} {what} found"
+    if p["read"] < p["found"]:
+        first += f" (the {p['read']} best observed were read)"
+    parts = [first]
+    if p["observed"] is not None:
+        parts.append(f"{p['observed']} reported a 12-month change within a month of the peak")
+    parts.append(f"{p['assessable']} had enough history to be assessed against their own past")
+    if p["assessable"]:
+        parts.append(f"{p['elevated']} of those {p['assessable']} were also unusually {hl}")
+    return "; ".join(parts)
+
+
+def nominal_breadth(doc: dict[str, Any]) -> dict[str, Any]:
+    """How many other foods in the market moved a lot in nominal terms, whether or not that was unusual for them.
+
+    "Not unusual" means within a food's own historical range; it does not mean the price was flat. This is a
+    plain description of nominal changes and is not evidence for any mechanism.
+    """
+    up = doc["direction"] == "up"
+    ys = [r["yoy_pct"] for r in doc["breadth"]["rows"] if r.get("yoy_pct") is not None]
+    big = [y for y in ys if (y >= LARGE_NOMINAL if up else y <= -LARGE_NOMINAL)]
+    return {
+        "n_with_change": len(ys),
+        "n_large": len(big),
+        "median_yoy_pct": float(np.median(ys)) if ys else None,
+        "min_large_yoy_pct": (min(big) if up else max(big)) if big else None,
+    }
 
 
 def rank_text(share: float, n: int, up: bool) -> str:
@@ -192,10 +249,12 @@ def quantitative(doc: dict[str, Any]) -> list[dict[str, Any]]:
         if ep["kind"] == "unusual":
             out.append(
                 _st(
-                    f"The 12-month change met the episode rule (|z| >= {Z_ELEVATED:g}) from {month_name(ep['start'])} "
-                    f"to {month_name(ep['end'])} ({ep['duration_months']} months"
+                    f"The screening rule (|robust z| >= {Z_ELEVATED:g}, reaching {Z_TRIGGER:g} at least once) flagged "
+                    f"the 12-month change from {month_name(ep['start'])} to {month_name(ep['end'])} "
+                    f"({ep['duration_months']} months"
                     + (", and it was still elevated at the last observation" if ep["ongoing"] else "")
-                    + ").",
+                    + "). "
+                    + EPISODE_CAVEAT,
                     keys=["episode", "persistence"],
                 )
             )
@@ -217,23 +276,26 @@ def quantitative(doc: dict[str, Any]) -> list[dict[str, Any]]:
                 keys=["seasonality"],
             )
         )
+    hl = "high" if doc["direction"] == "up" else "low"
     px = doc["peers"]["extent"]
     if px["n_peers"]:
+        pop = population_text(px, doc["peers"].get("n_available"), "comparable markets", hl)
         if px["class"] == "inconclusive":
             out.append(
                 _st(
-                    f"Only {px['n_assessable']} of {px['n_peers']} comparable markets (same commodity, unit, price "
-                    "type "
-                    "and currency) could be assessed at that time, too few to judge whether the movement was shared.",
+                    f"Comparable markets (same commodity, unit, price type and currency): {pop}. Fewer than "
+                    "3 could be assessed, too few to judge whether the movement was shared.",
+                    "associational",
                     keys=["peers.extent"],
                 )
             )
         else:
             out.append(
                 _st(
-                    f"{px['n_elevated']} of {px['n_assessable']} assessable comparable markets were also unusually "
-                    f"{'high' if doc['direction'] == 'up' else 'low'} within a month of the peak (median 12-month "
-                    f"change across comparable markets {pct(px['median_peer_yoy_pct'])}).",
+                    f"Comparable markets (same commodity, unit, price type and currency): {pop}. The extent "
+                    f"({px['class']}) describes only the {px['n_assessable']} assessable markets, not every market in "
+                    f"the country; the median 12-month change across the comparable markets with a change was "
+                    f"{pct(px['median_peer_yoy_pct'])}.",
                     "associational",
                     keys=["peers.extent"],
                 )
@@ -243,13 +305,17 @@ def quantitative(doc: dict[str, Any]) -> list[dict[str, Any]]:
             _st("No other market reports this commodity in the same unit, price type and currency.", keys=["peers"])
         )
     br = doc["breadth"]["extent"]
-    if br["n_peers"] and br["class"] != "inconclusive":
+    if br["n_peers"]:
         out.append(
             _st(
-                f"In the same market, {br['n_elevated']} of {br['n_assessable']} other assessable foods were also "
-                f"unusually {'high' if doc['direction'] == 'up' else 'low'} at the same time"
+                "Other foods in the same market: "
+                + population_text(br, doc["breadth"].get("n_available"), "other foods", hl)
                 + _median_clause(br)
-                + ".",
+                + (
+                    ". Too few could be assessed to classify the breadth of the movement."
+                    if br["class"] == "inconclusive"
+                    else f". The breadth ({br['class']}) describes only the {br['n_assessable']} assessable foods."
+                ),
                 "associational",
                 keys=["breadth.extent"],
             )
@@ -284,18 +350,27 @@ def _mechanisms(doc: dict[str, Any]) -> list[dict[str, Any]]:
     up = doc["direction"] == "up"
     out: list[dict[str, Any]] = []
 
-    def add(key: str, name: str, desc: str, status: str, evidence: list[str], needed: list[str]) -> None:
-        out.append(
-            {
-                "key": key,
-                "name": name,
-                "description": desc,
-                "status": status,
-                "status_text": STATUS_TEXT[status],
-                "evidence": evidence,
-                "needed": needed,
-            }
-        )
+    def add(
+        key: str,
+        name: str,
+        desc: str,
+        status: str,
+        evidence: list[str],
+        needed: list[str],
+        groups: list[dict[str, Any]] | None = None,
+    ) -> None:
+        item: dict[str, Any] = {
+            "key": key,
+            "name": name,
+            "description": desc,
+            "status": status,
+            "status_text": STATUS_TEXT[status],
+            "evidence": evidence,
+            "needed": needed,
+        }
+        if groups is not None:
+            item["evidence_groups"] = groups
+        out.append(item)
 
     # 1. data problems
     ev_rep: list[str] = []
@@ -350,11 +425,15 @@ def _mechanisms(doc: dict[str, Any]) -> list[dict[str, Any]]:
 
     # 3. country-wide driver for this commodity
     c_ev = [
-        f"{px['n_elevated']} of {px['n_assessable']} assessable comparable markets were unusually "
-        f"{'high' if up else 'low'} at the same time"
-        if px["n_assessable"]
-        else "no comparable market could be assessed"
+        population_text(px, doc["peers"].get("n_available"), "comparable markets", "high" if up else "low")
+        if px["n_peers"]
+        else "no other market reports this commodity in the same unit, price type and currency"
     ]
+    if px["n_assessable"]:
+        c_ev.append(
+            f"the classification ({px['class']}) describes only the {px['n_assessable']} assessable markets; the "
+            "others could not be judged either way"
+        )
     c_status = {
         "widespread": "consistent",
         "mixed": "partly_consistent",
@@ -394,41 +473,77 @@ def _mechanisms(doc: dict[str, Any]) -> list[dict[str, Any]]:
         ],
     )
 
-    # 5. general inflation / currency
-    m_ev: list[str] = []
-    if br["class"] != "inconclusive":
-        m_ev.append(
-            f"{br['n_elevated']} of {br['n_assessable']} other assessable foods in the same market were also unusually "
-            f"{'high' if up else 'low'}" + _median_clause(br)
+    # 5. general inflation / currency. Four things are kept apart: broad nominal increases, historical
+    # unusualness, evidence for a macroeconomic mechanism, and the evidence that is missing. Without a price index
+    # or an exchange rate, nothing here can support or argue against the mechanism, whatever other foods did.
+    nb = nominal_breadth(doc)
+    nominal_items: list[str] = []
+    if nb["n_with_change"]:
+        nominal_items.append(
+            f"{nb['n_large']} of the {nb['n_with_change']} other foods in the same market with a 12-month change "
+            f"{'rose' if up else 'fell'} by {LARGE_NOMINAL * 100:.0f}% or more in nominal terms around the peak "
+            f"(median {pct(nb['median_yoy_pct'])})"
         )
-    if mac.get("cpi"):
-        m_ev.append(f"national CPI changed {pct(mac['cpi']['yoy_pct'])} over the same 12 months")
-    if mac.get("fx"):
-        m_ev.append(f"the exchange rate to the US dollar changed {pct(mac['fx']['yoy_pct'])}")
-    yoy = doc["magnitude"]["event_yoy_pct"]
-    if mac.get("cpi") and yoy:
-        share = mac["cpi"]["yoy_pct"] / yoy if yoy else 0
-        g_status = "consistent" if share >= 0.5 else "partly_consistent" if share >= 0.2 else "less_likely"
-    elif br["class"] in ("broad", "mixed"):
-        # co-movement of other foods fits general inflation, but also any shock that hits many foods at once
-        g_status = "partly_consistent"
-    elif br["class"] == "narrow":
-        # without price-index or exchange-rate data, local foods standing still does not rule out a currency
-        # effect, which reaches imported and traded foods first
-        g_status = "not_indicated"
+        if nb["n_large"] and br["n_elevated"] < br["n_assessable"] / 2:
+            nominal_items.append(
+                "most of those nominal changes stayed within each food's own historical range, which is a "
+                "statement about history, not about whether prices rose"
+            )
     else:
-        g_status = "cannot_be_assessed"
+        nominal_items.append("no other food in this market has a 12-month change around the peak to compare")
+    unusual_items = [
+        f"{br['n_elevated']} of {br['n_assessable']} assessable other foods were unusually {'high' if up else 'low'} "
+        "against their own past"
+        if br["n_assessable"]
+        else "none of the other foods could be assessed against its own past"
+    ]
+    if br["n_assessable"] and br["n_elevated"] < br["n_assessable"] / 2:
+        unusual_items.append(
+            "foods staying within their usual ranges is not evidence against inflation or depreciation, which can "
+            "be habitual in a market"
+        )
+    mech_items: list[str] = []
+    if mac.get("cpi"):
+        mech_items.append(f"national CPI changed {pct(mac['cpi']['yoy_pct'])} over the same 12 months")
+    if mac.get("fx"):
+        mech_items.append(f"the exchange rate to the US dollar changed {pct(mac['fx']['yoy_pct'])}")
+    missing_items: list[str] = []
     if not mac.get("cpi"):
-        m_ev.append("no consumer price index is integrated for this country")
+        missing_items.append("no consumer price index is integrated for this country")
     if not mac.get("fx"):
-        m_ev.append("no exchange-rate series is integrated for this country")
+        missing_items.append("no exchange-rate series is integrated for this country")
+    if not mech_items:
+        mech_items.append("none: neither a price index nor an exchange rate is available to test this mechanism")
+    yoy = doc["magnitude"]["event_yoy_pct"]
+    if mac.get("cpi") and up and yoy and yoy > 0:
+        share = mac["cpi"]["yoy_pct"] / yoy
+        g_status = "consistent" if share >= 0.5 else "partly_consistent" if share >= 0.2 else "less_likely"
+    elif mac.get("cpi") or mac.get("fx"):
+        g_status = "context_only"  # a measurement placed alongside the prices, not evaluated as an explanation
+    else:
+        # A broad nominal rise fits inflation, but equally any shock that hits many foods; calm foods do not rule
+        # it out either (a currency effect reaches imported and traded foods first). Not assessable, not unlikely.
+        g_status = "cannot_be_assessed"
+    groups = [
+        {
+            "key": "nominal",
+            "label": "Broad nominal price increases (descriptive; not evidence of a mechanism)",
+            "items": nominal_items,
+        },
+        {"key": "unusual", "label": "Historically unusual (against each food's own past)", "items": unusual_items},
+        {"key": "mechanism", "label": "Evidence for a macroeconomic mechanism", "items": mech_items},
+        {"key": "missing", "label": "Missing evidence", "items": missing_items},
+    ]
     add(
         "macro",
         "General inflation or currency depreciation",
-        "When the currency loses value or inflation is high, most prices rise together, imported foods first.",
+        "When the currency loses value or inflation is high, most prices rise together, imported foods first. Without "
+        "a price index and an exchange rate, a broad nominal rise cannot be told apart from any other shock that "
+        "moves many foods at once, and prices that look calm cannot rule inflation or depreciation out.",
         g_status,
-        m_ev,
+        [x for g in groups for x in g["items"]],
         ["monthly consumer price index and exchange rate for the country (integrated only where listed above)"],
+        groups,
     )
 
     # 6. weather / production
@@ -510,6 +625,29 @@ def _unsupported(doc: dict[str, Any]) -> list[dict[str, Any]]:
                 "causal",
             )
         )
+    out.append(
+        _st(
+            "That a robust z-score is a probability, significance level or false-positive rate. " + SCREENING_CAVEAT,
+            "descriptive",
+        )
+    )
+    if doc["episode"]:
+        out.append(
+            _st(
+                "That the detected episode is the full duration of a real-world disruption. " + EPISODE_CAVEAT,
+                "descriptive",
+            )
+        )
+    mac = doc["context"]["macro"]
+    if not mac.get("cpi") and not mac.get("fx"):
+        out.append(
+            _st(
+                "That inflation or currency depreciation was absent or unlikely. No price index or exchange rate is "
+                "integrated for this country, and other foods staying within their usual ranges does not rule "
+                "either out.",
+                "descriptive",
+            )
+        )
     if doc["context"]["weather"].get("status") == "ok":
         out.append(
             _st(
@@ -573,28 +711,47 @@ def conclusion(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[st
     if ep and ep["kind"] == "unusual":
         parts.append(
             {
-                "single_month": "The unusual change lasted a single month.",
-                "short": f"It lasted {ep['duration_months']} months.",
-                "persistent": f"It persisted for {ep['duration_months']} months.",
-                "ongoing": f"It has lasted {ep['duration_months']} months and was still elevated at the last "
-                "observation.",
+                "single_month": "The screening rule flagged a single month.",
+                "short": f"The screening rule flagged {ep['duration_months']} months.",
+                "persistent": f"The screening rule flagged {ep['duration_months']} consecutive months.",
+                "ongoing": f"The screening rule flagged {ep['duration_months']} months and the change was still "
+                "elevated at the last observation.",
             }.get(per["verdict"], "")
         )
+    pp, bp = population(px, doc["peers"].get("n_available")), population(br, doc["breadth"].get("n_available"))
+    of_found = f" (of {pp['found']} found)" if pp["found"] > pp["assessable"] else ""
+    if ep and ep["kind"] == "unusual":
+        parts.append("The episode dates show where the screening rule fired, not the full duration of any event.")
     parts.append(
         {
-            "widespread": f"Most comparable markets in the country were also unusually {hl} at the time.",
-            "mixed": f"Some comparable markets were also unusually {hl}; others were not.",
-            "local": f"Few comparable markets were unusually {hl} at the time.",
-            "inconclusive": "Too few comparable markets could be assessed to tell whether the movement was local.",
+            "widespread": f"Most of the {pp['assessable']} assessable comparable markets{of_found} were also "
+            f"unusually {hl} at the time.",
+            "mixed": f"Some of the {pp['assessable']} assessable comparable markets{of_found} were also unusually "
+            f"{hl}; others were not.",
+            "local": f"Few of the {pp['assessable']} assessable comparable markets{of_found} were unusually {hl} at "
+            "the time.",
+            "inconclusive": f"Only {pp['assessable']} of {pp['found']} comparable markets could be assessed, too few "
+            "to tell whether the movement was local.",
         }[px["class"]]
+    )
+    nb = nominal_breadth(doc)
+    nominal = (
+        f" Several rose substantially in nominal terms ({nb['n_large']} of {nb['n_with_change']} by "
+        f"{LARGE_NOMINAL * 100:.0f}% or more) while staying within their own usual ranges."
+        if nb["n_large"] and br["class"] in ("narrow", "inconclusive", "mixed")
+        else ""
     )
     parts.append(
         {
-            "broad": f"Most other foods in the same market were also unusually {hl}.",
-            "mixed": f"Some other foods in the same market were also unusually {hl}.",
-            "narrow": "Few other foods in the same market moved unusually.",
-            "inconclusive": "Too few other foods in the same market could be assessed.",
+            "broad": f"Most of the {bp['assessable']} assessable other foods in the same market were also unusually "
+            f"{hl}.",
+            "mixed": f"Some of the {bp['assessable']} assessable other foods in the same market were also unusually "
+            f"{hl}.",
+            "narrow": f"Few of the {bp['assessable']} assessable other foods in the same market were unusually {hl} "
+            "against their own past.",
+            "inconclusive": "Too few other foods in the same market could be assessed against their own past.",
         }[br["class"]]
+        + nominal
     )
     consistent = [m["name"].split(" (")[0].lower() for m in mechanisms if m["status"] == "consistent"]
     unknown = [m["name"].split(" (")[0].lower() for m in mechanisms if m["status"] == "cannot_be_assessed"]
@@ -634,6 +791,8 @@ def build_evidence(doc: dict[str, Any]) -> dict[str, Any]:
         "assessment": assessment(doc),
         "rules": {
             "unusual": f"|robust z| >= {Z_ELEVATED:g} against at least {MIN_REFERENCE} earlier 12-month changes",
+            "screening": SCREENING_CAVEAT,
+            "episode": EPISODE_CAVEAT,
             "statuses": STATUS_TEXT,
         },
     }
@@ -672,7 +831,8 @@ def assessment(doc: dict[str, Any]) -> list[dict[str, Any]]:
                 "no_episode": "No episode",
             }[per["verdict"]],
             "tone": "neutral" if per["verdict"] != "no_episode" else "muted",
-            "detail": f"{month_name(ep['start'])} to {month_name(ep['end'])}"
+            "detail": f"detected {month_name(ep['start'])} to {month_name(ep['end'])} (may split or truncate a longer "
+            "event)"
             if ep
             else "no month met the episode rule",
         },
@@ -683,7 +843,8 @@ def assessment(doc: dict[str, Any]) -> list[dict[str, Any]]:
                 px["class"]
             ],
             "tone": "muted" if px["class"] == "inconclusive" else "neutral",
-            "detail": f"{px['n_elevated']} of {px['n_assessable']} assessable comparable markets also unusual"
+            "detail": f"{px['n_elevated']} of {px['n_assessable']} assessable comparable markets also unusual "
+            f"({doc['peers'].get('n_available', px['n_peers'])} found)"
             if px["n_assessable"]
             else f"{px['n_peers']} comparable markets, none assessable",
         },
