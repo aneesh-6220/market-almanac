@@ -13,6 +13,23 @@ make dev                    # API :8000 and web :3000 with reload
 The default database is SQLite at `data/market-almanac.db`. To use PostgreSQL locally set
 `DATABASE_URL` and run `market-almanac db-init` (Alembic).
 
+### Never develop against the production database
+
+Settings fall back to `.env`, and a maintainer's `.env` may hold the production (Neon) connection string for
+`sync-db`. The production database is on a free plan whose **5 GB monthly egress** is the binding limit: when it
+runs out the compute is suspended until the next month and every page that calls `/api/v1/status` fails. So:
+
+- `make demo`, `make api`, `make dev` and `make test` pass `DATABASE_URL=sqlite:///./data/market-almanac.db`
+  (override deliberately with `DEV_DATABASE_URL=...`).
+- The Playwright web server starts the API on `data/market-almanac.db` (demo) or `data/live_local.db` (live), or
+  `E2E_DATABASE_URL` if set.
+- The pytest session replaces any non-SQLite `DATABASE_URL` with a throwaway SQLite file.
+- When running `uv run ...` commands directly, export a SQLite `DATABASE_URL` first. Point at production only
+  for the documented one-off `sync-db`, never for benchmarks, browser tests or research runs. A cleaner setup
+  keeps the production URL out of `.env` and passes it only on that one command.
+- Feature branches matching `dev/*` and `fix/*` do not create Vercel previews (`apps/web/vercel.json`); a preview
+  would call the production API and, through it, the production database.
+
 ## Project conventions
 
 - Python: Ruff (lint + format, 120 columns), mypy with the Pydantic plugin, type hints throughout.

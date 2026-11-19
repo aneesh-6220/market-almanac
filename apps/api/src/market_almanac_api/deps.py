@@ -76,7 +76,6 @@ class DataCache:
         self._lock = threading.Lock()
         self._frames: dict[tuple[str, str, str], pd.DataFrame] = {}
         self._results: dict[str, tuple[float, dict[str, Any]]] = {}
-        self._quality: dict[str, tuple[str, dict[str, Any]]] = {}
         self._catalog: dict[str, Any] = {}
         self._prod: dict[Any, Any] = {}
         self._peers: dict[tuple[Any, ...], pd.DataFrame] = {}
@@ -355,34 +354,6 @@ class DataCache:
                 self._prod.clear()
             self._prod[key] = out
         return out
-
-    def quality(self, db: Any, mode: str) -> tuple[dict[str, Any], str, str] | None:
-        """Latest data-quality report for a mode, cached by report id.
-
-        Live reports can be tens of MB (one entry per series), so only the id is queried on each
-        request and the body is fetched once per new report.
-        """
-        from sqlalchemy import desc, select
-
-        from market_almanac.db import models as m
-
-        head = db.execute(
-            select(m.DataQualityReport.id, m.DataQualityReport.created_at)
-            .where(m.DataQualityReport.mode == mode)
-            .order_by(desc(m.DataQualityReport.created_at))
-            .limit(1)
-        ).first()
-        if head is None:
-            return None
-        rid, created = head
-        with self._lock:
-            hit = self._quality.get(mode)
-            if hit and hit[0] == rid:
-                return hit[1], rid, created.isoformat()
-        body = db.get(m.DataQualityReport, rid).report
-        with self._lock:
-            self._quality[mode] = (rid, body)
-        return body, rid, created.isoformat()
 
     def results(self, artifact_dir: str) -> dict[str, Any]:
         p = Path(artifact_dir) / "results.json"
