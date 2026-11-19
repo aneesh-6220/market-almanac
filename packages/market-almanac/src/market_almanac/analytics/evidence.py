@@ -22,7 +22,7 @@ from typing import Any
 
 import pandas as pd
 
-from market_almanac.analytics.shocks import MIN_REFERENCE, Z_ELEVATED
+from market_almanac.analytics.shocks import LARGE_NOMINAL, MIN_REFERENCE, Z_ELEVATED
 
 STATUS_TEXT = {
     "consistent": "Consistent with the available evidence",
@@ -32,6 +32,28 @@ STATUS_TEXT = {
     "context_only": "Only contextual data are available; not evaluated",
     "cannot_be_assessed": "Cannot be assessed with the data integrated here",
 }
+
+
+def _median_clause(ext: dict[str, Any]) -> str:
+    """Large moves that stay within each food's own usual range are still worth saying (not unusual is not flat)."""
+    med = ext.get("median_peer_yoy_pct")
+    if med is None:
+        return ""
+    clause = f" (their median 12-month change was {pct(med)}"
+    if abs(med) >= LARGE_NOMINAL and ext.get("n_elevated", 0) < ext.get("n_assessable", 0) / 2:
+        clause += ", large but mostly within their own usual ranges"
+    return clause + ")"
+
+
+def rank_text(share: float, n: int, up: bool) -> str:
+    """'higher than all 71' / 'higher than 93% of the 71' (share: fraction of earlier changes on the near side)."""
+    word = "higher" if up else "lower"
+    return f"{word} than all {n}" if share >= 0.995 else f"{word} than {share * 100:.0f}% of the {n}"
+
+
+def ztext(z: float) -> str:
+    """A robust z-score for prose; beyond +/-10 the digits are false precision (it exceeds every earlier change)."""
+    return f"beyond {'+' if z > 0 else '-'}10" if abs(z) >= 10 else f"{z:+.1f}"
 
 
 def pct(v: float | None, signed: bool = True, digits: int = 1) -> str:
@@ -135,13 +157,13 @@ def quantitative(doc: dict[str, Any]) -> list[dict[str, Any]]:
             )
         )
     if un["status"] == "ok":
-        rank = un["percentile"]
-        above = f"higher than {rank * 100:.0f}%" if doc["direction"] == "up" else f"lower than {(1 - rank) * 100:.0f}%"
+        up = doc["direction"] == "up"
+        above = rank_text(un["percentile"] if up else 1 - un["percentile"], un["n_reference"], up)
         out.append(
             _st(
-                f"Compared with the {un['n_reference']} earlier 12-month changes of this series (from "
-                f"{un['reference_years']} calendar years, ending {month_name(un['reference_ends'])}), it was {above} "
-                f"of them (robust z-score {un['z']:+.1f}; a typical 12-month change here was "
+                f"Compared with the earlier 12-month changes of this series (from {un['reference_years']} calendar "
+                f"years, ending {month_name(un['reference_ends'])}), it was {above} "
+                f"(robust z-score {ztext(un['z'])}; a typical 12-month change here was "
                 f"{pct(un['reference_median_yoy_pct'])}, and 80% fell between {pct(un['reference_p10_yoy_pct'])} and "
                 f"{pct(un['reference_p90_yoy_pct'])}).",
                 keys=["unusualness"],
@@ -225,7 +247,9 @@ def quantitative(doc: dict[str, Any]) -> list[dict[str, Any]]:
         out.append(
             _st(
                 f"In the same market, {br['n_elevated']} of {br['n_assessable']} other assessable foods were also "
-                f"unusually {'high' if doc['direction'] == 'up' else 'low'} at the same time.",
+                f"unusually {'high' if doc['direction'] == 'up' else 'low'} at the same time"
+                + _median_clause(br)
+                + ".",
                 "associational",
                 keys=["breadth.extent"],
             )
@@ -375,7 +399,7 @@ def _mechanisms(doc: dict[str, Any]) -> list[dict[str, Any]]:
     if br["class"] != "inconclusive":
         m_ev.append(
             f"{br['n_elevated']} of {br['n_assessable']} other assessable foods in the same market were also unusually "
-            f"{'high' if up else 'low'}"
+            f"{'high' if up else 'low'}" + _median_clause(br)
         )
     if mac.get("cpi"):
         m_ev.append(f"national CPI changed {pct(mac['cpi']['yoy_pct'])} over the same 12 months")
@@ -385,12 +409,13 @@ def _mechanisms(doc: dict[str, Any]) -> list[dict[str, Any]]:
     if mac.get("cpi") and yoy:
         share = mac["cpi"]["yoy_pct"] / yoy if yoy else 0
         g_status = "consistent" if share >= 0.5 else "partly_consistent" if share >= 0.2 else "less_likely"
-    elif br["class"] == "broad":
-        g_status = "consistent"
-    elif br["class"] == "mixed":
+    elif br["class"] in ("broad", "mixed"):
+        # co-movement of other foods fits general inflation, but also any shock that hits many foods at once
         g_status = "partly_consistent"
     elif br["class"] == "narrow":
-        g_status = "less_likely"
+        # without price-index or exchange-rate data, local foods standing still does not rule out a currency
+        # effect, which reaches imported and traded foods first
+        g_status = "not_indicated"
     else:
         g_status = "cannot_be_assessed"
     if not mac.get("cpi"):
@@ -532,11 +557,15 @@ def conclusion(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[st
         parts.append(
             lead
             + (
-                f", which is unusual for this market (robust z {un['z']:+.1f}; beyond "
-                f"{(un['percentile'] if doc['direction'] == 'up' else 1 - un['percentile']) * 100:.0f}% of "
-                f"{un['n_reference']} earlier 12-month changes)."
+                f", which is unusual for this market (robust z {ztext(un['z'])}; "
+                + rank_text(
+                    un["percentile"] if doc["direction"] == "up" else 1 - un["percentile"],
+                    un["n_reference"],
+                    doc["direction"] == "up",
+                )
+                + " earlier 12-month changes)."
                 if un["label"] == "unusual"
-                else f", which is within the usual range for this market (robust z {un['z']:+.1f})."
+                else f", which is within the usual range for this market (robust z {ztext(un['z'])})."
             )
         )
     else:
@@ -628,7 +657,7 @@ def assessment(doc: dict[str, Any]) -> list[dict[str, Any]]:
             "label": "Unusual for this market?",
             "value": ("Yes" if un["label"] == "unusual" else "No") if un["status"] == "ok" else "Not assessed",
             "tone": ("warn" if un["label"] == "unusual" else "good") if un["status"] == "ok" else "muted",
-            "detail": f"robust z {un['z']:+.1f}, {un['n_reference']} earlier changes"
+            "detail": f"robust z {ztext(un['z'])}, {un['n_reference']} earlier changes"
             if un["status"] == "ok"
             else un["text"],
         },

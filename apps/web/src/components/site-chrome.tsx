@@ -13,6 +13,7 @@ import { cn } from "./ui";
 const NAV = [
   { href: "/explorer", label: "Explore" },
   { href: "/compare", label: "Compare" },
+  { href: "/investigate", label: "Investigate" },
   { href: "/forecasts", label: "Forecasts" },
   { href: "/atlas", label: "Global" },
   { href: "/forecastability", label: "Forecastability" },
@@ -82,7 +83,7 @@ export function SiteHeader() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   return (
-    <header className="border-b border-line bg-surface/80 backdrop-blur">
+    <header className="border-b border-line bg-surface/80 backdrop-blur print:hidden">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
         <Wordmark />
         <nav aria-label="Main" className="hidden items-center gap-0.5 xl:flex">
@@ -156,7 +157,7 @@ export function ModeBand() {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-20 border-t border-line">
+    <footer className="mt-20 border-t border-line print:hidden">
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 text-sm text-ink-3 md:grid-cols-3 md:px-6">
         <div>
           <Wordmark />

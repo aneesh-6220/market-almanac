@@ -67,6 +67,7 @@ def shocks(
     min_coverage: Annotated[float | None, Query(ge=0, le=1)] = None,
     max_months_behind: Annotated[int | None, Query(ge=0, le=600)] = None,
     include_data_concerns: bool = False,
+    include_non_food: bool = False,
     stable_only: bool = False,
     sort: Annotated[str, Query(pattern="^(" + "|".join(SORTS) + ")$")] = "unusual",
     limit: Annotated[int, Query(ge=1, le=MAX_PAGE)] = 25,
@@ -77,7 +78,8 @@ def shocks(
     ``kind``: ``unusual`` (|robust z| >= 2 against the series' own earlier 12-month changes), ``large_typical``
     (12-month change of 25% or more that is normal for that series) or ``withheld`` (large, but too little or too
     sparse history to assess). Episodes flagged as possible recording or unit changes are excluded unless
-    ``include_data_concerns``.
+    ``include_data_concerns``; WFP's non-food items (fuel, exchange rates, medicines, wages) unless
+    ``include_non_food`` or a ``commodity`` is named.
     """
     gp = _gp()
     try:
@@ -97,6 +99,7 @@ def shocks(
             min_window_coverage=min_coverage,
             max_months_behind=max_months_behind,
             include_data_concerns=include_data_concerns,
+            include_non_food=include_non_food,
             stable_only=stable_only,
             sort=sort,
             limit=limit,
@@ -115,7 +118,10 @@ DEFINITIONS = {
     "unusual": "The 12-month price change was at least 2 robust standard deviations from the series' own earlier "
     "12-month changes (median and MAD), with at least 36 earlier changes from 4+ years and half of the last 24 "
     "months observed.",
-    "large_typical": "A 12-month change of 25% or more that is within the series' normal range.",
+    "large_typical": "A 12-month change of 25% or more that stays within 2 robust standard deviations of the "
+    "series' earlier 12-month changes (normal for that market, e.g. under persistent inflation).",
+    "not_listed": "Large changes between 2 and 3 robust standard deviations that never reach the episode trigger "
+    "are neither unusual episodes nor typical and are not listed; they can still be investigated directly.",
     "withheld": "A 12-month change of 25% or more whose unusualness cannot be assessed (too little, too sparse or "
     "too constant a history).",
     "extent": "Whether comparable markets (same country, commodity, unit, price type and currency) were also "

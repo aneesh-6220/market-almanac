@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from market_almanac.config import Settings
 from market_almanac.data.public_bundle import BundleError, build_prices_bundle
 from market_almanac.globaldata.release import install_prices, is_installed
+from market_almanac.globaldata.shocks import SHOCK_CATALOG, SHOCK_MANIFEST, build_shock_catalog
 from tests.global_support import build_catalog_for, obs_rows, write_country
 
 G = "/api/v1/global"
@@ -24,6 +25,7 @@ def artefact(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, str, dict]
     write_country(src, "TST", obs_rows())
     write_country(src, "TSB", obs_rows(country="TSB", currency="TSH", base=50.0))
     build_catalog_for(src)
+    build_shock_catalog(_settings(src), log=lambda *_: None)
     out = tmp_path_factory.mktemp("out")
     res = build_prices_bundle(src, "live", out)
     path = Path(res["archive"])
@@ -43,6 +45,7 @@ def test_artefact_holds_only_prices_and_is_small(artefact):
     assert any("partitions/prices/TST" in n for n in names) and any(
         n.endswith("global_series_catalog.parquet") for n in names
     )
+    assert any(n.endswith(SHOCK_CATALOG) for n in names) and any(n.endswith(SHOCK_MANIFEST) for n in names)
     assert not any("weather" in n or ("series_catalog.parquet" in n and "global" not in n) for n in names)
     assert path.stat().st_size < 1_000_000
 
@@ -130,8 +133,23 @@ def test_app_cold_start_reports_503_then_ready_and_serves(artefact, tmp_path, mo
             assert body["parts"]["prices"] == "ready", body
             sid = client.get(f"{G}/countries/TST/series").json()["items"][0]["series_id"]
             assert client.get(f"{G}/series/{sid}/observations").json()["total"] == 30
+            shocks = client.get("/api/v1/shocks", params={"kind": "all", "direction": "any"})
+            assert shocks.status_code == 200 and shocks.json()["stale_countries"] == []  # discovery ships with prices
         assert BootstrapState.prices_error is None
     finally:
         reset_settings_cache()
         reset_global_prices()
         BootstrapState.prices_installing = False
+
+
+def test_bundle_refuses_a_missing_or_stale_shock_catalog(tmp_path):
+    src = tmp_path / "data"
+    write_country(src, "TST", obs_rows())
+    build_catalog_for(src)
+    with pytest.raises(BundleError, match="price-shock catalog is required"):
+        build_prices_bundle(src, "live", tmp_path / "out")
+    build_shock_catalog(_settings(src), log=lambda *_: None)
+    write_country(src, "TSB", obs_rows(country="TSB", currency="TSH", base=50.0))  # a country added afterwards
+    build_catalog_for(src)
+    with pytest.raises(BundleError, match="different snapshots"):
+        build_prices_bundle(src, "live", tmp_path / "out")

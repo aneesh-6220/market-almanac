@@ -95,7 +95,8 @@ def bundle_files(data_dir: Path, mode: str) -> Iterator[Path]:
 
 
 def prices_bundle_files(data_dir: Path, mode: str) -> Iterator[Path]:
-    """Files of the data-only price artefact: the newest partition of every country and its catalog.
+    """Files of the data-only price artefact: the newest partition of every country, its catalog and the
+    precomputed price-shock episodes (the Price Shock Investigator's discovery table, ~10 MB).
 
     Nothing else is needed to serve price browsing: no weather, macro, agriculture, experiments or
     older snapshots, which is why this is ~30 MB where the full research bundle is 75 MB and the Atlas
@@ -103,6 +104,7 @@ def prices_bundle_files(data_dir: Path, mode: str) -> Iterator[Path]:
     """
     from market_almanac.globaldata.partitions import PartitionStore
     from market_almanac.globaldata.prices import GLOBAL_CATALOG, GLOBAL_CATALOG_MANIFEST
+    from market_almanac.globaldata.shocks import SHOCK_CATALOG, SHOCK_MANIFEST
 
     store = PartitionStore(data_dir / "lake" / mode, mode)
     for c in store.countries("prices"):
@@ -111,7 +113,7 @@ def prices_bundle_files(data_dir: Path, mode: str) -> Iterator[Path]:
             continue
         d = store.path("prices", c, m.snapshot_id).parent
         yield from sorted(p.relative_to(data_dir) for p in d.iterdir() if p.is_file())
-    for name in (GLOBAL_CATALOG, GLOBAL_CATALOG_MANIFEST):
+    for name in (GLOBAL_CATALOG, GLOBAL_CATALOG_MANIFEST, SHOCK_CATALOG, SHOCK_MANIFEST):
         if (data_dir / "public" / mode / name).is_file():
             yield Path("public") / mode / name
 
@@ -196,6 +198,15 @@ def build_prices_bundle(data_dir: Path, mode: str, out_dir: Path) -> dict[str, A
     in_bundle = {f.parts[-3]: f.parts[-2] for f in files if f.name == "data.parquet" and "partitions" in f.parts}
     if in_bundle != built:
         raise BundleError("the catalog was built from different snapshots than the newest partitions; rebuild it")
+    from market_almanac.globaldata.shocks import SHOCK_CATALOG, SHOCK_MANIFEST, load_manifest, stale_countries
+
+    if not {SHOCK_CATALOG, SHOCK_MANIFEST} <= names:
+        raise BundleError("the price-shock catalog is required; run `market-almanac global shocks`")
+    shock_manifest = load_manifest(data_dir / "public" / mode) or {}
+    if stale_countries(shock_manifest, in_bundle) or set(shock_manifest.get("countries", {})) != set(in_bundle):
+        raise BundleError(
+            "the price-shock catalog was built from different snapshots; rerun `market-almanac global shocks`"
+        )
     rows = sum(
         int(pd.read_parquet(data_dir / f, columns=["series_id"]).shape[0]) for f in files if f.name == "data.parquet"
     )

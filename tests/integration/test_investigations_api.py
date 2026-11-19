@@ -9,6 +9,8 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
+from market_almanac.analytics.evidence import ztext
+
 
 @pytest.fixture(scope="module")
 def client(seeded_env):  # type: ignore[no-untyped-def]
@@ -43,6 +45,8 @@ def test_discovery_is_bounded_filtered_and_documented(client, shock_page):
     assert {i["country_iso3"] for i in only["items"]} == {country}
     down = client.get("/api/v1/shocks", params={"direction": "down", "kind": "all", "limit": 100}).json()
     assert all(i["direction"] == "down" for i in down["items"])
+    wide = client.get("/api/v1/shocks", params={"kind": "all", "direction": "any", "include_non_food": True}).json()
+    assert wide["total"] >= shock_page["total"]  # non-food items are excluded by default, never added
     paged = client.get("/api/v1/shocks", params={"kind": "all", "direction": "any", "limit": 2, "offset": 1}).json()
     assert paged["limit"] == 2 and paged["offset"] == 1 and len(paged["items"]) <= 2
     for bad in (
@@ -135,7 +139,7 @@ def test_exports_match_the_document(client, unusual):
     assert d["evidence"]["conclusion"]["text"] in text
     un = d["unusualness"]
     if un["status"] == "ok":
-        assert f"robust z-score {un['z']:+.1f}" in text and f"{un['n_reference']} earlier 12-month changes" in text
+        assert f"robust z-score {ztext(un['z'])}" in text and f"{un['n_reference']} earlier 12-month changes" in text
     yoy = d["magnitude"]["event_yoy_pct"]
     if yoy is not None:
         assert f"{yoy * 100:+.1f}%" in text

@@ -214,6 +214,46 @@ test.describe("Market Almanac (synthetic demo)", () => {
     expect(errors).toEqual([]);
   });
 
+  test("investigate: discover an unusual rise, open it, reproduce it and export its brief", async ({
+    page,
+    request,
+  }) => {
+    const errors = trackPageErrors(page);
+    await page.goto("/investigate");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Price shock investigator");
+    const open = page.getByRole("link", { name: /^Investigate / }).first();
+    await expect(open).toBeVisible();
+    await open.click();
+    await expect(page).toHaveURL(/\/investigate\?series=ps_[0-9a-f]{16}&event=\d{4}-\d{2}/);
+    await waitForContent(page);
+    for (const n of ["1. At a glance", "2. Price history", "3. Compared with", "4. Comparable markets", "5. Other foods", "6. Context", "7. What the evidence", "8. Method"]) {
+      await expect(page.getByRole("heading", { name: new RegExp(`^${n.replace(".", "\\.")}`) })).toBeVisible();
+    }
+    await expect(page.getByRole("img", { name: /Monthly .* price in/ })).toBeVisible();
+    // the brief carries the configuration that reproduces it
+    const md = await page.getByRole("link", { name: /Research brief/ }).getAttribute("href");
+    const brief = await (await request.get(md!)).text();
+    const configId = /Configuration:\*\* `([0-9a-f]{16})`/.exec(brief)?.[1];
+    expect(configId).toBeTruthy();
+    await expect(page.getByText(configId!, { exact: true })).toBeVisible();
+    // the permalink (event and window in the URL) reproduces the same configuration
+    const url = new URL(page.url());
+    const sid = url.searchParams.get("series")!;
+    const doc = await (await request.get(`${API}/api/v1/investigations/${sid}?event=${url.searchParams.get("event")}`)).json();
+    await page.goto(`/investigate?series=${sid}&event=${doc.config.event}&start=${doc.config.window.start}&end=${doc.config.window.end}`);
+    await waitForContent(page);
+    await expect(page.getByText(doc.config_id, { exact: true })).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test("investigate: an investigation reads well on a phone @mobile", async ({ page, request }) => {
+    const page1 = await (await request.get(`${API}/api/v1/shocks?limit=1`)).json();
+    await page.goto(`/investigate?series=${page1.items[0].series_id}&event=${page1.items[0].peak}`);
+    await waitForContent(page);
+    await expect(page.getByRole("heading", { name: /^1\. At a glance/ })).toBeVisible();
+    await noHorizontalScroll(page);
+  });
+
   test("navigation and layout work on a phone-sized screen @mobile", async ({
     page,
   }) => {
@@ -227,6 +267,7 @@ test.describe("Market Almanac (synthetic demo)", () => {
       "/methodology",
       "/workbench",
       "/studies",
+      "/investigate",
     ]) {
       await page.goto(path);
       await waitForContent(page);

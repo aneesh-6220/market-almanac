@@ -206,3 +206,80 @@ def test_extent_is_inconclusive_with_too_few_assessable_peers():
     states = [state_near(s, pd.Timestamp("2019-05-01"), "up") for s in sigs.values()]
     ex = extent(states)
     assert ex["class"] == "inconclusive" and ex["n_assessable"] == 0
+
+
+def test_extreme_z_scores_are_not_reported_with_false_precision():
+    from market_almanac.analytics.evidence import ztext
+
+    assert ztext(3.24) == "+3.2" and ztext(-2.05) == "-2.0"
+    assert ztext(145.7) == "beyond +10" and ztext(-12.0) == "beyond -10"
+
+
+def test_rank_wording():
+    from market_almanac.analytics.evidence import rank_text
+
+    assert rank_text(1.0, 71, True) == "higher than all 71"
+    assert rank_text(0.93, 71, True) == "higher than 93% of the 71"
+    assert rank_text(1.0, 40, False) == "lower than all 40"
+
+
+def _meta(sid: str, commodity: str) -> dict:
+    return {
+        "series_id": sid,
+        "country_iso3": "TST",
+        "market_name": "Alpha",
+        "commodity_name": commodity,
+        "unit": "KG",
+        "price_type": "Retail",
+        "currency": "TSH",
+        "first_period": "2012-01-01",
+        "last_period": "2022-12-01",
+        "n_observations": 132,
+    }
+
+
+def test_without_price_index_data_calm_local_foods_do_not_argue_against_inflation():
+    from market_almanac.analytics.investigation import investigate
+
+    own = shock(series(132, seed=1), "2019-03-01", 9, 1.6)
+    others = {f"f{i}": (_meta(f"f{i}", f"Food {i}"), series(132, seed=40 + i)) for i in range(5)}
+    doc = investigate(
+        series_id="s0",
+        meta=_meta("s0", "Rice (imported)"),
+        prices=own,
+        snapshot_id="snap",
+        raw=None,
+        peers={},
+        market_series=others,
+        macro=None,
+        environment=None,
+        event="2019-08",
+        country_name="Testland",
+    )
+    assert doc["breadth"]["extent"]["class"] == "narrow" and doc["context"]["macro"]["cpi"] is None
+    macro = next(m for m in doc["evidence"]["mechanisms"] if m["key"] == "macro")
+    assert macro["status"] == "not_indicated"
+    assert any("no consumer price index" in e for e in macro["evidence"])
+    assert "higher than all" in doc["evidence"]["conclusion"]["text"]
+
+
+def test_large_but_ordinary_moves_of_other_foods_are_still_reported():
+    from market_almanac.analytics.evidence import _median_clause
+
+    calm = {"median_peer_yoy_pct": 0.03, "n_elevated": 0, "n_assessable": 3}
+    big = {"median_peer_yoy_pct": 0.467, "n_elevated": 0, "n_assessable": 3}
+    assert _median_clause(calm) == " (their median 12-month change was +3.0%)"
+    assert "large but mostly within their own usual ranges" in _median_clause(big)
+    assert _median_clause({"median_peer_yoy_pct": None}) == ""
+
+
+def test_large_typical_means_within_the_usual_range_on_both_references():
+    # noisy series: many large 12-month changes, some between the elevated (2) and trigger (3) thresholds
+    p = series(132, seed=7, noise=0.12)
+    sig = compute_signals(p)
+    typical = [e for e in find_episodes(sig) if e["kind"] == "large_typical"]
+    assert typical
+    for e in typical:
+        sgn = 1 if e["direction"] == "up" else -1
+        assert abs(e["peak_z"]) < Z_ELEVATED  # against the changes before the movement began
+        assert (sgn * sig.loc[e["start"] : e["end"], "z"]).max() < Z_ELEVATED  # against all earlier changes

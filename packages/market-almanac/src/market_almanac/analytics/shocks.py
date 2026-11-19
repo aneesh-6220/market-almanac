@@ -368,11 +368,19 @@ def find_episodes(sig: pd.DataFrame) -> list[dict[str, Any]]:
                 unusual_months += run
         in_unusual = sig.index.isin(unusual_months)
         large = (sign * r12 >= (big if sign > 0 else -np.log(1 - LARGE_NOMINAL))).fillna(False).to_numpy(dtype=bool)
-        typical = ok.to_numpy(dtype=bool) & ~in_unusual & large
+        # "typical" must hold on both references: every month within +/-Z_ELEVATED of the changes before it, and
+        # the peak within it of the changes before the movement began. Large changes between the two thresholds
+        # that never reach the trigger are neither unusual episodes nor typical; they are not catalogued (they
+        # can still be investigated directly).
+        within = (ok & (z < Z_ELEVATED)).fillna(False).to_numpy(dtype=bool)
+        typical = ok.to_numpy(dtype=bool) & ~in_unusual & large & within
         withheld = (sig["status"] == "withheld").to_numpy(dtype=bool) & large
         for kind, mask in (("large_typical", typical), ("withheld", withheld)):
             for run in _runs(list(sig.index[mask]), set(sig.index[sig["r12"].notna().to_numpy(dtype=bool)])):
-                out.append(describe_episode(sig, run, direction, kind))
+                ep = describe_episode(sig, run, direction, kind)
+                if kind == "large_typical" and ep["peak_z"] is not None and abs(ep["peak_z"]) >= Z_ELEVATED:
+                    continue
+                out.append(ep)
     out.sort(key=lambda e: (e["start"], e["direction"], e["kind"]))
     return out
 

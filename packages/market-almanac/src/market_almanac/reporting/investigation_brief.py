@@ -123,6 +123,12 @@ def render_markdown(doc: dict[str, Any], link: str | None = None) -> str:
     L += [f"- {x['text']} *({INFERENCE[x['inference']]})*" for x in ev["quantitative"]]
 
     L += ["", "## Price history in the window", ""]
+    L += [
+        "*Robust z* here compares each month with every 12-month change before that month. The headline score "
+        "compares the month investigated only with changes before the episode began, so that an episode does not "
+        "dilute its own reference; the two can differ inside an episode.",
+        "",
+    ]
     L += _table(
         ["Month", f"Price ({cur}/{unit})", "Change on month", "Change on year", "Robust z", "Assessment"],
         [

@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Price Shock Investigator** (`/investigate`, `/api/v1/shocks`, `/api/v1/investigations/{id}`). Discovery of
+  food-price movements that were unusual for their own market across all 95 countries, and a reproducible
+  investigation of any one of them: magnitude, unusualness (robust z against the series' own earlier 12-month
+  changes, withheld below 36 changes, 4 years or 50% recent coverage, or on near-constant histories),
+  persistence, seasonality, extent among comparable markets (same commodity, unit, price type and currency),
+  breadth across other foods in the market, available weather and macro context (missing is shown as missing),
+  and a deterministic evidence framework that labels every statement descriptive, associational, predictive or
+  causal and never makes causal claims. Permalinks pin the month, window and snapshot; briefs export as
+  Markdown, JSON and CSV. Episodes are precomputed offline (`market-almanac global shocks`, about 10 minutes
+  on 6 cores) and ship inside the price artefact, so the API only runs bounded queries. Method:
+  [docs/PRICE_SHOCK_INVESTIGATOR.md](docs/PRICE_SHOCK_INVESTIGATOR.md).
+
 ### Fixed
 
 - **The production database was running out of egress, not compute.** The Neon free plan's 5 GB monthly network
@@ -21,7 +35,9 @@ All notable changes to this project are documented here. The format follows
   `make api`, Playwright's API server and some tests connected to whatever `DATABASE_URL` `.env` held; the
   production database contains two demo-mode quality reports written that way. These now default to local
   SQLite (see [Development](docs/DEVELOPMENT.md#never-develop-against-the-production-database)), and `dev/*` and
-  `fix/*` branches no longer create Vercel previews.
+  `fix/*` branches no longer create Vercel previews. The `api-demo` and `api-live` launch configurations
+  (`.claude/launch.json`) had the same fallback; `api-demo` now names its SQLite file and `api-live` is removed
+  in favour of `api-live-local`.
 
 ### Performance
 

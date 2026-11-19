@@ -35,6 +35,19 @@ The Market Almanac API is a read-only FastAPI service. Interactive OpenAPI docum
 | `GET /api/v1/compare` | 2–8 `series_id`s: comparability decision with reasons, aligned prices, indices, statistics (`format=json|csv`). |
 | `GET /api/v1/studies`, `GET /api/v1/studies/{id}?phase=confirmatory|exploratory|all` | Pre-registered study results, as stored. |
 
+### Price Shock Investigator
+
+Discovery reads a table precomputed offline (`market-almanac global shocks`, shipped inside the price artefact);
+an investigation reads one series, at most 60 comparable markets and at most 40 other foods of its market. No
+request scans the price archive. Method and limits: [Price Shock Investigator](PRICE_SHOCK_INVESTIGATOR.md).
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/v1/shocks` | Episodes, filtered and paged (`limit` <= 100, `offset` <= 10,000): `country`, `commodity`, `market`, `q`, `price_type`, `unit`, `kind` (`unusual` default, `large_typical`, `withheld`, `all`), `direction` (`up` default, `down`, `any`), `extent` (`widespread`, `mixed`, `local`, `inconclusive`), `peak_from`/`peak_to` (`YYYY-MM`), `min_coverage`, `max_months_behind`, `include_data_concerns`, `include_non_food`, `stable_only`, `sort` (`unusual`, `unusual_down`, `change`, `change_down`, `recent`, `duration`). Also returns the method version, when the table was computed, countries whose prices are newer than it (`stale_countries`) and the definitions. 503 when the table is not installed. |
+| `GET /api/v1/shocks/facets?country=` | Commodities, markets, price types, units and years with counts of unusual episodes, for one country. |
+| `GET /api/v1/investigations/{id}` | The investigation document: `config` (with `config_id`), subject, episode, magnitude, unusualness, persistence, seasonality, comparable markets (extent, rows, price index), other foods in the market, context (weather, CPI, exchange rate, each `null` when not integrated), observation quality, monthly signals, the research question and the evidence (facts, quantitative statements, possible mechanisms with statuses, gaps, unsupported conclusions, assessment cards). `event`, `start`, `end` (`YYYY-MM`) pin the configuration; the same configuration on the same snapshot always returns the same document. |
+| `GET /api/v1/investigations/{id}/export` | `format=md` (research brief; `link` adds a permalink), `json` (the full document) or `csv` with `table=signals|peers|market|index`, as a download. Takes the same `event`/`start`/`end`. |
+
 ### Global price layer (every country with stored prices)
 
 Read-only, bounded queries over the partitioned lake: 95 countries, 4,835 markets, 125,202 series,

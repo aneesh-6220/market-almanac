@@ -235,6 +235,7 @@ def stale_countries(manifest: dict[str, Any], installed: dict[str, str]) -> list
 # --- serving (bounded queries; never a scan of price observations) ----------------------------------------
 
 MAX_PAGE = 100
+NON_FOOD_FILTER = "coalesce(c.commodity_category, '') <> 'non-food'"  # WFP's fuel, exchange rates, medicines, wages
 MAX_OFFSET = 10_000
 SORTS = {
     "unusual": "s.peak_z DESC NULLS LAST, s.peak_yoy_pct DESC",
@@ -298,6 +299,7 @@ def query_shocks(
     min_window_coverage: float | None = None,
     max_months_behind: int | None = None,
     include_data_concerns: bool = False,
+    include_non_food: bool = False,
     stable_only: bool = False,
     sort: str = "unusual",
     limit: int = 25,
@@ -334,6 +336,8 @@ def query_shocks(
         params.append(int(max_months_behind))
     if not include_data_concerns:
         where.append("NOT s.data_concern")
+    if not include_non_food and not commodity:
+        where.append(NON_FOOD_FILTER)
     if stable_only:
         where.append("s.stable")
     if q:
