@@ -130,6 +130,16 @@ E2E_MODE=live E2E_BASE_URL=https://market-almanac-app.vercel.app E2E_API_URL=htt
   npx playwright test --workers=1
 ```
 
+## Price Shock Investigator
+
+Bounded by design: discovery is one DuckDB query over a precomputed 10 MB episode table (at most 100 rows, offset
+at most 10,000), and an investigation reads one series, at most 60 comparable markets and 40 other foods from the
+country partition that market pages already use; documents are cached (24). Measured locally on the 95-country
+lake: discovery 60 to 120 ms and 33 kB a page; a first investigation 0.26 s median and 53 kB, repeated 4 ms. Peak
+resident memory in a fresh process: 12 market pages 244 MB, the same 12 series investigated 260 MB, six discovery
+queries including the deepest page 230 MB. Details: [PRICE_SHOCK_INVESTIGATOR.md](PRICE_SHOCK_INVESTIGATOR.md#architecture-and-performance).
+Market-page endpoints are unchanged.
+
 ## What would be next
 
 If more than a few simultaneous visitors are expected, the smallest justified change is more CPU (a paid

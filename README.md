@@ -47,7 +47,7 @@ source.
 Screenshots: [home](docs/screenshots/home.png) · [explore](docs/screenshots/explore-mali.png) ·
 [compare](docs/screenshots/compare-millet.png) · [research lab](docs/screenshots/research-lab.png) ·
 [forecasts](docs/screenshots/forecasts.png) · [data coverage](docs/screenshots/data-coverage.png) ·
-[phone](docs/screenshots/mobile-market.png). All are of the running app on real data.
+[phone](docs/screenshots/mobile-market.png) · [price shock investigator](docs/screenshots/investigate-maradi-rice.png). All are of the running app on real data.
 
 ## What the research found
 

@@ -374,14 +374,22 @@ def query_shocks(
         like = "%" + q.lower().replace("\\", "").replace("%", "").replace("_", "") + "%"
         params += [like, like, like]
     order = SORTS.get(sort, SORTS["unusual"])
-    src = f"read_parquet('{str(path).replace(chr(39), chr(39) * 2)}') s"
+    src = f"read_parquet('{str(path).replace(chr(39), chr(39) * 2)}', file_row_number = true) s"
     sql_where = " AND ".join(where)
     total = int(gp._query(f"SELECT count(*) AS n FROM {src} WHERE {sql_where}", params)["n"].iloc[0])
     lim, off = max(1, min(int(limit), MAX_PAGE)), max(0, min(int(offset), MAX_OFFSET))
-    df = gp._query(
-        f"SELECT s.* FROM {src} WHERE {sql_where} ORDER BY {order}, s.series_id, s.start LIMIT {lim} OFFSET {off}",
+    # Sort and page row numbers only, then read the full rows of the page: a deep page of a large kind would
+    # otherwise sort every column of every matching row (measured: +110 MB resident for offset 9,900).
+    order_by = f"{order}, s.series_id, s.start, s.direction, s.kind"
+    page = gp._query(
+        f"SELECT s.file_row_number AS rn FROM {src} WHERE {sql_where} ORDER BY {order_by} LIMIT {lim} OFFSET {off}",
         params,
-    )
+    )["rn"].tolist()
+    df = pd.DataFrame()
+    if page:
+        marks = ", ".join("?" for _ in page)
+        df = gp._query(f"SELECT * FROM {src} WHERE s.file_row_number IN ({marks})", [int(r) for r in page])
+        df = df.set_index("file_row_number").loc[page].reset_index(drop=True)
     from market_almanac.globaldata.prices import catalog_record
 
     rows = df.to_dict("records")
