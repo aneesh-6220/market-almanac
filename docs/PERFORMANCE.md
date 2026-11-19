@@ -90,15 +90,20 @@ to 2.6 s; 4 visitors 3.1 s median, 8.3 s worst, no failures.
 
 ## Cold start
 
-After a deploy or an idle spin-down the new process serves `/health` at once but `/api/v1/status` answers
-503 `data_installing` with `Retry-After` for about 35 s while the data artefact installs (observed on the
-deploy of `25a8c8c`: `/ready` reported `installing`, `/status` 503). The web app retries through that window and
-the panels say so; this is covered by the Playwright tests that mock 503 + `Retry-After` and a dead API under a
-virtual clock, not by a timing guess. Measured in the browser after that deploy finished installing: first visit
-to a series on a fresh process 4.0 s (one visitor) and 3.2 s for another series about an hour later. Not captured:
-a browser visit that starts inside the 35 s install window, or after an idle spin-down (the instance did not spin
-down in the 55 minutes I waited, so this was not reproduced). Expect that first visit to take about 35 s plus the
-page time, with "retrying" shown, not an error.
+After a deploy or an idle spin-down the new process serves `/health` at once, but `/api/v1/status` answers 503
+`data_installing` with `Retry-After` for about 35 s while the research artefact installs (the price data is
+ready first, so market pages do not wait for it). Measured in a real browser, one visitor, started the moment the
+deploy of `0af325f` began returning that 503 (`scripts/ops/benchmark_market_page.mjs`):
+
+| visit | page complete | notes |
+|---|---|---|
+| first view of a series, inside the install window | 16.1 s | `/status` 503 (`Retry-After: 30`); the other 8 requests 200, primary panels at about 5 s, secondary at about 16 s (a cold process also installing); no error shown |
+| first view of a series, process up an hour, new series | 3.2 s | |
+| first view after install finished | 4.0 s | |
+
+The retry behaviour is also covered by Playwright tests that mock 503 + `Retry-After` and a dead API under a virtual
+clock. Not measured: a visit after an idle spin-down with the process fully asleep (the instance stayed up in the
+55 minutes I waited); that adds Render's own wake-up time before the first byte, which no code here controls.
 
 ## Overload
 
