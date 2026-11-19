@@ -105,10 +105,11 @@ the `/lagged-relationships` endpoint, which loads the whole price table) can sti
 ## The price artefact (global explorer)
 
 The Market Explorer reads a **data-only price artefact**, not the research bundle: the newest
-partition of every country, their manifests and the precomputed series catalog (19.3 MB archive,
-about 24 MB installed; the 75 MB research bundle and the 242 MB Atlas package are not needed to browse
+partition of every country, their manifests, the precomputed series catalog and the Price Shock
+Investigator's episode table (29.5 MB archive, about 35 MB installed; the 75 MB research bundle and the
+242 MB Atlas package are not needed to browse
 prices). It is pinned in `packages/market-almanac/src/market_almanac/globaldata/prices_release.json`
-(release `global-prices-v1`, URL and SHA-256), so a live service installs it with no extra
+(release `global-prices-v2`, URL and SHA-256), so a live service installs it with no extra
 configuration:
 
 - At start-up, in a background thread, the API installs the artefact if the newest partitions or their
@@ -120,7 +121,9 @@ configuration:
 - Override with `GLOBAL_PRICES_BUNDLE_URL` + `GLOBAL_PRICES_BUNDLE_SHA256` (the digest is mandatory) or
   disable with `GLOBAL_PRICES_AUTO_INSTALL=0` for a volume filled by hand:
   `market-almanac global install-prices [source] [--sha256 …]`.
-- **Publishing new data:** ingest, `market-almanac global catalog`,
+- **Publishing new data:** ingest, `market-almanac global catalog`, `market-almanac global shocks --workers 6`
+  (the Price Shock Investigator's episode table, about 10 minutes on 6 cores; the bundle refuses to build
+  without it or with one computed from other snapshots),
   `market-almanac global prices-bundle --out dist`, upload the archive as a GitHub release asset, and
   update `prices_release.json` (URL, SHA-256, per-country snapshot ids). Older snapshots stay in the
   partitions, so anything that cited them stays reproducible.

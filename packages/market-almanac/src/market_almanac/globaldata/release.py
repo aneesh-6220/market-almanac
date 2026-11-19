@@ -44,9 +44,20 @@ def resolve_source(settings: Any, source: str | None = None, sha256: str | None 
 
 
 def is_installed(settings: Any) -> bool:
-    """True when every country's newest partition is present and the catalog was built from exactly those."""
+    """True when every country's newest partition is present and the catalog and the price-shock episode table were
+    built from exactly those. A volume that holds an older artefact (prices and catalog but no episodes) is therefore
+    not "installed": the install is idempotent and adds what is missing instead of leaving the investigator without
+    its discovery table."""
     gp = GlobalPrices(settings)
-    return gp.layout() == "partition" and gp.available() and not gp.stale_countries()
+    if not (gp.layout() == "partition" and gp.available() and not gp.stale_countries()):
+        return False
+    from market_almanac.globaldata.shocks import SHOCK_CATALOG, load_manifest, stale_countries
+
+    manifest = load_manifest(gp.public_dir)
+    if manifest is None or not (gp.public_dir / SHOCK_CATALOG).is_file():
+        return False
+    sources = gp.sources()[0]
+    return not stale_countries(manifest, {c: s.snapshot_id for c, s in sources.items()})
 
 
 def install_prices(settings: Any, source: str | None = None, sha256: str | None = None) -> dict[str, Any]:

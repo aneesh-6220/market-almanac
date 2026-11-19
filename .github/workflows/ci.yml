@@ -59,6 +59,28 @@ jobs:
       - name: Journeys over 3.8 million archived observations, 95 countries
         run: uv run pytest tests/integration/test_global_prices_real.py -q -p no:cacheprovider
 
+  price-shocks:
+    name: Price shocks (pinned release, real observations)
+    runs-on: ubuntu-latest
+    env:
+      MARKET_ALMANAC_MODE: live
+      DATA_DIR: ${{ github.workspace }}/.real-data
+      MARKET_ALMANAC_REAL_DATA_DIR: ${{ github.workspace }}/.real-data
+      DATABASE_URL: sqlite:///./.real-data/api.db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --frozen
+      - name: Install the pinned data-only price artefact (SHA-256 verified)
+        run: uv run market-almanac global install-prices
+      - name: Build the episode catalog from those prices (offline step of a data refresh)
+        run: uv run market-almanac global shocks --workers 4
+      - name: Catalog invariants, the worked example and investigations over 95 countries
+        run: uv run pytest tests/integration/test_price_shocks_real.py -q -p no:cacheprovider
+
   web:
     name: Web (lint, types, unit tests, build)
     runs-on: ubuntu-latest

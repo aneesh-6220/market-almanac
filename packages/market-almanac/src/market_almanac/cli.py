@@ -597,6 +597,24 @@ def global_catalog(
     _echo_json(build_global_catalog(_settings(mode), countries=country))
 
 
+@global_app.command("shocks")
+def global_shocks(
+    country: Annotated[
+        list[str] | None, typer.Option("--country", help="limit to these ISO3 codes (repeatable)")
+    ] = None,
+    out: Annotated[Path | None, typer.Option("--out", help="output directory (default: the public data dir)")] = None,
+    workers: Annotated[int, typer.Option("--workers", min=1, max=32, help="countries processed in parallel")] = 1,
+    mode: ModeOpt = None,
+) -> None:
+    """Precompute price-shock episodes for every series (offline; the API only filters the result)."""
+    from market_almanac.globaldata.shocks import build_shock_catalog
+
+    m = build_shock_catalog(
+        _settings(mode), out_dir=out, countries=country, log=lambda msg: typer.echo(msg, err=True), workers=workers
+    )
+    _echo_json({k: m[k] for k in ("rows", "counts", "file_sha256", "content_sha256", "method_version")})
+
+
 @global_app.command("prices-bundle")
 def global_prices_bundle(
     out: Annotated[Path, typer.Option(help="output directory")] = Path("dist"),

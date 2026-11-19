@@ -356,6 +356,7 @@ export function MarketClient() {
       <PageHeader title={`${s.commodity_name} in ${s.market_name}`} lede={`${[s.admin1_name, detail.data.series.country_iso3].filter(Boolean).join(", ")} · ${s.price_type.toLowerCase()} price, ${s.currency} per ${s.unit}`}>
         <CopyButton label="Copy link" icon="share" text={() => window.location.href} />
         <LinkButton href={`/compare?s=${s.series_id}`}>Compare with other markets</LinkButton>
+        <LinkButton href={`/investigate?series=${s.series_id}`}>Investigate a price movement</LinkButton>
       </PageHeader>
 
       {global.data && (

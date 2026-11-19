@@ -6,9 +6,38 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Price Shock Investigator** (`/investigate`, `/api/v1/shocks`, `/api/v1/investigations/{id}`). Discovery of
+  food-price movements that were unusual for their own market across all 95 countries, and a reproducible
+  investigation of any one of them: magnitude, unusualness (robust z against the series' own earlier 12-month
+  changes, withheld below 36 changes, 4 years or 50% recent coverage, or on near-constant histories),
+  persistence, seasonality, extent among comparable markets (same commodity, unit, price type and currency),
+  breadth across other foods in the market, available weather and macro context (missing is shown as missing),
+  and a deterministic evidence framework that labels every statement descriptive, associational, predictive or
+  causal and never makes causal claims. Permalinks name the month, window and price snapshot (the API answers
+  409 rather than serve other data under a pinned link; plain addresses are live links); briefs export as
+  Markdown, JSON and CSV. Episodes are precomputed offline (`market-almanac global shocks`, about 10 minutes
+  on 6 cores) and ship inside the price artefact (`global-prices-v2`: the v1 partitions byte for byte plus the shock catalog;
+  29.5 MB, SHA-256 pinned in `prices_release.json`), so the API only runs bounded queries. Method:
+  [docs/PRICE_SHOCK_INVESTIGATOR.md](docs/PRICE_SHOCK_INVESTIGATOR.md).
+
+### Changed
+
+- **Price Shock Investigator correctness pass (before release).** Inflation and currency: without a consumer price
+  index and an exchange rate the mechanism is *cannot be assessed* (it was *not indicated* when other foods were
+  calm and *partly consistent* when they moved together, both of which implied more than the data show); broad
+  nominal increases, historical unusualness, evidence for the mechanism and missing evidence are listed separately.
+  Comparator populations are reported as four nested counts (found, read, with a 12-month change, assessable, unusual)
+  and "widespread", "local" and "broad" are said to describe the assessable ones only. The Gaussian tail
+  probabilities once quoted for the 2 and 3 thresholds are removed: they are screening rules, not calibrated
+  significance tests, and no false-positive rate is claimed. Detected episodes are labelled as where the rule fired,
+  which can split or truncate a longer real-world disruption. Pinned permalinks (`&snapshot=`) and live links are
+  distinguished in the page, the brief and the API. Regression tests cover each.
+
 ### Fixed
 
-- **The production database was running out of egress, not compute.** The Neon free plan's 5 GB monthly network
+- **The production database was running out of egress, not compute.** The Neon free plan's 5 GB monthly network, not compute.** The Neon free plan's 5 GB monthly network
   transfer stood at 4.70 GB (94%) three days after the project was created; compute had used about 1.9 of 100
   CU-hours. The live data-quality report is one 20.9 MB JSON row, and every read of it is transferred whole:
   `/api/v1/status` read it on every page load until `bad3491`, and `/data-quality`, `/series` and `/markets` still
@@ -21,7 +50,9 @@ All notable changes to this project are documented here. The format follows
   `make api`, Playwright's API server and some tests connected to whatever `DATABASE_URL` `.env` held; the
   production database contains two demo-mode quality reports written that way. These now default to local
   SQLite (see [Development](docs/DEVELOPMENT.md#never-develop-against-the-production-database)), and `dev/*` and
-  `fix/*` branches no longer create Vercel previews.
+  `fix/*` branches no longer create Vercel previews. The `api-demo` and `api-live` launch configurations
+  (`.claude/launch.json`) had the same fallback; `api-demo` now names its SQLite file and `api-live` is removed
+  in favour of `api-live-local`.
 
 ### Performance
 

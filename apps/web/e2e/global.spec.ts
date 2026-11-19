@@ -166,3 +166,31 @@ test.describe("Global Market Explorer", () => {
     await noHorizontalScroll(page);
   });
 });
+
+test.describe("Price Shock Investigator (real data)", () => {
+  test("the worked example reproduces: unusual, persistent and widespread, with no causal claim", async ({ page }) => {
+    const errors = trackPageErrors(page);
+    await page.goto("/investigate");
+    await page.getByRole("link", { name: /Worked example/ }).click();
+    await expect(page).toHaveURL(/series=ps_f0d5ea3ff6ef122d&event=2024-06/);
+    await waitForContent(page);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Rice (imported) in Maradi Commune");
+    const glance = page.getByRole("region", { name: "1. At a glance" });
+    await expect(glance).toContainText("Widespread");
+    await expect(glance).toContainText("+53.3%");
+    await expect(glance).toContainText("no causal claim");
+    await expect(page.getByRole("region", { name: "7. What the evidence supports" })).toContainText(
+      "Cannot be assessed with the data integrated here",
+    );
+    expect(errors).toEqual([]);
+  });
+
+  test("discovery lists unusual rises across countries, food only by default @mobile", async ({ page, request }) => {
+    const d = await get(request, "/api/v1/shocks?limit=5&sort=recent");
+    expect(d.total).toBeGreaterThan(1000);
+    await page.goto("/investigate");
+    await waitForContent(page);
+    await expect(page.getByRole("link", { name: /^Investigate / }).first()).toBeVisible();
+    await noHorizontalScroll(page);
+  });
+});

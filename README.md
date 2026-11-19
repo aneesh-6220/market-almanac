@@ -15,6 +15,12 @@ source.
   flags and provenance, compare economically compatible series, and download every stored record
   (CSV or JSON). Each country is labelled as ingested, validated, research-eligible or
   forecast-evaluated, and no forecast appears where none was evaluated.
+- **Investigate a price shock** (`/investigate`): find food-price movements that were unusual for the
+  market where they happened (robust z against the series' own past, withheld where history is too thin),
+  then open one: how unusual and how lasting, whether comparable markets and other foods moved too, what
+  weather and macro context exists, which explanations the data are consistent with and which they cannot
+  assess. Every investigation has a permalink and exports as a Markdown brief, JSON and CSV.
+  [Method and worked example](docs/PRICE_SHOCK_INVESTIGATOR.md).
 - **See global coverage** (`/atlas`): 95 countries with stored WFP prices (3,801,021 monthly
   observations, 125,202 series, 4,835 markets), each with a status (validated, research-eligible,
   forecast-evaluated…), QC results, snapshot hashes and licence; the 149 areas with no integrated
@@ -41,7 +47,7 @@ source.
 Screenshots: [home](docs/screenshots/home.png) · [explore](docs/screenshots/explore-mali.png) ·
 [compare](docs/screenshots/compare-millet.png) · [research lab](docs/screenshots/research-lab.png) ·
 [forecasts](docs/screenshots/forecasts.png) · [data coverage](docs/screenshots/data-coverage.png) ·
-[phone](docs/screenshots/mobile-market.png). All are of the running app on real data.
+[phone](docs/screenshots/mobile-market.png) · [price shock investigator](docs/screenshots/investigate-maradi-rice.png). All are of the running app on real data.
 
 ## What the research found
 
@@ -195,6 +201,7 @@ Full list: [Research limitations](docs/RESEARCH_LIMITATIONS.md).
 [Architecture](docs/ARCHITECTURE.md) · [Data sources](docs/DATA_SOURCES.md) ·
 [Data dictionary](docs/DATA_DICTIONARY.md) · [Methodology](docs/METHODOLOGY.md) ·
 [Results](docs/RESULTS.md) · [Reproducibility](docs/REPRODUCIBILITY.md) · [API](docs/API.md) ·
+[Price Shock Investigator](docs/PRICE_SHOCK_INVESTIGATOR.md) ·
 [Deployment](docs/DEPLOYMENT.md) · [Development](docs/DEVELOPMENT.md) ·
 [Engineering report](docs/FINAL_ENGINEERING_REPORT.md) · [Changelog](CHANGELOG.md)
 

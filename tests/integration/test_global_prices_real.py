@@ -1,7 +1,7 @@
 """Journeys over the archived global WFP data (3.8 M observations, 95 countries).
 
 These tests need the real lake: set ``MARKET_ALMANAC_REAL_DATA_DIR`` to a data directory that holds the pinned
-``global-prices-v1`` snapshot (``market-almanac global install-prices`` creates one) or run from a checkout whose
+``global-prices-v2`` snapshot (``market-almanac global install-prices`` creates one) or run from a checkout whose
 ``data/`` already has it. Otherwise they skip. Every expectation is checked against the Parquet files read
 independently of the API, or against a fixed property of the data (e.g. totals), never against a number copied
 from the API under test.

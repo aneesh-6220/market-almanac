@@ -1,0 +1,1654 @@
+{
+ "investigation": {
+  "breadth": {
+   "capped_at": 40,
+   "extent": {
+    "class": "inconclusive",
+    "median_peer_yoy_pct": 0.07775831873905426,
+    "n_assessable": 1,
+    "n_elevated": 0,
+    "n_peers": 1,
+    "n_with_change": 1,
+    "rule": "broad: >= 50% of the other assessable foods in the same market elevated in the same direction (robust z beyond 2 in 2 of the 3 months around the peak); narrow: < 25%; inconclusive: fewer than 3 assessable",
+    "share_elevated": 0.0,
+    "share_same_direction": 1.0
+   },
+   "n_available": 1,
+   "rows": [
+    {
+     "admin1_name": "Drylands",
+     "commodity_name": "Rice (imported)",
+     "elevated": false,
+     "market_name": "Quarry Gate (no coordinates)",
+     "period": "2020-02-01",
+     "price_type": "Retail",
+     "reason": null,
+     "series_id": "ps_eec2ac16e08ff5fb",
+     "status": "ok",
+     "unit": "KG",
+     "yoy_pct": 0.07775831873905426,
+     "z": 0.019043157778889395
+    }
+   ]
+  },
+  "config": {
+   "event": "2020-02",
+   "format": "investigation-1",
+   "method_version": "shock-1",
+   "peers": "same country, commodity, unit, price type and currency",
+   "series_id": "ps_d49d4a2b9a406db7",
+   "snapshot_id": "20261119T164353_6fabad",
+   "window": {
+    "end": "2021-03",
+    "start": "2018-01"
+   }
+  },
+  "config_id": "ec010177a1f1cfa2",
+  "context": {
+   "macro": {
+    "available": [
+     "cpi",
+     "fx"
+    ],
+    "cpi": {
+     "indicator_code": "IMF.CPI.ALL",
+     "indicator_name": "Consumer price index, all items",
+     "period": "2020-02",
+     "provider": "demo",
+     "series": [
+      {
+       "period": "2017-02",
+       "value": 117.1779
+      },
+      {
+       "period": "2017-03",
+       "value": 118.252
+      },
+      {
+       "period": "2017-04",
+       "value": 118.5936
+      },
+      {
+       "period": "2017-05",
+       "value": 119.5845
+      },
+      {
+       "period": "2017-06",
+       "value": 119.496
+      },
+      {
+       "period": "2017-07",
+       "value": 120.1371
+      },
+      {
+       "period": "2017-08",
+       "value": 121.25
+      },
+      {
+       "period": "2017-09",
+       "value": 122.1926
+      },
+      {
+       "period": "2017-10",
+       "value": 123.8466
+      },
+      {
+       "period": "2017-11",
+       "value": 124.6393
+      },
+      {
+       "period": "2017-12",
+       "value": 125.3032
+      },
+      {
+       "period": "2018-01",
+       "value": 126.9436
+      },
+      {
+       "period": "2018-02",
+       "value": 128.0299
+      },
+      {
+       "period": "2018-03",
+       "value": 128.3818
+      },
+      {
+       "period": "2018-04",
+       "value": 130.2183
+      },
+      {
+       "period": "2018-05",
+       "value": 131.6782
+      },
+      {
+       "period": "2018-06",
+       "value": 133.2316
+      },
+      {
+       "period": "2018-07",
+       "value": 134.9278
+      },
+      {
+       "period": "2018-08",
+       "value": 136.6281
+      },
+      {
+       "period": "2018-09",
+       "value": 138.7871
+      },
+      {
+       "period": "2018-10",
+       "value": 140.1852
+      },
+      {
+       "period": "2018-11",
+       "value": 141.8593
+      },
+      {
+       "period": "2018-12",
+       "value": 142.6577
+      },
+      {
+       "period": "2019-01",
+       "value": 143.0099
+      },
+      {
+       "period": "2019-02",
+       "value": 143.586
+      },
+      {
+       "period": "2019-03",
+       "value": 143.5587
+      },
+      {
+       "period": "2019-04",
+       "value": 143.807
+      },
+      {
+       "period": "2019-05",
+       "value": 143.8034
+      },
+      {
+       "period": "2019-06",
+       "value": 144.1618
+      },
+      {
+       "period": "2019-07",
+       "value": 144.7521
+      },
+      {
+       "period": "2019-08",
+       "value": 145.9987
+      },
+      {
+       "period": "2019-09",
+       "value": 147.4349
+      },
+      {
+       "period": "2019-10",
+       "value": 148.459
+      },
+      {
+       "period": "2019-11",
+       "value": 149.3614
+      },
+      {
+       "period": "2019-12",
+       "value": 150.5351
+      },
+      {
+       "period": "2020-01",
+       "value": 151.4174
+      },
+      {
+       "period": "2020-02",
+       "value": 152.4697
+      }
+     ],
+     "unit": "index",
+     "value": 152.4697,
+     "yoy_pct": 0.06187023804549163
+    },
+    "fx": {
+     "indicator_code": "IMF.FX.USD",
+     "indicator_name": "Exchange rate, national currency per US dollar, period average",
+     "period": "2020-02",
+     "provider": "demo",
+     "series": [
+      {
+       "period": "2017-02",
+       "value": 185.5014
+      },
+      {
+       "period": "2017-03",
+       "value": 182.9895
+      },
+      {
+       "period": "2017-04",
+       "value": 185.5272
+      },
+      {
+       "period": "2017-05",
+       "value": 182.4752
+      },
+      {
+       "period": "2017-06",
+       "value": 185.0093
+      },
+      {
+       "period": "2017-07",
+       "value": 185.4614
+      },
+      {
+       "period": "2017-08",
+       "value": 186.4871
+      },
+      {
+       "period": "2017-09",
+       "value": 189.3801
+      },
+      {
+       "period": "2017-10",
+       "value": 191.5602
+      },
+      {
+       "period": "2017-11",
+       "value": 191.759
+      },
+      {
+       "period": "2017-12",
+       "value": 192.8188
+      },
+      {
+       "period": "2018-01",
+       "value": 193.0312
+      },
+      {
+       "period": "2018-02",
+       "value": 189.2314
+      },
+      {
+       "period": "2018-03",
+       "value": 193.5887
+      },
+      {
+       "period": "2018-04",
+       "value": 198.1057
+      },
+      {
+       "period": "2018-05",
+       "value": 205.3474
+      },
+      {
+       "period": "2018-06",
+       "value": 210.4459
+      },
+      {
+       "period": "2018-07",
+       "value": 215.9472
+      },
+      {
+       "period": "2018-08",
+       "value": 220.2447
+      },
+      {
+       "period": "2018-09",
+       "value": 221.209
+      },
+      {
+       "period": "2018-10",
+       "value": 222.9611
+      },
+      {
+       "period": "2018-11",
+       "value": 227.2898
+      },
+      {
+       "period": "2018-12",
+       "value": 226.304
+      },
+      {
+       "period": "2019-01",
+       "value": 225.1959
+      },
+      {
+       "period": "2019-02",
+       "value": 225.1
+      },
+      {
+       "period": "2019-03",
+       "value": 223.998
+      },
+      {
+       "period": "2019-04",
+       "value": 226.3595
+      },
+      {
+       "period": "2019-05",
+       "value": 223.2027
+      },
+      {
+       "period": "2019-06",
+       "value": 225.1459
+      },
+      {
+       "period": "2019-07",
+       "value": 225.906
+      },
+      {
+       "period": "2019-08",
+       "value": 231.2644
+      },
+      {
+       "period": "2019-09",
+       "value": 232.1116
+      },
+      {
+       "period": "2019-10",
+       "value": 232.6805
+      },
+      {
+       "period": "2019-11",
+       "value": 232.0838
+      },
+      {
+       "period": "2019-12",
+       "value": 233.1649
+      },
+      {
+       "period": "2020-01",
+       "value": 237.1198
+      },
+      {
+       "period": "2020-02",
+       "value": 234.433
+      }
+     ],
+     "unit": "national currency per USD",
+     "value": 234.433,
+     "yoy_pct": 0.04146157263438477
+    },
+    "real_yoy_pct": 0.48040212233392277
+   },
+   "weather": {
+    "market_cell": null,
+    "production_region": null,
+    "status": "unavailable"
+   }
+  },
+  "direction": "up",
+  "episode": {
+   "baseline": {
+    "end": "2019-12-01",
+    "mean_price": 71.79833333333333,
+    "n": 12,
+    "start": "2019-01-01"
+   },
+   "data_concern": false,
+   "direction": "up",
+   "duration_months": 3,
+   "end": "2020-03-01",
+   "flags": [],
+   "kind": "unusual",
+   "max_mom_pct": 0.035616763623412595,
+   "n_reference": 84,
+   "ongoing": false,
+   "onset_mom_pct": 0.02631899597904197,
+   "peak": "2020-02-01",
+   "peak_index": 121.49307086979735,
+   "peak_percentile": 1.0,
+   "peak_price": 87.23,
+   "peak_yoy_pct": 0.5719949540457738,
+   "peak_z": 3.5627717041467055,
+   "qualifying_months": 3,
+   "reference_median_yoy_pct": 0.012096742132149174,
+   "reference_years": 7,
+   "retrace_6m_pct": -0.07566204287515776,
+   "stable": true,
+   "start": "2020-01-01",
+   "window_coverage": 1.0,
+   "withheld_reason": null
+  },
+  "episodes_in_window": [
+   {
+    "baseline": {
+     "end": "2019-11-01",
+     "mean_price": 70.34166666666665,
+     "n": 12,
+     "start": "2018-12-01"
+    },
+    "data_concern": false,
+    "direction": "up",
+    "duration_months": 1,
+    "end": "2019-12-01",
+    "flags": [],
+    "kind": "large_typical",
+    "max_mom_pct": 0.049354302518859416,
+    "n_reference": 83,
+    "ongoing": false,
+    "onset_mom_pct": 0.049354302518859416,
+    "peak": "2019-12-01",
+    "peak_index": 116.67337993128778,
+    "peak_percentile": 0.9397590361445783,
+    "peak_price": 82.07,
+    "peak_yoy_pct": 0.27063012850286405,
+    "peak_z": 1.9083123186366224,
+    "qualifying_months": 1,
+    "reference_median_yoy_pct": 0.010799691437386905,
+    "reference_years": 7,
+    "retrace_6m_pct": 0.1516997684903132,
+    "stable": true,
+    "start": "2019-12-01",
+    "window_coverage": 1.0,
+    "withheld_reason": null
+   },
+   {
+    "baseline": {
+     "end": "2019-12-01",
+     "mean_price": 71.79833333333333,
+     "n": 12,
+     "start": "2019-01-01"
+    },
+    "data_concern": false,
+    "direction": "up",
+    "duration_months": 3,
+    "end": "2020-03-01",
+    "flags": [],
+    "kind": "unusual",
+    "max_mom_pct": 0.035616763623412595,
+    "n_reference": 84,
+    "ongoing": false,
+    "onset_mom_pct": 0.02631899597904197,
+    "peak": "2020-02-01",
+    "peak_index": 121.49307086979735,
+    "peak_percentile": 1.0,
+    "peak_price": 87.23,
+    "peak_yoy_pct": 0.5719949540457738,
+    "peak_z": 3.5627717041467055,
+    "qualifying_months": 3,
+    "reference_median_yoy_pct": 0.012096742132149174,
+    "reference_years": 7,
+    "retrace_6m_pct": -0.07566204287515776,
+    "stable": true,
+    "start": "2020-01-01",
+    "window_coverage": 1.0,
+    "withheld_reason": null
+   },
+   {
+    "baseline": {
+     "end": "2020-03-01",
+     "mean_price": 79.0925,
+     "n": 12,
+     "start": "2019-04-01"
+    },
+    "data_concern": false,
+    "direction": "up",
+    "duration_months": 1,
+    "end": "2020-04-01",
+    "flags": [],
+    "kind": "large_typical",
+    "max_mom_pct": 0.048847295138096936,
+    "n_reference": 87,
+    "ongoing": false,
+    "onset_mom_pct": 0.048847295138096936,
+    "peak": "2020-04-01",
+    "peak_index": 116.1930650820242,
+    "peak_percentile": 0.896551724137931,
+    "peak_price": 91.9,
+    "peak_yoy_pct": 0.2686361126449477,
+    "peak_z": 1.6393968020915493,
+    "qualifying_months": 1,
+    "reference_median_yoy_pct": 0.016416444506806016,
+    "reference_years": 8,
+    "retrace_6m_pct": -0.09902067464635478,
+    "stable": true,
+    "start": "2020-04-01",
+    "window_coverage": 1.0,
+    "withheld_reason": null
+   }
+  ],
+  "evidence": {
+   "assessment": [
+    {
+     "detail": "large in nominal terms",
+     "key": "magnitude",
+     "label": "12-month change",
+     "tone": "neutral",
+     "value": "+57.2%"
+    },
+    {
+     "detail": "robust z +3.6, 84 earlier changes",
+     "key": "unusualness",
+     "label": "Unusual for this market?",
+     "tone": "warn",
+     "value": "Yes"
+    },
+    {
+     "detail": "detected January 2020 to March 2020 (may split or truncate a longer event)",
+     "key": "persistence",
+     "label": "Persistence",
+     "tone": "neutral",
+     "value": "3 months"
+    },
+    {
+     "detail": "1 of 7 assessable comparable markets also unusual (7 found)",
+     "key": "extent",
+     "label": "Other markets",
+     "tone": "neutral",
+     "value": "Local"
+    },
+    {
+     "detail": "0 of 1 assessable foods also unusual",
+     "key": "breadth",
+     "label": "Other foods, same market",
+     "tone": "muted",
+     "value": "Inconclusive"
+    },
+    {
+     "detail": "usual pattern implies -10.8% over these months",
+     "key": "seasonality",
+     "label": "Seasonal?",
+     "tone": "neutral",
+     "value": "No"
+    },
+    {
+     "detail": "39 of 39 months observed",
+     "key": "data",
+     "label": "Data quality",
+     "tone": "good",
+     "value": "Adequate"
+    }
+   ],
+   "conclusion": {
+    "inference": "descriptive and associational; no causal claim",
+    "text": "In February 2020 the price of Maize (white) in Quarry Gate (no coordinates) had risen 57.2% over 12 months, which is unusual for this market (robust z +3.6; higher than all 84 earlier 12-month changes). The screening rule flagged 3 months. The episode dates show where the screening rule fired, not the full duration of any event. Few of the 7 assessable comparable markets were unusually high at the time. Too few other foods in the same market could be assessed against their own past. This pattern is consistent with local supply or market-access disruption, but the data integrated here cannot establish which, if any, was responsible. It cannot assess weather-related production shock, policy intervention or transmission of international prices."
+   },
+   "gaps": [
+    "the original survey records or enumerator notes",
+    "confirmation of the unit and outlet by the data provider",
+    "the local crop calendar and the timing of the most recent harvest",
+    "national production estimates for the relevant season (not integrated)",
+    "import, export and cross-border trade flows (not integrated)",
+    "conflict and access-constraint records for the area (not integrated)",
+    "transport costs and road or border closures (not integrated)",
+    "monthly consumer price index and exchange rate for the country (integrated only where listed above)",
+    "harvest outcome for the season (not integrated)",
+    "evidence that this market is supplied from those areas",
+    "dated records of trade and price policy measures for the country",
+    "world reference prices for the commodity and the country's import dependence"
+   ],
+   "mechanisms": [
+    {
+     "description": "A change of unit, a mis-keyed price or a change of reporting outlet can look like a price shock.",
+     "evidence": [
+      "no implausible jumps or reversing single-month spikes were detected"
+     ],
+     "key": "data_error",
+     "name": "Recording, unit or measurement error",
+     "needed": [
+      "the original survey records or enumerator notes",
+      "confirmation of the unit and outlet by the data provider"
+     ],
+     "status": "not_indicated",
+     "status_text": "Not indicated by the available evidence"
+    },
+    {
+     "description": "Prices of many staples rise every year before the harvest and fall after it.",
+     "evidence": [
+      "the usual seasonal pattern implies -10.8% over these months against +6.3% observed",
+      "the unusualness test compares 12-month changes, which already removes a regular seasonal pattern"
+     ],
+     "key": "seasonal",
+     "name": "Normal seasonal pattern (lean season, harvest timing)",
+     "needed": [
+      "the local crop calendar and the timing of the most recent harvest"
+     ],
+     "status": "less_likely",
+     "status_text": "The available evidence argues against this being the main explanation"
+    },
+    {
+     "description": "A shock to national supply or demand moves the price in most markets that trade the commodity.",
+     "evidence": [
+      "7 comparable markets found; 7 reported a 12-month change within a month of the peak; 7 had enough history to be assessed against their own past; 1 of those 7 were also unusually high",
+      "the classification (local) describes only the 7 assessable markets; the others could not be judged either way"
+     ],
+     "key": "national_commodity",
+     "name": "Country-wide supply or demand change for this commodity (harvest shortfall, import or trade disruption)",
+     "needed": [
+      "national production estimates for the relevant season (not integrated)",
+      "import, export and cross-border trade flows (not integrated)"
+     ],
+     "status": "less_likely",
+     "status_text": "The available evidence argues against this being the main explanation"
+    },
+    {
+     "description": "A disruption that affects one market or area raises prices there but not elsewhere.",
+     "evidence": [
+      "7 comparable markets found; 7 reported a 12-month change within a month of the peak; 7 had enough history to be assessed against their own past; 1 of those 7 were also unusually high",
+      "the episode lasted 3 months"
+     ],
+     "key": "local_disruption",
+     "name": "Local supply or market-access disruption (transport, insecurity, market closure)",
+     "needed": [
+      "conflict and access-constraint records for the area (not integrated)",
+      "transport costs and road or border closures (not integrated)"
+     ],
+     "status": "consistent",
+     "status_text": "Consistent with the available evidence"
+    },
+    {
+     "description": "When the currency loses value or inflation is high, most prices rise together, imported foods first. Without a price index and an exchange rate, a broad nominal rise cannot be told apart from any other shock that moves many foods at once, and prices that look calm cannot rule inflation or depreciation out.",
+     "evidence": [
+      "0 of the 1 other foods in the same market with a 12-month change rose by 25% or more in nominal terms around the peak (median +7.8%)",
+      "0 of 1 assessable other foods were unusually high against their own past",
+      "foods staying within their usual ranges is not evidence against inflation or depreciation, which can be habitual in a market",
+      "national CPI changed +6.2% over the same 12 months",
+      "the exchange rate to the US dollar changed +4.1%"
+     ],
+     "evidence_groups": [
+      {
+       "items": [
+        "0 of the 1 other foods in the same market with a 12-month change rose by 25% or more in nominal terms around the peak (median +7.8%)"
+       ],
+       "key": "nominal",
+       "label": "Broad nominal price increases (descriptive; not evidence of a mechanism)"
+      },
+      {
+       "items": [
+        "0 of 1 assessable other foods were unusually high against their own past",
+        "foods staying within their usual ranges is not evidence against inflation or depreciation, which can be habitual in a market"
+       ],
+       "key": "unusual",
+       "label": "Historically unusual (against each food's own past)"
+      },
+      {
+       "items": [
+        "national CPI changed +6.2% over the same 12 months",
+        "the exchange rate to the US dollar changed +4.1%"
+       ],
+       "key": "mechanism",
+       "label": "Evidence for a macroeconomic mechanism"
+      },
+      {
+       "items": [],
+       "key": "missing",
+       "label": "Missing evidence"
+      }
+     ],
+     "key": "macro",
+     "name": "General inflation or currency depreciation",
+     "needed": [
+      "monthly consumer price index and exchange rate for the country (integrated only where listed above)"
+     ],
+     "status": "less_likely",
+     "status_text": "The available evidence argues against this being the main explanation"
+    },
+    {
+     "description": "Poor rains in producing areas can reduce harvests and raise prices months later.",
+     "evidence": [
+      "no weather data are integrated for this market or crop"
+     ],
+     "key": "weather",
+     "name": "Weather-related production shock (drought, floods)",
+     "needed": [
+      "harvest outcome for the season (not integrated)",
+      "evidence that this market is supplied from those areas"
+     ],
+     "status": "cannot_be_assessed",
+     "status_text": "Cannot be assessed with the data integrated here"
+    },
+    {
+     "description": "Trade and price policies can move domestic prices abruptly.",
+     "evidence": [
+      "no record of policy measures is integrated"
+     ],
+     "key": "policy",
+     "name": "Policy intervention (export ban, tariff, subsidy removal, price control)",
+     "needed": [
+      "dated records of trade and price policy measures for the country"
+     ],
+     "status": "cannot_be_assessed",
+     "status_text": "Cannot be assessed with the data integrated here"
+    },
+    {
+     "description": "Prices of imported or traded staples follow world markets with a lag.",
+     "evidence": [
+      "no international reference prices are integrated"
+     ],
+     "key": "international",
+     "name": "Transmission of international prices",
+     "needed": [
+      "world reference prices for the commodity and the country's import dependence"
+     ],
+     "status": "cannot_be_assessed",
+     "status_text": "Cannot be assessed with the data integrated here"
+    }
+   ],
+   "observed_facts": [
+    {
+     "evidence": [
+      "magnitude.event_price"
+     ],
+     "inference": "descriptive",
+     "text": "The reported retail price of Maize (white) in Quarry Gate (no coordinates) for February 2020 was 87.23 XTS/KG (nominal, XTS)."
+    },
+    {
+     "evidence": [
+      "magnitude.baseline"
+     ],
+     "inference": "descriptive",
+     "text": "Over the 12 observed months from January 2019 to December 2019 the price averaged 71.80 XTS/KG."
+    },
+    {
+     "evidence": [
+      "magnitude.peak_price"
+     ],
+     "inference": "descriptive",
+     "text": "The highest 12-month change in the episode came in February 2020, at a price of 87.23 XTS/KG."
+    },
+    {
+     "evidence": [
+      "observation_quality"
+     ],
+     "inference": "descriptive",
+     "text": "In the investigation window (January 2018 to March 2021) 39 of 39 months have a valid price; the longest run of missing months is 0."
+    }
+   ],
+   "quantitative": [
+    {
+     "evidence": [
+      "magnitude.event_yoy_pct",
+      "magnitude.event_mom_pct"
+     ],
+     "inference": "descriptive",
+     "text": "The 12-month change to February 2020 was +57.2%; the change from the previous month was +3.6%."
+    },
+    {
+     "evidence": [
+      "magnitude.change_from_baseline_pct"
+     ],
+     "inference": "descriptive",
+     "text": "The February 2020 price was +21.5% relative to its average over the 12 months before the movement began (price index 121, baseline = 100)."
+    },
+    {
+     "evidence": [
+      "unusualness"
+     ],
+     "inference": "descriptive",
+     "text": "Compared with the earlier 12-month changes of this series (from 7 calendar years, ending December 2019), it was higher than all 84 (robust z-score +3.6; a typical 12-month change here was +1.2%, and 80% fell between -11.4% and +25.0%)."
+    },
+    {
+     "evidence": [
+      "episode",
+      "persistence"
+     ],
+     "inference": "descriptive",
+     "text": "The screening rule (|robust z| >= 2, reaching 3 at least once) flagged the 12-month change from January 2020 to March 2020 (3 months). A detected episode is the run of months in which the screening rule fired. It can split one longer disruption into several episodes (a single month just below the threshold ends a run) or cut it short (the rule needs earlier history and observed months), so its dates and length are not the duration of any real-world event."
+    },
+    {
+     "evidence": [
+      "episode.retrace_6m_pct"
+     ],
+     "inference": "descriptive",
+     "text": "Six months after the peak the price was -7.6% relative to the peak."
+    },
+    {
+     "evidence": [
+      "seasonality"
+     ],
+     "inference": "descriptive",
+     "text": "The usual seasonal pattern (from 8 earlier years) implies a change of -10.8% from December to February; the observed change over those months was +6.3%."
+    },
+    {
+     "evidence": [
+      "peers.extent"
+     ],
+     "inference": "associational",
+     "text": "Comparable markets (same commodity, unit, price type and currency): 7 comparable markets found; 7 reported a 12-month change within a month of the peak; 7 had enough history to be assessed against their own past; 1 of those 7 were also unusually high. The extent (local) describes only the 7 assessable markets, not every market in the country; the median 12-month change across the comparable markets with a change was +32.7%."
+    },
+    {
+     "evidence": [
+      "breadth.extent"
+     ],
+     "inference": "associational",
+     "text": "Other foods in the same market: 1 other foods found; 1 reported a 12-month change within a month of the peak; 1 had enough history to be assessed against their own past; 0 of those 1 were also unusually high (their median 12-month change was +7.8%). Too few could be assessed to classify the breadth of the movement."
+    },
+    {
+     "evidence": [
+      "context.macro.cpi"
+     ],
+     "inference": "descriptive",
+     "text": "The national consumer price index rose +6.2% over the same 12 months (DEMO); deflated by it, the commodity's 12-month change was +48.0%."
+    },
+    {
+     "evidence": [
+      "context.macro.fx"
+     ],
+     "inference": "descriptive",
+     "text": "The local currency's exchange rate to the US dollar changed +4.1% over the same 12 months (more units per dollar: depreciation)."
+    }
+   ],
+   "rules": {
+    "episode": "A detected episode is the run of months in which the screening rule fired. It can split one longer disruption into several episodes (a single month just below the threshold ends a run) or cut it short (the rule needs earlier history and observed months), so its dates and length are not the duration of any real-world event.",
+    "screening": "The robust z-score thresholds are screening rules, not calibrated significance tests: food-price changes are heavy-tailed and overlap from month to month, so a z-score is not a probability and no false-positive rate is claimed.",
+    "statuses": {
+     "cannot_be_assessed": "Cannot be assessed with the data integrated here",
+     "consistent": "Consistent with the available evidence",
+     "context_only": "Only contextual data are available; not evaluated",
+     "less_likely": "The available evidence argues against this being the main explanation",
+     "not_indicated": "Not indicated by the available evidence",
+     "partly_consistent": "Partly consistent with the available evidence"
+    },
+    "unusual": "|robust z| >= 2 against at least 36 earlier 12-month changes"
+   },
+   "unsupported": [
+    {
+     "evidence": [],
+     "inference": "causal",
+     "text": "That any of the mechanisms above caused this movement. The evidence can be consistent or inconsistent with a mechanism; it does not identify causes."
+    },
+    {
+     "evidence": [],
+     "inference": "causal",
+     "text": "That households faced food insecurity, hunger or a crisis. Prices alone do not measure incomes, access or consumption, and no risk score is computed here."
+    },
+    {
+     "evidence": [],
+     "inference": "predictive",
+     "text": "That the price will continue to rise or fall back. No forecast is made in this investigation."
+    },
+    {
+     "evidence": [],
+     "inference": "descriptive",
+     "text": "That prices of this commodity rose across the country."
+    },
+    {
+     "evidence": [],
+     "inference": "descriptive",
+     "text": "That a robust z-score is a probability, significance level or false-positive rate. The robust z-score thresholds are screening rules, not calibrated significance tests: food-price changes are heavy-tailed and overlap from month to month, so a z-score is not a probability and no false-positive rate is claimed."
+    },
+    {
+     "evidence": [],
+     "inference": "descriptive",
+     "text": "That the detected episode is the full duration of a real-world disruption. A detected episode is the run of months in which the screening rule fired. It can split one longer disruption into several episodes (a single month just below the threshold ends a run) or cut it short (the rule needs earlier history and observed months), so its dates and length are not the duration of any real-world event."
+    }
+   ]
+  },
+  "magnitude": {
+   "baseline": {
+    "end": "2019-12-01",
+    "mean_price": 71.79833333333333,
+    "n": 12,
+    "start": "2019-01-01"
+   },
+   "change_from_baseline_pct": 0.21493070869797348,
+   "event_mom_pct": 0.035616763623412526,
+   "event_price": 87.23,
+   "event_yoy_pct": 0.5719949540457737,
+   "large_nominal": true,
+   "peak_index": 121.49307086979735,
+   "peak_month": "2020-02",
+   "peak_price": 87.23
+  },
+  "method": {
+   "text": "12-month log price change compared with the same series' earlier 12-month changes (robust z-score: median and 1.4826 x MAD, scale floor 0.01; rank: share of earlier changes below it). Assessed only with at least 36 earlier changes from 4+ calendar years and at least 50% of the last 24 months observed. Episode: consecutive months with |z| >= 2.0 that reaches |z| >= 3.0 at least once; its peak is re-assessed against changes recorded before it began. The thresholds are screening rules, not calibrated significance tests, and an episode is where the rule fired: it can split or truncate a longer real-world disruption, so its length is not the duration of any event.",
+   "version": "shock-1"
+  },
+  "observation_quality": {
+   "flagged_records": [
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-01",
+     "price": 71.6,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-02",
+     "price": 69.71,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-03",
+     "price": 69.79,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-04",
+     "price": 71.27,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-05",
+     "price": 75.81,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-06",
+     "price": 74.15,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-07",
+     "price": 78.62,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-08",
+     "price": 87.23,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-09",
+     "price": 86.49,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-10",
+     "price": 79.02,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-11",
+     "price": 70.24,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2018-12",
+     "price": 64.59,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-01",
+     "price": 56.14,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-02",
+     "price": 55.49,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-03",
+     "price": 59.92,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-04",
+     "price": 72.44,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-05",
+     "price": 78.08,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-06",
+     "price": 78.05,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-07",
+     "price": 77.64,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-08",
+     "price": 73.33,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-09",
+     "price": 74.43,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-10",
+     "price": 75.78,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-11",
+     "price": 78.21,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2019-12",
+     "price": 82.07,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-01",
+     "price": 84.23,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-02",
+     "price": 87.23,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-03",
+     "price": 87.62,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-04",
+     "price": 91.9,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-05",
+     "price": 96.54,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-06",
+     "price": 94.52,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-07",
+     "price": 87.92,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-08",
+     "price": 80.63,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-09",
+     "price": 76.25,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-10",
+     "price": 82.8,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-11",
+     "price": 83.94,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2020-12",
+     "price": 81.1,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2021-01",
+     "price": 88.86,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2021-02",
+     "price": 97.02,
+     "used": true
+    },
+    {
+     "flags": [
+      "synthetic"
+     ],
+     "period": "2021-03",
+     "price": 102.16,
+     "used": true
+    }
+   ],
+   "longest_gap_months": 0,
+   "missing_months": [],
+   "months_in_window": 39,
+   "months_missing": 0,
+   "months_observed": 39,
+   "records_in_window": 39,
+   "records_not_used": 0
+  },
+  "peers": {
+   "capped_at": 60,
+   "extent": {
+    "class": "local",
+    "median_peer_yoy_pct": 0.3273842721695488,
+    "n_assessable": 7,
+    "n_elevated": 1,
+    "n_peers": 7,
+    "n_with_change": 7,
+    "rule": "a peer is elevated when its robust z is beyond 2 in the same direction in at least 2 of the 3 months around the peak; widespread: >= 50% of assessable peers elevated; local: < 25%; inconclusive: fewer than 3 assessable peers",
+    "share_elevated": 0.14285714285714285,
+    "share_same_direction": 1.0
+   },
+   "index": {
+    "base": {
+     "end": "2019-12",
+     "start": "2019-01"
+    },
+    "n_indexed_peers": 7,
+    "rows": [
+     {
+      "own": 99.72376331855428,
+      "peer_median": 85.44098817503955,
+      "peer_q25": 82.22959911100045,
+      "peer_q75": 89.24875476268282,
+      "peers_observed": 7,
+      "period": "2018-01"
+     },
+     {
+      "own": 97.09139023654215,
+      "peer_median": 89.06787177381116,
+      "peer_q25": 86.39826903999193,
+      "peer_q75": 93.81694820433233,
+      "peers_observed": 6,
+      "period": "2018-02"
+     },
+     {
+      "own": 97.20281343578078,
+      "peer_median": 88.99600813436771,
+      "peer_q25": 88.37374769516653,
+      "peer_q75": 91.01583585368758,
+      "peers_observed": 7,
+      "period": "2018-03"
+     }
+    ]
+   },
+   "n_available": 7,
+   "rows": [
+    {
+     "admin1_name": "Drylands",
+     "commodity_name": "Maize (white)",
+     "elevated": true,
+     "market_name": "Dunmere",
+     "period": "2020-01-01",
+     "price_type": "Retail",
+     "reason": null,
+     "series_id": "ps_8f24933b78ce6794",
+     "status": "ok",
+     "unit": "KG",
+     "yoy_pct": 0.38831323254628813,
+     "z": 2.8077702397578688
+    },
+    {
+     "admin1_name": "Uplands",
+     "commodity_name": "Maize (white)",
+     "elevated": false,
+     "market_name": "Fenwick (gappy)",
+     "period": "2020-02-01",
+     "price_type": "Retail",
+     "reason": null,
+     "series_id": "ps_07af5346144ebc06",
+     "status": "ok",
+     "unit": "KG",
+     "yoy_pct": 0.3273842721695488,
+     "z": 1.9381525151939187
+    },
+    {
+     "admin1_name": "Coastal",
+     "commodity_name": "Maize (white)",
+     "elevated": false,
+     "market_name": "Vell Junction",
+     "period": "2020-01-01",
+     "price_type": "Retail",
+     "reason": null,
+     "series_id": "ps_e81bb090053d9ca5",
+     "status": "ok",
+     "unit": "KG",
+     "yoy_pct": 0.32515337423312807,
+     "z": 1.8749646693025779
+    }
+   ]
+  },
+  "persistence": {
+   "duration_months": 3,
+   "note": "A detected episode is the run of months in which the screening rule fired. It can split one longer disruption into several episodes (a single month just below the threshold ends a run) or cut it short (the rule needs earlier history and observed months), so its dates and length are not the duration of any real-world event.",
+   "ongoing": false,
+   "qualifying_months": 3,
+   "retrace_6m_pct": -0.07566204287515776,
+   "verdict": "short"
+  },
+  "question": "Was the rise in the retail price of Maize (white) in Quarry Gate (no coordinates) (XDM) around February 2020 unusual for that market, was it shared by comparable markets and other foods, and what can the available data say about why it happened?",
+  "seasonality": {
+   "base_month": "2019-12-01",
+   "expected_change_pct": -0.10808108169128272,
+   "method": "median across pre-episode years of price / calendar-year mean, by calendar month; expected change = profile(peak month) / profile(month before onset) - 1",
+   "months": [
+    {
+     "median_index": 0.8892145314533291,
+     "month": 1,
+     "n_years": 8,
+     "name": "Jan",
+     "q25": 0.8282432552930634,
+     "q75": 0.9086189211030512
+    },
+    {
+     "median_index": 0.9059423915137594,
+     "month": 2,
+     "n_years": 8,
+     "name": "Feb",
+     "q25": 0.8769825472968985,
+     "q75": 0.9351585806843352
+    },
+    {
+     "median_index": 0.9302184178166482,
+     "month": 3,
+     "n_years": 8,
+     "name": "Mar",
+     "q25": 0.918038210892512,
+     "q75": 0.9383234213690943
+    },
+    {
+     "median_index": 0.9800603930365607,
+     "month": 4,
+     "n_years": 8,
+     "name": "Apr",
+     "q25": 0.9633263638490936,
+     "q75": 1.0094774683601007
+    },
+    {
+     "median_index": 1.0410545935544295,
+     "month": 5,
+     "n_years": 8,
+     "name": "May",
+     "q25": 1.0056669439452675,
+     "q75": 1.0600605177132294
+    },
+    {
+     "median_index": 1.0548582747050632,
+     "month": 6,
+     "n_years": 8,
+     "name": "Jun",
+     "q25": 1.0262879831971166,
+     "q75": 1.0875218377434217
+    },
+    {
+     "median_index": 1.0719615478731743,
+     "month": 7,
+     "n_years": 8,
+     "name": "Jul",
+     "q25": 1.0546448259927952,
+     "q75": 1.0884954900629413
+    },
+    {
+     "median_index": 1.063373372490375,
+     "month": 8,
+     "n_years": 8,
+     "name": "Aug",
+     "q25": 1.0422464986647515,
+     "q75": 1.0895355398198785
+    },
+    {
+     "median_index": 1.054564627579552,
+     "month": 9,
+     "n_years": 8,
+     "name": "Sep",
+     "q25": 1.0338571506920504,
+     "q75": 1.0724070841639852
+    },
+    {
+     "median_index": 1.0516214927793353,
+     "month": 10,
+     "n_years": 8,
+     "name": "Oct",
+     "q25": 1.0317051807200355,
+     "q75": 1.05544729581458
+    },
+    {
+     "median_index": 1.0055572770201162,
+     "month": 11,
+     "n_years": 8,
+     "name": "Nov",
+     "q25": 0.9750822511244476,
+     "q75": 1.032618920660789
+    },
+    {
+     "median_index": 1.0157228117009043,
+     "month": 12,
+     "n_years": 8,
+     "name": "Dec",
+     "q25": 0.9172711904541189,
+     "q75": 1.025591615486776
+    }
+   ],
+   "observed_change_pct": 0.06287315706104568,
+   "peak_calendar_month": 7,
+   "peak_month": "2020-02-01",
+   "seasonal_amplitude": 0.20551510344884294,
+   "share_explained": null,
+   "status": "ok",
+   "trough_calendar_month": 1,
+   "verdict": "not_seasonal",
+   "years_used": 8
+  },
+  "signals": [
+   {
+    "mom_pct": -0.07791371538956904,
+    "percentile": 0.5666666666666667,
+    "period": "2018-01",
+    "price": 71.6,
+    "reason": null,
+    "status": "ok",
+    "yoy_pct": 0.06515917881582825,
+    "z": 0.17305044016546262
+   },
+   {
+    "mom_pct": -0.02639664804469255,
+    "percentile": 0.26229508196721313,
+    "period": "2018-02",
+    "price": 69.71,
+    "reason": null,
+    "status": "ok",
+    "yoy_pct": -0.03408618539559363,
+    "z": -0.45935645334204184
+   },
+   {
+    "mom_pct": 0.0011476115334963335,
+    "percentile": 0.22580645161290322,
+    "period": "2018-03",
+    "price": 69.79,
+    "reason": null,
+    "status": "ok",
+    "yoy_pct": -0.04252983948415363,
+    "z": -0.5234542264170716
+   },
+   {
+    "mom_pct": 0.021206476572573858,
+    "percentile": 0.2222222222222222,
+    "period": "2018-04",
+    "price": 71.27,
+    "reason": null,
+    "status": "ok",
+    "yoy_pct": -0.04604470619729693,
+    "z": -0.5522540864529305
+   }
+  ],
+  "sources": [
+   {
+    "licence": "CC BY-IGO; cite WFP / HDX",
+    "name": "World Food Programme market prices, via the HDX Humanitarian API (HAPI)",
+    "url": "https://hapi.humdata.org/",
+    "use": "all prices"
+   },
+   {
+    "licence": "NASA POWER: public; MapSPAM: CC BY 4.0 (IFPRI)",
+    "name": "NASA POWER daily meteorology (market grid cell) and MapSPAM 2010 crop areas (production region)",
+    "url": "https://power.larc.nasa.gov/",
+    "use": "weather context, where integrated"
+   },
+   {
+    "licence": "IMF terms of use",
+    "name": "IMF consumer price index and exchange rates",
+    "url": "https://data.imf.org/",
+    "use": "macroeconomic context, where integrated"
+   }
+  ],
+  "subject": {
+   "admin1_name": "Drylands",
+   "admin2_name": null,
+   "commodity_name": "Maize (white)",
+   "country_iso3": "XDM",
+   "country_name": "XDM",
+   "currency": "XTS",
+   "first_period": "2012-01",
+   "last_period": "2025-11",
+   "market_name": "Quarry Gate (no coordinates)",
+   "n_observations": 167,
+   "price_flag": "actual",
+   "price_type": "Retail",
+   "series_id": "ps_d49d4a2b9a406db7",
+   "unit": "KG"
+  },
+  "unusualness": {
+   "band_lower_yoy_pct": -0.20955161810994008,
+   "band_upper_yoy_pct": 0.29589716280421363,
+   "label": "unusual",
+   "n_reference": 84,
+   "percentile": 1.0,
+   "reference_ends": "2019-12",
+   "reference_median_yoy_pct": 0.012096742132149264,
+   "reference_p10_yoy_pct": -0.11370214334463151,
+   "reference_p90_yoy_pct": 0.249800782645925,
+   "reference_years": 7,
+   "stable": true,
+   "status": "ok",
+   "z": 3.5627717041467055
+  }
+ },
+ "shocks": {
+  "built_at": "2026-11-19T16:57:30+00:00",
+  "definitions": {
+   "caution": "A statistical description of one market's prices compared with its own past. Not a finding of a shortage, a crisis or food insecurity, and not an explanation of causes.",
+   "extent": "Whether comparable markets (same country, commodity, unit, price type and currency) were also elevated (robust z beyond 2 in 2 of the 3 months around the peak): widespread >= 50% of assessable ones, local < 25%, inconclusive with fewer than 3 assessable.",
+   "large_typical": "A 12-month change of 25% or more that stays within 2 robust standard deviations of the series' earlier 12-month changes (normal for that market, e.g. under persistent inflation).",
+   "not_listed": "Large changes between 2 and 3 robust standard deviations that never reach the episode trigger are neither unusual episodes nor typical and are not listed; they can still be investigated directly.",
+   "peak_index": "Price at the peak as a percentage of its average over the 12 months before the episode began.",
+   "unusual": "The 12-month price change was at least 2 robust standard deviations from the series' own earlier 12-month changes (median and MAD), with at least 36 earlier changes from 4+ years and half of the last 24 months observed.",
+   "withheld": "A 12-month change of 25% or more whose unusualness cannot be assessed (too little, too sparse or too constant a history)."
+  },
+  "items": [
+   {
+    "admin1_name": "Drylands",
+    "admin2_name": null,
+    "commodity_category": "cereals and tubers",
+    "commodity_code": "DM-MAIZE",
+    "commodity_name": "Maize (white)",
+    "coordinate_status": "missing",
+    "country_iso3": "XDM",
+    "country_name": "XDM",
+    "coverage": 1.0,
+    "currency": "XTS",
+    "data_concern": false,
+    "direction": "up",
+    "duration_months": 3,
+    "end": "2020-03",
+    "extent": "local",
+    "first_period": "2012-01-01",
+    "flags": [],
+    "ineligible_reasons": null,
+    "kind": "unusual",
+    "last_period": "2025-11-01",
+    "market_code": "D007",
+    "market_name": "Quarry Gate (no coordinates)",
+    "max_mom_pct": 0.035616762936115265,
+    "missing_months": 0,
+    "months_behind_dataset": 0,
+    "n_observations": 167,
+    "n_reference": 84,
+    "ongoing": false,
+    "onset_mom_pct": 0.026318995282053947,
+    "peak": "2020-02",
+    "peak_index": 121.49307250976562,
+    "peak_percentile": 1.0,
+    "peak_yoy_pct": 0.571994960308075,
+    "peak_z": 3.562771797180176,
+    "peer_assessable": 7,
+    "peer_elevated": 1,
+    "peer_median_yoy_pct": 0.32738426327705383,
+    "peer_n": 7,
+    "peer_share_elevated": 0.1428571492433548,
+    "price_flag": "actual",
+    "price_type": "Retail",
+    "qualifying_months": 3,
+    "reference_median_yoy_pct": 0.012096742168068886,
+    "reference_years": 7,
+    "retrace_6m_pct": -0.0756620392203331,
+    "series_id": "ps_d49d4a2b9a406db7",
+    "snapshot_id": "20261119T164353_6fabad",
+    "stable": true,
+    "start": "2020-01",
+    "unit": "KG",
+    "window_coverage": 1.0,
+    "withheld_reason": null
+   },
+   {
+    "admin1_name": "Drylands",
+    "admin2_name": null,
+    "commodity_category": "cereals and tubers",
+    "commodity_code": "DM-MAIZE",
+    "commodity_name": "Maize (white)",
+    "coordinate_status": "missing",
+    "country_iso3": "XDM",
+    "country_name": "XDM",
+    "coverage": 1.0,
+    "currency": "XTS",
+    "data_concern": false,
+    "direction": "up",
+    "duration_months": 5,
+    "end": "2024-01",
+    "extent": "local",
+    "first_period": "2012-01-01",
+    "flags": [],
+    "ineligible_reasons": null,
+    "kind": "unusual",
+    "last_period": "2025-11-01",
+    "market_code": "D005",
+    "market_name": "Dunmere",
+    "max_mom_pct": 0.004683840554207563,
+    "missing_months": 0,
+    "months_behind_dataset": 0,
+    "n_observations": 167,
+    "n_reference": 128,
+    "ongoing": false,
+    "onset_mom_pct": 0.003935220185667276,
+    "peak": "2023-11",
+    "peak_index": 120.31317138671875,
+    "peak_percentile": 1.0,
+    "peak_yoy_pct": 0.5119830965995789,
+    "peak_z": 3.129188060760498,
+    "peer_assessable": 7,
+    "peer_elevated": 0,
+    "peer_median_yoy_pct": 0.19412022829055786,
+    "peer_n": 7,
+    "peer_share_elevated": 0.0,
+    "price_flag": "actual",
+    "price_type": "Retail",
+    "qualifying_months": 5,
+    "reference_median_yoy_pct": 0.060255683958530426,
+    "reference_years": 11,
+    "retrace_6m_pct": -0.08865579217672348,
+    "series_id": "ps_8f24933b78ce6794",
+    "snapshot_id": "20261119T164353_6fabad",
+    "stable": true,
+    "start": "2023-09",
+    "unit": "KG",
+    "window_coverage": 1.0,
+    "withheld_reason": null
+   }
+  ],
+  "limit": 2,
+  "method_version": "shock-1",
+  "offset": 0,
+  "stale_countries": [],
+  "total": 3
+ }
+}

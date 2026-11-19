@@ -1,12 +1,12 @@
 {
- "bytes": 19268819,
+ "bytes": 29489666,
  "catalog_format": "global-series-catalog-1",
- "code_commit": "f4c85f9116bb88e7f1be398cca47fed851db096a",
+ "code_commit": "246f589c86bcc8e7c7fc21b127dd76fe8fd5e9ac",
  "countries": 95,
- "created_at": "2026-11-18T21:10:23.720512+00:00",
+ "created_at": "2026-11-19T22:56:13.957357+00:00",
  "observations": 3801021,
- "release": "global-prices-v1",
- "sha256": "695419069e7dfdf60d62dfd293688dcbc81b48d2e9032cd3cc28bb199ee85a9d",
+ "release": "global-prices-v2",
+ "sha256": "e736b0279b3a0b983e079448c9bfd0bdeedf9e28294f9dc05e2e3b9b650f7540",
  "snapshots": {
   "AFG": "20261118T015248_986651",
   "AGO": "20261118T015230_691a0a",
@@ -104,5 +104,5 @@
   "ZMB": "20261118T020807_de672b",
   "ZWE": "20261118T020813_b53caa"
  },
- "url": "https://github.com/aneesh-6220/market-almanac/releases/download/global-prices-v1/market-almanac-global-prices-live-20261118T211023Z.tar.gz"
+ "url": "https://github.com/aneesh-6220/market-almanac/releases/download/global-prices-v2/market-almanac-global-prices-live-20261119T225613Z.tar.gz"
 }

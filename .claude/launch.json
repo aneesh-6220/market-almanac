@@ -3,21 +3,10 @@
   "configurations": [
     {
       "name": "api-demo",
-      "runtimeExecutable": "uv",
-      "runtimeArgs": [
-        "run",
-        "uvicorn",
-        "market_almanac_api.main:app",
-        "--port",
-        "8000"
-      ],
-      "port": 8000
-    },
-    {
-      "name": "api-live",
       "runtimeExecutable": "env",
       "runtimeArgs": [
-        "MARKET_ALMANAC_MODE=live",
+        "DATABASE_URL=sqlite:///./data/market-almanac.db",
+        "MARKET_ALMANAC_MODE=demo",
         "uv",
         "run",
         "uvicorn",
