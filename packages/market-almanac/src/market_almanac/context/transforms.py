@@ -242,6 +242,10 @@ def log_monthly_changes(s: pd.Series, breaks: list[pd.Timestamp] | None = None) 
     return np.log1p(m.where(m > -1.0))
 
 
+def _by_month_number(s: pd.Series) -> pd.Series:
+    return pd.Series(s.to_numpy(), index=pd.Index(s.index.year * 12 + s.index.month - 1))
+
+
 def lagged_comparison(
     local: pd.Series, reference: pd.Series, lags: tuple[int, ...] = (0, 1, 2, 3, 4, 5, 6), min_obs: int = MIN_LAG_OBS
 ) -> list[LagRow]:
@@ -253,13 +257,15 @@ def lagged_comparison(
     seven lags are looked at, and nothing about timing identifies a mechanism. All lags are returned, never only
     the largest, and a lag with fewer than ``min_obs`` paired months is ``insufficient``, not zero.
     """
-    a = as_monthly(local)
-    b = as_monthly(reference)
+    # Months are shifted as integers (year * 12 + month): the same alignment as shifting a month-start index, without
+    # constructing a date range for every lag, which dominated the cost of an investigation.
+    a = _by_month_number(as_monthly(local))
+    b = _by_month_number(as_monthly(reference))
     rows: list[LagRow] = []
     for lag in lags:
         if lag < 0:
             raise TransformError("lags must be >= 0 (the reference leads the local series)")
-        pair = pd.concat([a, b.shift(lag, freq="MS")], axis=1, join="inner").dropna()
+        pair = pd.concat([a, pd.Series(b.to_numpy(), index=b.index + lag)], axis=1, join="inner").dropna()
         n = len(pair)
         if n < min_obs or pair.iloc[:, 0].nunique() < 3 or pair.iloc[:, 1].nunique() < 3:
             rows.append(LagRow(lag, n, None, "insufficient"))
