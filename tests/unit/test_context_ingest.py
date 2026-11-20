@@ -181,7 +181,7 @@ def test_refresh_writes_a_verified_snapshot(refreshed: Any) -> None:
     assert out.status == "written" and out.manifest["revision"] == "initial"
     assert store.verify(out.snapshot_id) == []
     snap = ContextSnapshot(store.path(out.snapshot_id))
-    assert snap.has_data and set(snap.countries()) == {"KEN", "NER", "LBY", "ZWE", "SEN"}
+    assert snap.has_data and set(snap.countries()) == {"KEN", "NER", "LBY", "ZWE", "SEN", "ECU"}
     assert snap.source("imf", "CPI")["licence"]["redistribution"] == "unconfirmed"
     assert snap.source("world_bank")["workbook_sha256"]
     assert out.manifest["semantics"]["release_lags_are_assumptions"] is True

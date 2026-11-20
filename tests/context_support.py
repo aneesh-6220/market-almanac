@@ -8,7 +8,8 @@ verification, each one named after the behaviour it pins down:
 * ``NER``  headline CPI and exchange rates; the food-CPI series exists but every observation is empty;
 * ``LBY``  a CPI rebase that was not spliced (the level drops by ~70% at a reference-period change);
 * ``ZWE``  an exchange-rate value dated in a future month, and a CPI month reported twice;
-* ``SEN``  a currency-union member (XOF) with a flat per-USD path of its own.
+* ``SEN``  a currency-union member (XOF) with a flat per-USD path of its own;
+* ``ECU``  a dollarized economy whose IMF exchange-rate series is a constant 1.
 """
 
 from __future__ import annotations
@@ -128,6 +129,7 @@ def world() -> dict[str, list[dict[str, Any]]]:
             series("LBY", lby_levels, ref="2010", ref_by_month=lby_ref),
             series("ZWE", zwe_cpi, obs_extra=zwe_dup),
             series("SEN", sen_cpi, ref="2014"),
+            series("ECU", path(0.001), ref="2014"),
         ],
         "cpi_food": [
             series("KEN", ken_food),
@@ -139,6 +141,7 @@ def world() -> dict[str, list[dict[str, Any]]]:
             series("NER", ner_fx, ref=""),
             series("ZWE", zwe_fx, ref=""),
             series("SEN", sen_fx, ref=""),
+            series("ECU", path(0.0, start=1.0), ref=""),
         ],
         "fx_end_period": [series("KEN", ken_fx, ref=""), series("NER", ner_fx, ref="")],
     }
@@ -279,3 +282,21 @@ def handler(
         return httpx.Response(404, text="not found")
 
     return serve
+
+
+def build_snapshot(
+    root: Path, w: dict[str, list[dict[str, Any]]] | None = None, *, workbook: dict[str, Any] | None = None
+) -> Any:
+    """Run the real refresh against the scripted server and return the resulting :class:`ContextSnapshot`."""
+    import asyncio
+    from datetime import UTC, datetime
+
+    from market_almanac.context.refresh import refresh
+    from market_almanac.context.store import ContextSnapshot, ContextStore
+    from market_almanac.http import HttpClient, HttpConfig
+
+    wb = pink_workbook(root / "pink.xlsx", **(workbook or {}))
+    http = HttpClient(HttpConfig(max_retries=0), transport=httpx.MockTransport(handler(w or world(), wb)))
+    store = ContextStore(root / "store")
+    out = asyncio.run(refresh(store, http, root / "work", pause=0, now=datetime(2026, 11, 20, tzinfo=UTC)))
+    return ContextSnapshot(store.path(out.snapshot_id))
