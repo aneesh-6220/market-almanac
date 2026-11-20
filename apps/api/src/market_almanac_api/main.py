@@ -163,14 +163,15 @@ def _bootstrap_context() -> None:
 
     Best effort and non-blocking: investigations report the context as not installed until it is there, and a failure
     never affects the price layer."""
-    from market_almanac.context.release import install_context, is_installed, pinned_release
+    from market_almanac.context.release import install_context, pinned_release
+    from market_almanac.context.store import ContextStore
 
     s = get_settings()
     try:
         if (
             s.market_almanac_mode.value != "live"
             or not s.context_auto_install
-            or is_installed(s)
+            or ContextStore.for_settings(s).latest_id() is not None  # metadata-only counts: do not fetch it again
             or not (s.context_bundle_url or pinned_release())
         ):
             return

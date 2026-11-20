@@ -159,3 +159,29 @@ def test_demo_style_unavailable_states_are_explicit(world: Path, tmp_path_factor
         assert c.get("/api/v1/context/coverage").status_code == 404
         eco = _inv(c, _series_id(c)).json()["context"]["economic"]
         assert eco["status"] == "not_installed" and eco["reason"]
+
+
+def test_startup_does_not_refetch_a_metadata_only_snapshot(
+    world: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A deployment holding the metadata-only artefact must not download it again on every restart."""
+    from market_almanac.config import get_settings
+    from market_almanac_api import main as api_main
+
+    snap = cs.build_snapshot(tmp_path / "src")
+    data = tmp_path / "data"
+    dest = data / "context" / "live" / snap.snapshot_id
+    shutil.copytree(snap.dir, dest)
+    (dest / "observations.parquet").unlink(missing_ok=True)  # metadata only: nothing with data
+    monkeypatch.setenv("DATA_DIR", str(data))
+    monkeypatch.setenv("MARKET_ALMANAC_MODE", "live")
+    monkeypatch.setenv("CONTEXT_BUNDLE_URL", "https://invalid.example/never-fetched.tar.gz")
+    monkeypatch.setenv("CONTEXT_BUNDLE_SHA256", "0" * 64)
+    get_settings.cache_clear()
+    called: list[str] = []
+    monkeypatch.setattr("market_almanac.context.release.install_context", lambda *a, **k: called.append("x") or {})
+    try:
+        api_main._bootstrap_context()
+    finally:
+        get_settings.cache_clear()
+    assert called == []

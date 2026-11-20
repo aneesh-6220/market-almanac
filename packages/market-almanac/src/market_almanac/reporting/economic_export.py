@@ -225,7 +225,10 @@ def economic_markdown(doc: dict[str, Any], table: Any) -> list[str]:
             L += ["", "### Cautions", ""] + [f"- {x['text']}" for x in eco["warnings"]]
         if eco["missing"]:
             L += ["", "### Missing context", ""]
-            L += [f"- {m['label']}: **{m['state'].replace('_', ' ')}**. {m['reason']}." for m in eco["missing"]]
+            L += [
+                f"- {m['label']}: **{m['state'].replace('_', ' ')}**. {m['reason'][:1].upper()}{m['reason'][1:]}."
+                for m in eco["missing"]
+            ]
         L += ["", "### Not established by this context", ""]
         L += [f"- {x['text']} *({x['inference']})*" for x in ev["causal"]]
         L += ["", "### Unresolved alternatives", ""] + [f"- {x['text']}" for x in ev["unresolved"]]

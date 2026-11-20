@@ -120,8 +120,10 @@ Shown only where real data are integrated; missing context says "not integrated"
 - **Weather** (NASA POWER at the market's grid cell; MapSPAM production region where defined): rainfall anomalies
   over the 12 months to the event. Labelled *contextual only*: it is not evaluated as an explanation, and
   Market Almanac's pre-registered studies did not find that these measurements improve price forecasts.
-- **Consumer prices and exchange rate** (IMF, where integrated): their 12-month changes and the commodity's change
-  deflated by CPI.
+- **Economic context** (v1.4; IMF consumer prices, IMF exchange rates, World Bank benchmarks): section 7 of the
+  investigation. Method, semantics and limits: [ECONOMIC_CONTEXT.md](ECONOMIC_CONTEXT.md); coverage by country:
+  [ECONOMIC_CONTEXT_COVERAGE.md](ECONOMIC_CONTEXT_COVERAGE.md). Where a deployment holds only the metadata of the
+  economic-context artefact, the section says so and shows no numbers.
 
 ## Evidence framework
 

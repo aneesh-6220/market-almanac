@@ -4,4 +4,4 @@ The core research package. It is deliberately independent of the web API so the
 analysis can be used from Python, the CLI, or notebooks.
 """
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"

@@ -4,6 +4,42 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-11-20
+
+### Added
+
+- **Economic Context Engine** ([docs/ECONOMIC_CONTEXT.md](docs/ECONOMIC_CONTEXT.md)). For a price movement, the
+  Price Shock Investigator now sets the local price beside IMF general and food consumer prices, the IMF official
+  exchange rate and mapped World Bank Pink Sheet benchmarks: 12-month and baseline-to-peak changes, relative price
+  change, an exact log decomposition of the benchmark's local-currency change, descriptive lag comparisons and a
+  deterministic evidence layer that sets propositions beside the figures without claiming a cause. Pegs,
+  dollarized economies, countries whose official rate diverged from the rate in use, mismatched currencies,
+  missing, stale and empty series are each stated, never zero-filled. Section 7 of `/investigate`
+  ("Economic context"), indexed charts without dual axes, mobile layout.
+- Offline ingestion (`market-almanac context refresh|verify|coverage|bundle|install|check-against`): idempotent,
+  resumable, schema-validated, SHA-256 manifests, revision detection, immutable content-addressed snapshots.
+- API: `context.economic` and `evidence.economic` on investigations, `context=` (409 on mismatch) and `as_of=`
+  (information assumed published by a month), `/api/v1/context`, `/api/v1/context/coverage`. The investigation's
+  `config_id` is unchanged, so v1.3 links and exports keep working. Context is read from local files only: no
+  IMF or World Bank request and no Neon query at request time.
+- Exports: an "Economic context" section in the Markdown brief, five CSV tables (`economic_series`,
+  `economic_changes`, `economic_lags`, `economic_lineage`, `economic_notes`) and a versioned JSON Schema
+  (`docs/schemas/economic-context-1.schema.json`). Three real-data worked examples in `docs/examples/`.
+- `scripts/ops/benchmark_economic_context.py`.
+
+### Changed
+
+- The macro and international mechanisms of the investigator are assessed from the context when one is installed
+  (headline, food and exchange-rate propositions; the international status uses the median across mapped
+  benchmarks and is withheld for low-confidence mappings) and are otherwise unchanged from v1.3.
+
+### Licensing
+
+- The public economic-context artefact is **metadata-only**: it holds the series table, citations, licence records,
+  vintages, retrieval instructions and the SHA-256 of every response and series, but no IMF or World Bank
+  observations, because redistribution of the observations is not confirmed. A deployment installed from it shows
+  the economic section as `metadata_only`. The full artefact is for private installation only.
+
 ## [1.3.0] - 2026-11-19
 
 ### Added
