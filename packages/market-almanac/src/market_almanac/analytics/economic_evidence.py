@@ -61,6 +61,12 @@ def _share_status(part: float | None, whole: float | None, up: bool) -> tuple[st
     return "less_likely", share
 
 
+def _status_for_share(share: float) -> str:
+    if share >= SHARE_CONSISTENT:
+        return "consistent"
+    return "partly_consistent" if share >= SHARE_PARTIAL else "less_likely"
+
+
 def _combine(statuses: list[str]) -> str:
     real = [s for s in statuses if s != "cannot_be_assessed"]
     if not real:
@@ -359,14 +365,26 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
     ]
     if usable and intl["confidence"] == "medium":
         sts = [_share_status(i["local_currency"]["yoy_pct"], price_yoy, up) for i in usable]
-        st_int = _combine([x for x, _ in sts])
+        shares = sorted(sh for _, sh in sts if sh is not None)
+        if shares:
+            mid = len(shares) // 2
+            median = shares[mid] if len(shares) % 2 else (shares[mid - 1] + shares[mid]) / 2
+            st_int = _status_for_share(median)
+            spread = (
+                f"; the share of the price's log change is {median:.0%} at the median across "
+                f"{len(shares)} benchmark{'s' if len(shares) > 1 else ''} (range {shares[0]:.0%} to "
+                f"{shares[-1]:.0%}). The median is used so that the most favourable of several alternative "
+                "quotations does not decide the status"
+            )
+        else:
+            st_int, spread = "cannot_be_assessed", "; the price's 12-month change is too small, or not a rise"
         basis = "; ".join(
             f"{i['label']} changed {pct(i['local_currency']['yoy_pct'])} in local currency" for i in usable
         )
         prop(
             int_text,
             st_int,
-            basis + f" against {pct(price_yoy)} for this price. Grade, place, freight, duties and "
+            basis + f" against {pct(price_yoy)} for this price" + spread + ". Grade, place, freight, duties and "
             "margins differ between the benchmark and the local product",
             [i["series_key"] for i in usable],
         )
@@ -388,14 +406,18 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
         )
 
     for p in props:
-        if p["status"] in ("consistent", "partly_consistent"):
-            consistent.append(
-                _st(
-                    f"The figures are {p['verdict']} with this: {p['proposition'].lower()} ({p['basis']}).",
-                    "associational",
-                    keys=p["evidence"],
-                )
+        if p["status"] == "consistent":
+            lead = "The figures are consistent with this"
+        elif p["status"] == "partly_consistent":
+            lead = (
+                "The figures are only partly consistent with this: they fit it accounting for part of the rise, "
+                "not most of it. Proposition"
             )
+        else:
+            continue
+        consistent.append(
+            _st(f"{lead}: {p['proposition'].lower()} ({p['basis']}).", "associational", keys=p["evidence"])
+        )
 
     # ---- mechanisms (replace the two the context can speak to) ----------------------------------------------------
     macro = _combine([st_head, st_food, st_fx])

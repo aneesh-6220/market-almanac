@@ -182,3 +182,20 @@ def test_as_of_changes_the_context_but_not_the_investigation_identity(snap: Cont
     assert (
         early["context"]["economic"]["inflation"]["headline"]["yoy_pct"] is None
     )  # not yet published at the as-of month
+
+
+def test_a_partly_consistent_proposition_is_not_described_as_accounting_for_most(snap: ContextSnapshot) -> None:
+    eco = doc_for(snap)["evidence"]["economic"]
+    partly = [p for p in eco["propositions"] if p["status"] == "partly_consistent"]
+    assert partly
+    texts = [c["text"] for c in eco["consistent"]]
+    for p in partly:
+        line = next(t for t in texts if p["proposition"].lower() in t)
+        assert "only partly consistent" in line and "not most of it" in line
+
+
+def test_the_international_status_uses_the_median_benchmark_not_the_most_favourable(snap: ContextSnapshot) -> None:
+    d = doc_for(snap)
+    prop = next(p for p in d["evidence"]["economic"]["propositions"] if p["proposition"].startswith("International"))
+    if prop["status"] != "cannot_be_assessed":
+        assert "at the median across" in prop["basis"] and "range" in prop["basis"]

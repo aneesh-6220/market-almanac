@@ -26,6 +26,7 @@ from market_almanac.logging import configure_logging, get_logger, log_event
 from market_almanac_api import resources
 from market_almanac_api.deps import DataUnavailableError
 from market_almanac_api.routers import (
+    context,
     coverage,
     data,
     global_prices,
@@ -157,7 +158,30 @@ def _bootstrap_prices() -> None:
         BootstrapState.prices_installing = False
 
 
+def _bootstrap_context() -> None:
+    """Install the pinned economic-context artefact (about 1 MB, or metadata only) when one is configured.
+
+    Best effort and non-blocking: investigations report the context as not installed until it is there, and a failure
+    never affects the price layer."""
+    from market_almanac.context.release import install_context, is_installed, pinned_release
+
+    s = get_settings()
+    try:
+        if (
+            s.market_almanac_mode.value != "live"
+            or not s.context_auto_install
+            or is_installed(s)
+            or not (s.context_bundle_url or pinned_release())
+        ):
+            return
+        res = install_context(s)
+        log_event(log, "economic context installed", snapshot=res["snapshot_id"], has_data=res["has_data"])
+    except Exception as exc:  # optional layer: never stop start-up
+        log_event(log, "economic context install failed", level=40, error=f"{type(exc).__name__}: {exc}"[:300])
+
+
 def _startup() -> None:
+    _bootstrap_context()
     _bootstrap_prices()
     _bootstrap_data()
     _warm_caches()
@@ -234,6 +258,7 @@ def readiness(scope: str = "research") -> tuple[str, str | None]:
 
 
 # Routes that read only the price artefact (the global explorer and the series pages built on it).
+CONTEXT_PREFIX = "/api/v1/context"
 PRICE_SCOPED_PREFIXES = ("/api/v1/global", "/api/v1/series/", "/api/v1/compare")
 
 
@@ -246,7 +271,11 @@ class InstallGate(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        if request.url.path in UNGATED_PATHS or request.method == "OPTIONS":
+        if (
+            request.url.path in UNGATED_PATHS
+            or request.url.path.startswith(CONTEXT_PREFIX)  # reads only the small context artefact
+            or request.method == "OPTIONS"
+        ):
             return await call_next(request)
         scope = "prices" if request.url.path.startswith(PRICE_SCOPED_PREFIXES) else "research"
         state, err = readiness(scope)
@@ -418,6 +447,7 @@ def create_app() -> FastAPI:
     app.include_router(coverage.router)
     app.include_router(global_prices.router)
     app.include_router(investigations.router)
+    app.include_router(context.router)
     app.include_router(workbench.router)
     return app
 
