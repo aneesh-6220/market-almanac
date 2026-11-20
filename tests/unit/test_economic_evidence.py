@@ -97,13 +97,31 @@ def test_a_large_rise_beside_small_inflation_is_reported_as_such(snap: ContextSn
     # headline CPI argues against; the faster-rising food index is partly consistent: the mechanism takes the latter
     assert macro["status"] == "partly_consistent" and macro["source"] == "economic_context"
     props = {p["proposition"]: p for p in eco["propositions"]}
-    general = next(p for k, p in props.items() if k.startswith("General inflation"))
-    assert general["status"] == "less_likely" and "does not exclude a local" in general["basis"]
+    general = next(p for k, p in props.items() if k.startswith("The national consumer price index"))
+    assert (
+        general["status"] == "context_only"
+        and "says nothing about whether general inflation matters" in general["basis"]
+    )
+
+
+def test_no_proposition_claims_explanation_or_evidence_against(snap: ContextSnapshot) -> None:
+    blob = json.dumps(doc_for(snap)["evidence"]["economic"]).lower()
+    for banned in ("accounts for", "argued against", "less_likely", "unlikely", "explains", "rules out"):
+        assert banned not in blob
+    assert "less_likely" not in json.dumps(doc_for(snap)["evidence"]["economic"]["statuses"])
+
+
+def test_a_frozen_official_rate_is_never_evidence_against_a_currency_effect(snap: ContextSnapshot) -> None:
+    d = doc_for(snap, meta=_meta(iso3="LBN", currency="LBP"))
+    for p in d["evidence"]["economic"]["propositions"]:
+        assert p["status"] != "less_likely"
+        if "lost value against the US dollar" in p["proposition"]:
+            assert p["status"] in ("context_only", "cannot_be_assessed", "partly_consistent", "consistent")
 
 
 def test_the_international_mechanism_is_assessed_only_with_a_mapped_benchmark(snap: ContextSnapshot) -> None:
     d = doc_for(snap)
-    assert _mech(d, "international")["status"] in ("less_likely", "partly_consistent", "consistent")
+    assert _mech(d, "international")["status"] in ("context_only", "partly_consistent", "consistent")
     millet = doc_for(snap, meta=_meta(commodity="Millet"))
     assert _mech(millet, "international")["status"] == "cannot_be_assessed"
     assert any("No international benchmark" in x["text"] for x in millet["evidence"]["economic"]["observed"])
@@ -119,7 +137,7 @@ def test_a_price_that_tracks_the_cpi_is_consistent_with_general_inflation(tmp_pa
     up = doc_for(snap, prices=tracking)
     assert 0.3 < up["magnitude"]["event_yoy_pct"] < 0.8
     eco = up["evidence"]["economic"]
-    general = next(p for p in eco["propositions"] if p["proposition"].startswith("General inflation"))
+    general = next(p for p in eco["propositions"] if p["proposition"].startswith("The national consumer price index"))
     assert general["status"] in ("consistent", "partly_consistent")
     assert eco["consistent"] and all(c["inference"] == "associational" for c in eco["consistent"])
 
@@ -142,16 +160,24 @@ def test_missing_food_cpi_appears_as_a_gap_and_a_withheld_proposition(snap: Cont
     d = doc_for(snap, meta=_meta(iso3="NER", currency="XOF"))
     eco = d["evidence"]["economic"]
     assert any("imf.cpi_food.NER" in g or "food" in g.lower() for g in eco["gaps"])
-    food = next(p for p in eco["propositions"] if p["proposition"].startswith("Food inflation"))
+    food = next(p for p in eco["propositions"] if p["proposition"].startswith("The food component"))
     assert food["status"] == "cannot_be_assessed" and "empty" in food["basis"]
 
 
 def test_peg_and_mismatch_shape_the_fx_proposition(snap: ContextSnapshot) -> None:
     peg = doc_for(snap, meta=_meta(iso3="SEN", currency="XOF"))
-    fx = next(p for p in peg["evidence"]["economic"]["propositions"] if p["proposition"].startswith("A depreciation"))
+    fx = next(
+        p
+        for p in peg["evidence"]["economic"]["propositions"]
+        if p["proposition"].startswith("The local currency lost value")
+    )
     assert "pegged" in fx["basis"] or fx["status"] == "cannot_be_assessed"
     bad = doc_for(snap, meta=_meta(iso3="SEN", currency="NGN"))
-    fx = next(p for p in bad["evidence"]["economic"]["propositions"] if p["proposition"].startswith("A depreciation"))
+    fx = next(
+        p
+        for p in bad["evidence"]["economic"]["propositions"]
+        if p["proposition"].startswith("The local currency lost value")
+    )
     assert fx["status"] == "cannot_be_assessed" and "differs" in fx["basis"]
 
 
@@ -191,7 +217,7 @@ def test_a_partly_consistent_proposition_is_not_described_as_accounting_for_most
     texts = [c["text"] for c in eco["consistent"]]
     for p in partly:
         line = next(t for t in texts if p["proposition"].lower() in t)
-        assert "only partly consistent" in line and "not most of it" in line
+        assert "smaller magnitude" in line and "compares sizes only" in line
 
 
 def test_the_international_status_uses_the_median_benchmark_not_the_most_favourable(snap: ContextSnapshot) -> None:

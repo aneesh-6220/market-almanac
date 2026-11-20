@@ -1216,7 +1216,7 @@
      "provider": "imf",
      "release_lag_months_assumed": 2,
      "response_sha256": "b4ea6a9ba9a333ae4d9cd781137ed1881c0ab125b176c79ce91f9a0c65e8b11f",
-     "retrieved_at": "2026-11-20T01:16:37.884158+00:00",
+     "retrieved_at": "2026-11-20T11:32:47.444219+00:00",
      "series_key": "imf.cpi_headline.KEN",
      "source_ref": "IMF.STA,CPI/KEN.CPI._T.IX.M",
      "unit": "index",
@@ -1235,7 +1235,7 @@
      "provider": "imf",
      "release_lag_months_assumed": 2,
      "response_sha256": "426f2fdbab3f7f4def3f32c1f0606abb00cf90a1c35e5d0e15a7ac0e86fc0014",
-     "retrieved_at": "2026-11-20T01:16:37.885321+00:00",
+     "retrieved_at": "2026-11-20T11:32:47.445334+00:00",
      "series_key": "imf.cpi_food.KEN",
      "source_ref": "IMF.STA,CPI/KEN.CPI.CP01.IX.M",
      "unit": "index",
@@ -1254,7 +1254,7 @@
      "provider": "imf",
      "release_lag_months_assumed": 1,
      "response_sha256": "087a6a31cfaf2a02968927f1ba5157c8adec1cd5cceaa83cec120326b2ae9db4",
-     "retrieved_at": "2026-11-20T01:16:37.886753+00:00",
+     "retrieved_at": "2026-11-20T11:32:47.446799+00:00",
      "series_key": "imf.fx_period_avg.KEN",
      "source_ref": "IMF.STA,ER/KEN.XDC_USD.PA_RT.M",
      "unit": "domestic currency per USD",
@@ -1273,7 +1273,7 @@
      "provider": "imf",
      "release_lag_months_assumed": 1,
      "response_sha256": "c9ab0e86fe79b2b23e1252dea5304807a8fc4df7d3cb69e6459a03b3aa59c623",
-     "retrieved_at": "2026-11-20T01:16:37.887666+00:00",
+     "retrieved_at": "2026-11-20T11:32:47.447598+00:00",
      "series_key": "imf.fx_end_period.KEN",
      "source_ref": "IMF.STA,ER/KEN.XDC_USD.EOP_RT.M",
      "unit": "domestic currency per USD",
@@ -1291,7 +1291,7 @@
      "observations_sha256": "5fcd82ce21e886e04d7ab864f58658360fd9cb848668b0006ac4e4907b915239",
      "provider": "world_bank",
      "release_lag_months_assumed": 1,
-     "response_sha256": "a67ba319bd82ebc86fd2e984ae5a98d84c734a6fc678cc59683c99b969483828",
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
      "retrieved_at": "2026-11-20T00:00:00+00:00",
      "series_key": "wb.pink.rice_thai_5",
      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 5%",
@@ -1310,7 +1310,7 @@
      "observations_sha256": "363c14658c8792e6522b434d999e609a3abd11d3212e51f5f2033470885627d7",
      "provider": "world_bank",
      "release_lag_months_assumed": 1,
-     "response_sha256": "a67ba319bd82ebc86fd2e984ae5a98d84c734a6fc678cc59683c99b969483828",
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
      "retrieved_at": "2026-11-20T00:00:00+00:00",
      "series_key": "wb.pink.rice_viet_5",
      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Viet Namese 5%",
@@ -1329,7 +1329,7 @@
      "observations_sha256": "9f027a1da3e644a66a9a41ab96e4a918b6e8a45e5c9a870c92524a66e8b2db90",
      "provider": "world_bank",
      "release_lag_months_assumed": 1,
-     "response_sha256": "a67ba319bd82ebc86fd2e984ae5a98d84c734a6fc678cc59683c99b969483828",
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
      "retrieved_at": "2026-11-20T00:00:00+00:00",
      "series_key": "wb.pink.rice_thai_25",
      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 25%",
@@ -1571,7 +1571,7 @@
       "imf.cpi_food.KEN"
      ],
      "inference": "associational",
-     "text": "The figures are only partly consistent with this: they fit it accounting for part of the rise, not most of it. Proposition: food inflation, as measured by the food component of the index, accounts for most of the rise (food CPI changed +16.0% against +60.7% for this price (31% of its log change))."
+     "text": "The figures show the same direction but a smaller magnitude for this. This compares sizes only. Proposition: the food component of the consumer price index rose by a comparable amount to this price (food CPI changed +16.0% against +60.7% for this price (31% of its log change))."
     }
    ],
    "context_id": "d913afa76214a8c5",
@@ -1612,31 +1612,31 @@
    ],
    "propositions": [
     {
-     "basis": "the national consumer price index changed +4.9% against +60.7% for this price, 10% of its log change. The index is a national average of a different basket, so a small figure does not exclude a local or product-specific price-level movement",
+     "basis": "the national consumer price index changed +4.9% against +60.7% for this price, 10% of its log change. The index is a national average of a different basket, so a small figure says nothing about whether general inflation matters, because the basket differs from this product",
      "evidence": [
       "imf.cpi_headline.KEN"
      ],
-     "proposition": "General inflation, as measured by the national consumer price index, accounts for most of the rise",
-     "status": "less_likely",
-     "verdict": "argued against by these figures"
+     "proposition": "The national consumer price index rose by a comparable amount to this price",
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
     },
     {
      "basis": "food CPI changed +16.0% against +60.7% for this price (31% of its log change)",
      "evidence": [
       "imf.cpi_food.KEN"
      ],
-     "proposition": "Food inflation, as measured by the food component of the index, accounts for most of the rise",
+     "proposition": "The food component of the consumer price index rose by a comparable amount to this price",
      "status": "partly_consistent",
-     "verdict": "partly consistent"
+     "verdict": "same direction, smaller magnitude"
     },
     {
      "basis": "units of local currency per dollar changed +2.4% against +60.7% for the price (5% of its log change)",
      "evidence": [
       "imf.fx_period_avg.KEN"
      ],
-     "proposition": "A depreciation of the local currency against the US dollar accounts for most of the rise",
-     "status": "less_likely",
-     "verdict": "argued against by these figures"
+     "proposition": "The local currency lost value against the US dollar by a comparable amount to the price rise",
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
     },
     {
      "basis": "Rice, Thailand 5% broken, white, milled changed +5.8% in local currency; Rice, Viet Nam 5% broken, white, milled changed +5.7% in local currency; Rice, Thailand 25% broken, white, milled changed +5.7% in local currency against +60.7% for this price; the share of the price's log change is 12% at the median across 3 benchmarks (range 12% to 12%). The median is used so that the most favourable of several alternative quotations does not decide the status. Grade, place, freight, duties and margins differ between the benchmark and the local product",
@@ -1646,8 +1646,8 @@
       "wb.pink.rice_thai_25"
      ],
      "proposition": "International benchmark prices, in local currency, moved by a comparable amount to this price",
-     "status": "less_likely",
-     "verdict": "argued against by these figures"
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
     }
    ],
    "quantitative": [
@@ -1829,11 +1829,10 @@
    ],
    "statuses": {
     "cannot_be_assessed": "Cannot be assessed with the data integrated here",
-    "consistent": "Consistent with the available evidence",
-    "context_only": "Only contextual data are available; not evaluated",
-    "less_likely": "The available evidence argues against this being the main explanation",
+    "consistent": "Same direction and a comparable or larger magnitude; descriptive, not causal",
+    "context_only": "Smaller magnitude, opposite direction or weak mapping; descriptive, not evidence against",
     "not_indicated": "Not indicated by the available evidence",
-    "partly_consistent": "Partly consistent with the available evidence"
+    "partly_consistent": "Same direction but a smaller magnitude; descriptive, not causal"
    },
    "unresolved": [
     {
@@ -2860,43 +2859,43 @@
         "lag": 0,
         "n": 100,
         "spearman": null,
-        "status": "insufficient"
+        "status": "no_variation"
        },
        {
         "lag": 1,
         "n": 99,
         "spearman": null,
-        "status": "insufficient"
+        "status": "no_variation"
        },
        {
         "lag": 2,
         "n": 98,
         "spearman": null,
-        "status": "insufficient"
+        "status": "no_variation"
        },
        {
         "lag": 3,
         "n": 97,
         "spearman": null,
-        "status": "insufficient"
+        "status": "no_variation"
        },
        {
         "lag": 4,
         "n": 96,
         "spearman": null,
-        "status": "insufficient"
+        "status": "no_variation"
        },
        {
         "lag": 5,
         "n": 95,
         "spearman": null,
-        "status": "insufficient"
+        "status": "no_variation"
        },
        {
         "lag": 6,
         "n": 94,
         "spearman": null,
-        "status": "insufficient"
+        "status": "no_variation"
        }
       ]
      },
@@ -2967,7 +2966,7 @@
      "provider": "imf",
      "release_lag_months_assumed": 2,
      "response_sha256": "b4ea6a9ba9a333ae4d9cd781137ed1881c0ab125b176c79ce91f9a0c65e8b11f",
-     "retrieved_at": "2026-11-20T01:16:37.884158+00:00",
+     "retrieved_at": "2026-11-20T11:32:47.444219+00:00",
      "series_key": "imf.cpi_headline.NER",
      "source_ref": "IMF.STA,CPI/NER.CPI._T.IX.M",
      "unit": "index",
@@ -2986,7 +2985,7 @@
      "provider": "imf",
      "release_lag_months_assumed": 2,
      "response_sha256": "426f2fdbab3f7f4def3f32c1f0606abb00cf90a1c35e5d0e15a7ac0e86fc0014",
-     "retrieved_at": "2026-11-20T01:16:37.885321+00:00",
+     "retrieved_at": "2026-11-20T11:32:47.445334+00:00",
      "series_key": "imf.cpi_food.NER",
      "source_ref": "IMF.STA,CPI/NER.CPI.CP01.IX.M",
      "unit": "index",
@@ -3005,7 +3004,7 @@
      "provider": "imf",
      "release_lag_months_assumed": 1,
      "response_sha256": "087a6a31cfaf2a02968927f1ba5157c8adec1cd5cceaa83cec120326b2ae9db4",
-     "retrieved_at": "2026-11-20T01:16:37.886753+00:00",
+     "retrieved_at": "2026-11-20T11:32:47.446799+00:00",
      "series_key": "imf.fx_period_avg.NER",
      "source_ref": "IMF.STA,ER/NER.XDC_USD.PA_RT.M",
      "unit": "domestic currency per USD",
@@ -3024,7 +3023,7 @@
      "provider": "imf",
      "release_lag_months_assumed": 1,
      "response_sha256": "c9ab0e86fe79b2b23e1252dea5304807a8fc4df7d3cb69e6459a03b3aa59c623",
-     "retrieved_at": "2026-11-20T01:16:37.887666+00:00",
+     "retrieved_at": "2026-11-20T11:32:47.447598+00:00",
      "series_key": "imf.fx_end_period.NER",
      "source_ref": "IMF.STA,ER/NER.XDC_USD.EOP_RT.M",
      "unit": "domestic currency per USD",
@@ -3042,7 +3041,7 @@
      "observations_sha256": "5fcd82ce21e886e04d7ab864f58658360fd9cb848668b0006ac4e4907b915239",
      "provider": "world_bank",
      "release_lag_months_assumed": 1,
-     "response_sha256": "a67ba319bd82ebc86fd2e984ae5a98d84c734a6fc678cc59683c99b969483828",
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
      "retrieved_at": "2026-11-20T00:00:00+00:00",
      "series_key": "wb.pink.rice_thai_5",
      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 5%",
@@ -3061,7 +3060,7 @@
      "observations_sha256": "363c14658c8792e6522b434d999e609a3abd11d3212e51f5f2033470885627d7",
      "provider": "world_bank",
      "release_lag_months_assumed": 1,
-     "response_sha256": "a67ba319bd82ebc86fd2e984ae5a98d84c734a6fc678cc59683c99b969483828",
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
      "retrieved_at": "2026-11-20T00:00:00+00:00",
      "series_key": "wb.pink.rice_viet_5",
      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Viet Namese 5%",
@@ -3080,7 +3079,7 @@
      "observations_sha256": "9f027a1da3e644a66a9a41ab96e4a918b6e8a45e5c9a870c92524a66e8b2db90",
      "provider": "world_bank",
      "release_lag_months_assumed": 1,
-     "response_sha256": "a67ba319bd82ebc86fd2e984ae5a98d84c734a6fc678cc59683c99b969483828",
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
      "retrieved_at": "2026-11-20T00:00:00+00:00",
      "series_key": "wb.pink.rice_thai_25",
      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 25%",
@@ -3358,20 +3357,20 @@
    ],
    "propositions": [
     {
-     "basis": "the national consumer price index changed +6.8% against +60.7% for this price, 14% of its log change. The index is a national average of a different basket, so a small figure does not exclude a local or product-specific price-level movement",
+     "basis": "the national consumer price index changed +6.8% against +60.7% for this price, 14% of its log change. The index is a national average of a different basket, so a small figure says nothing about whether general inflation matters, because the basket differs from this product",
      "evidence": [
       "imf.cpi_headline.NER"
      ],
-     "proposition": "General inflation, as measured by the national consumer price index, accounts for most of the rise",
-     "status": "less_likely",
-     "verdict": "argued against by these figures"
+     "proposition": "The national consumer price index rose by a comparable amount to this price",
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
     },
     {
      "basis": "no usable food index: the series exists but all 105 of its months are empty in the source",
      "evidence": [
       "imf.cpi_food.NER"
      ],
-     "proposition": "Food inflation, as measured by the food component of the index, accounts for most of the rise",
+     "proposition": "The food component of the consumer price index rose by a comparable amount to this price",
      "status": "cannot_be_assessed",
      "verdict": "not assessable"
     },
@@ -3380,9 +3379,9 @@
      "evidence": [
       "imf.fx_period_avg.NER"
      ],
-     "proposition": "A depreciation of the local currency against the US dollar accounts for most of the rise",
-     "status": "less_likely",
-     "verdict": "argued against by these figures"
+     "proposition": "The local currency lost value against the US dollar by a comparable amount to the price rise",
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
     },
     {
      "basis": "Rice, Thailand 5% broken, white, milled changed +3.3% in local currency; Rice, Viet Nam 5% broken, white, milled changed +3.2% in local currency; Rice, Thailand 25% broken, white, milled changed +3.2% in local currency against +60.7% for this price; the share of the price's log change is 7% at the median across 3 benchmarks (range 7% to 7%). The median is used so that the most favourable of several alternative quotations does not decide the status. Grade, place, freight, duties and margins differ between the benchmark and the local product",
@@ -3392,8 +3391,8 @@
       "wb.pink.rice_thai_25"
      ],
      "proposition": "International benchmark prices, in local currency, moved by a comparable amount to this price",
-     "status": "less_likely",
-     "verdict": "argued against by these figures"
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
     }
    ],
    "quantitative": [
@@ -3437,7 +3436,7 @@
       "imf.fx_period_avg.NER"
      ],
      "inference": "descriptive",
-     "text": "Domestic currency per US dollar changed +0.0% over the 12 months (fewer units per dollar), a +0.0% change in the dollar value of one unit of the local currency (official rate, period average)."
+     "text": "Domestic currency per US dollar changed +0.0% over the 12 months (the official rate did not move), a +0.0% change in the dollar value of one unit of the local currency (official rate, period average)."
     },
     {
      "evidence": [
@@ -3535,7 +3534,7 @@
       "context.economic.lags"
      ],
      "inference": "descriptive",
-     "text": "Too few overlapping months (at most 100, 24 needed) to compare monthly changes with Exchange rate (domestic currency per USD)."
+     "text": "Monthly changes of Exchange rate (domestic currency per USD) take too few distinct values in the overlapping months (100) for a rank correlation to be defined (for example an administered rate that did not move)."
     },
     {
      "evidence": [
@@ -3547,11 +3546,10 @@
    ],
    "statuses": {
     "cannot_be_assessed": "Cannot be assessed with the data integrated here",
-    "consistent": "Consistent with the available evidence",
-    "context_only": "Only contextual data are available; not evaluated",
-    "less_likely": "The available evidence argues against this being the main explanation",
+    "consistent": "Same direction and a comparable or larger magnitude; descriptive, not causal",
+    "context_only": "Smaller magnitude, opposite direction or weak mapping; descriptive, not evidence against",
     "not_indicated": "Not indicated by the available evidence",
-    "partly_consistent": "Partly consistent with the available evidence"
+    "partly_consistent": "Same direction but a smaller magnitude; descriptive, not causal"
    },
    "unresolved": [
     {

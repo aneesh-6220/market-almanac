@@ -22,6 +22,19 @@ the data in bulk is not confirmed (see [DATA_SOURCES.md](DATA_SOURCES.md#redistr
 Production therefore shows the economic section as `metadata_only` until the operator installs the full artefact
 privately or the providers' permission is on record. The worked examples contain derived percentages only.
 
+Source-by-source decision (terms read 2026-11-20):
+
+* **IMF (CPI, exchange rates)**: the Statistical Data terms allow copying and redistribution with attribution
+  ("Source: International Monetary Fund, Database Name, link", plus an explicit statement of any material
+  transformation), but the general terms prohibit bulk download by automated technology without explicit permission,
+  and commercial reuse requires a request to copyright@imf.org. Our retrieval is automated and bulk, so the
+  observations stay **restricted** until written permission is on record.
+* **World Bank Pink Sheet**: World Bank datasets default to CC BY 4.0 (attribution "The World Bank: Dataset name:
+  Data source"), but third-party data may not be redistributed without the original provider's consent, and the
+  Pink Sheet's own licence entry could not be confirmed (the Data Catalog page was not retrievable) while its
+  description lists third-party sources. The observations stay **restricted** until confirmed.
+* No observations were published; the artefact remains metadata-only and the UI states each provider's status.
+
 ## Neon (free plan, 5 GB egress per month, resets 2026-12-01)
 
 Baseline before v1.4 work: 4,698,390,295 bytes (4.70 GB, 2026-11-20 00:36Z). The economic context never touches the

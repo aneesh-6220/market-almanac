@@ -56,10 +56,14 @@ Coverage by country: [ECONOMIC_CONTEXT_COVERAGE.md](ECONOMIC_CONTEXT_COVERAGE.md
 * **Benchmark.** The Pink Sheet price in US dollars, and in local currency (`benchmark x rate`), with the exact
   decomposition `log(1 + local change) = log(1 + dollar change) + log(1 + exchange-rate change)`. The three terms are
   reported; the split is arithmetic and is not a statement about why either part moved.
-* **Share of log change.** For each proposition (general inflation, food inflation, depreciation, benchmark),
-  the log of the reference's change over the log of the price's change. Thresholds: at least 0.5 is
-  *consistent*, at least 0.2 is *partly consistent*, below that is *less likely*, and only when the price rose by at
-  least 10%. Below that, no proposition is assessed.
+* **Relative magnitude (descriptive).** For each comparison (general inflation, food inflation, currency, benchmark),
+  the log of the reference's change over the log of the price's change. This is a size ratio, not an explanatory
+  contribution. At least 0.5 is reported as *same direction, comparable or larger magnitude*, at least 0.2 as
+  *same direction, smaller magnitude*, below that as *much smaller magnitude or opposite direction*, and only when the
+  price rose by at least 10%. A small ratio is never evidence against inflation, a currency effect or transmission:
+  baskets, grades, places and unofficial exchange rates differ from the series compared, and a benchmark moving in the
+  same direction does not establish a transmission mechanism. Each statement also carries coverage, missing evidence and
+  the limits of causal interpretation.
 * **Charts.** Indexed, with 100 equal to the mean of the baseline months; never dual axes. Missing months are gaps,
   not interpolated and not joined.
 

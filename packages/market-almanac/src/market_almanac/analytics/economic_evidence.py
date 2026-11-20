@@ -10,8 +10,8 @@ The same seven layers as the rest of the evidence system, kept apart:
 * **observed**: which series exist, what the sources publish and what they do not;
 * **quantitative**: changes, relative changes, exact decompositions and lagged correlations (descriptive arithmetic);
 * **consistent**: statements that a pattern is consistent with a mechanism (never "caused by");
-* **propositions**: named claims a reader might make, each marked consistent, partly consistent, argued against
-  (by the numbers shown) or not assessable;
+* **propositions**: named claims a reader might make, each described by direction and relative magnitude (never as
+  an explanation or as evidence against one), or not assessable;
 * **unresolved**: alternatives the integrated data cannot separate;
 * **gaps**: what is missing, from the explicit missing states and what the sources do not provide;
 * **causal**: interpretations that would need causal identification and are therefore *not* supported.
@@ -48,7 +48,7 @@ def _ok(ind: dict[str, Any] | None) -> bool:
 
 
 def _share_status(part: float | None, whole: float | None, up: bool) -> tuple[str, float | None]:
-    """How much of the price's 12-month log change another change accounts for, as a status. Arithmetic, not cause."""
+    """Relative magnitude of another change against the price's 12-month log change. Arithmetic, not cause."""
     if part is None or whole is None or not up or whole < MATERIAL:
         return "cannot_be_assessed", None
     share = T.log_share(part, whole)
@@ -58,13 +58,13 @@ def _share_status(part: float | None, whole: float | None, up: bool) -> tuple[st
         return "consistent", share
     if share >= SHARE_PARTIAL:
         return "partly_consistent", share
-    return "less_likely", share
+    return "context_only", share
 
 
 def _status_for_share(share: float) -> str:
     if share >= SHARE_CONSISTENT:
         return "consistent"
-    return "partly_consistent" if share >= SHARE_PARTIAL else "less_likely"
+    return "partly_consistent" if share >= SHARE_PARTIAL else "context_only"
 
 
 def _combine(statuses: list[str]) -> str:
@@ -74,7 +74,7 @@ def _combine(statuses: list[str]) -> str:
     for s in ("consistent", "partly_consistent"):
         if s in real:
             return s
-    return "less_likely" if all(s == "less_likely" for s in real) else "context_only"
+    return "context_only"
 
 
 def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, Any] | None:
@@ -297,11 +297,10 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
     # ---- propositions and consistency -----------------------------------------------------------------------------
     def prop(text: str, status: str, basis: str, keys: list[str]) -> str:
         verdict = {
-            "consistent": "consistent",
-            "partly_consistent": "partly consistent",
-            "less_likely": "argued against by these figures",
+            "consistent": "same direction, comparable or larger magnitude",
+            "partly_consistent": "same direction, smaller magnitude",
+            "context_only": "much smaller magnitude, or opposite direction; not evidence against any mechanism",
             "cannot_be_assessed": "not assessable",
-            "context_only": "context only",
         }[status]
         props.append({"proposition": text, "status": status, "verdict": verdict, "basis": basis, "evidence": keys})
         return status
@@ -315,17 +314,18 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
             basis = (
                 f"the national consumer price index changed {pct(head['yoy_pct'])} against {pct(price_yoy)} for this "
                 f"price, {sh:.0%} of its log change. The index is a national average of a different basket, so a "
-                "small figure does not exclude a local or product-specific price-level movement"
+                "small figure says nothing about whether general inflation matters, because the basket differs from "
+                "this product"
             )
         prop(
-            "General inflation, as measured by the national consumer price index, accounts for most of the rise",
+            "The national consumer price index rose by a comparable amount to this price",
             st_head,
             basis,
             [head["series_key"]],
         )
     else:
         prop(
-            "General inflation, as measured by the national consumer price index, accounts for most of the rise",
+            "The national consumer price index rose by a comparable amount to this price",
             "cannot_be_assessed",
             f"no usable headline index: {head['reason'] or head.get('yoy_unavailable_reason')}",
             [head["series_key"]],
@@ -334,7 +334,7 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
     if _ok(food):
         st_food, sh = _share_status(food["yoy_pct"], price_yoy, up)
         prop(
-            "Food inflation, as measured by the food component of the index, accounts for most of the rise",
+            "The food component of the consumer price index rose by a comparable amount to this price",
             st_food,
             f"food CPI changed {pct(food['yoy_pct'])} against {pct(price_yoy)} for this price"
             + (f" ({sh:.0%} of its log change)" if sh is not None else ""),
@@ -342,13 +342,13 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
         )
     else:
         prop(
-            "Food inflation, as measured by the food component of the index, accounts for most of the rise",
+            "The food component of the consumer price index rose by a comparable amount to this price",
             "cannot_be_assessed",
             f"no usable food index: {food['reason'] or food.get('yoy_unavailable_reason')}",
             [food["series_key"]],
         )
     st_fx = "cannot_be_assessed"
-    fx_text = "A depreciation of the local currency against the US dollar accounts for most of the rise"
+    fx_text = "The local currency lost value against the US dollar by a comparable amount to the price rise"
     if fx["applicability"] == "applies" and _ok(pa):
         st_fx, sh = _share_status(pa["yoy_pct"], price_yoy, up)
         basis = (
@@ -365,10 +365,6 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
                 ". Official rates in this country have diverged from market rates, so the figure may not describe "
                 "the rate importers faced"
             )
-            if st_fx == "less_likely":
-                st_fx = (
-                    "context_only"  # an official rate that may not describe the transaction rate cannot argue against
-                )
         prop(fx_text, st_fx, basis, [pa["series_key"]])
     else:
         why = {
@@ -429,11 +425,11 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
 
     for p in props:
         if p["status"] == "consistent":
-            lead = "The figures are consistent with this"
+            lead = "The figures show the same direction and a comparable or larger magnitude for this"
         elif p["status"] == "partly_consistent":
             lead = (
-                "The figures are only partly consistent with this: they fit it accounting for part of the rise, "
-                "not most of it. Proposition"
+                "The figures show the same direction but a smaller magnitude for this. This compares sizes only. "
+                "Proposition"
             )
         else:
             continue
@@ -514,7 +510,12 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
         "unresolved": unresolved,
         "gaps": gaps,
         "causal": causal,
-        "statuses": {k: STATUS_TEXT[k] for k in STATUS_TEXT},
+        "statuses": {
+            **{k: STATUS_TEXT[k] for k in STATUS_TEXT if k != "less_likely"},
+            "consistent": "Same direction and a comparable or larger magnitude; descriptive, not causal",
+            "partly_consistent": "Same direction but a smaller magnitude; descriptive, not causal",
+            "context_only": "Smaller magnitude, opposite direction or weak mapping; descriptive, not evidence against",
+        },
     }
 
 
