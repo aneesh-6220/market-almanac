@@ -176,13 +176,28 @@ def refreshed(tmp_path: Path, make_http: Any) -> Any:
     return store, out, work, http, rec, wb
 
 
+@pytest.fixture
+def restricted(tmp_path: Path, make_http: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
+    """A snapshot whose sources do NOT confirm redistribution (exercises the withholding policy)."""
+    from market_almanac.context import refresh as refresh_mod
+
+    monkeypatch.setattr(
+        refresh_mod, "LICENCES", {k: v | {"redistribution": "unconfirmed"} for k, v in refresh_mod.LICENCES.items()}
+    )
+    wb = cs.pink_workbook(tmp_path / "src" / "pink.xlsx")
+    http, rec, _ = make_http(cs.handler(cs.world(), wb))
+    store = ContextStore(tmp_path / "store_restricted")
+    out = asyncio.run(refresh(store, http, tmp_path / "work_r", pause=0, now=datetime(2026, 11, 20, tzinfo=UTC)))
+    return store, out, tmp_path / "work_r", http, rec, wb
+
+
 def test_refresh_writes_a_verified_snapshot(refreshed: Any) -> None:
     store, out, *_ = refreshed
     assert out.status == "written" and out.manifest["revision"] == "initial"
     assert store.verify(out.snapshot_id) == []
     snap = ContextSnapshot(store.path(out.snapshot_id))
     assert snap.has_data and set(snap.countries()) == {"KEN", "NER", "LBY", "ZWE", "SEN", "ECU"}
-    assert snap.source("imf", "CPI")["licence"]["redistribution"] == "unconfirmed"
+    assert snap.source("imf", "CPI")["licence"]["redistribution"] == "confirmed"
     assert snap.source("world_bank")["workbook_sha256"]
     assert out.manifest["semantics"]["release_lags_are_assumptions"] is True
 
@@ -275,8 +290,8 @@ def _bundle_dir(refreshed: Any, tmp_path: Path) -> tuple[Path, ContextStore]:
     return data, store
 
 
-def test_public_bundle_withholds_unconfirmed_observations(refreshed: Any, tmp_path: Path) -> None:
-    data, _ = _bundle_dir(refreshed, tmp_path)
+def test_public_bundle_withholds_unconfirmed_observations(restricted: Any, tmp_path: Path) -> None:
+    data, _ = _bundle_dir(restricted, tmp_path)
     res = build_context_bundle(data, "live", tmp_path / "dist")
     assert res["data_included"] == "none" and res["withheld_providers"] == ["imf", "world_bank"]
     with tarfile.open(res["archive"]) as t:
@@ -290,8 +305,8 @@ def test_public_bundle_withholds_unconfirmed_observations(refreshed: Any, tmp_pa
     assert len(hashes) > 10 and all(len(h) == 64 for h in hashes.values())
 
 
-def test_metadata_only_install_is_not_a_data_install(refreshed: Any, tmp_path: Path, settings_factory: Any) -> None:
-    data, _ = _bundle_dir(refreshed, tmp_path)
+def test_metadata_only_install_is_not_a_data_install(restricted: Any, tmp_path: Path, settings_factory: Any) -> None:
+    data, _ = _bundle_dir(restricted, tmp_path)
     res = build_context_bundle(data, "live", tmp_path / "dist")
     target = tmp_path / "fresh"
     s = settings_factory(data_dir=target, market_almanac_mode="live")
@@ -305,7 +320,7 @@ def test_complete_bundle_installs_and_matches_series_hashes(
     refreshed: Any, tmp_path: Path, settings_factory: Any
 ) -> None:
     data, store = _bundle_dir(refreshed, tmp_path)
-    res = build_context_bundle(data, "live", tmp_path / "dist", include_unconfirmed=True)
+    res = build_context_bundle(data, "live", tmp_path / "dist")
     assert res["data_included"] == "full"
     s = settings_factory(data_dir=tmp_path / "fresh", market_almanac_mode="live")
     info = install_context(s, res["archive"], res["sha256"])

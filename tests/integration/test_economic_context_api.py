@@ -161,10 +161,10 @@ def test_demo_style_unavailable_states_are_explicit(world: Path, tmp_path_factor
         assert eco["status"] == "not_installed" and eco["reason"]
 
 
-def test_startup_does_not_refetch_a_metadata_only_snapshot(
+def test_startup_upgrades_a_metadata_only_snapshot_but_never_refetches_data(
     world: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A deployment holding the metadata-only artefact must not download it again on every restart."""
+    """A metadata-only snapshot is upgraded from the pinned artefact; a snapshot with data is not fetched again."""
     from market_almanac.config import get_settings
     from market_almanac_api import main as api_main
 
@@ -182,6 +182,9 @@ def test_startup_does_not_refetch_a_metadata_only_snapshot(
     monkeypatch.setattr("market_almanac.context.release.install_context", lambda *a, **k: called.append("x") or {})
     try:
         api_main._bootstrap_context()
+        assert called == ["x"]  # metadata only: the pinned artefact is installed
+        shutil.copyfile(snap.dir / "observations.parquet", dest / "observations.parquet")
+        api_main._bootstrap_context()
     finally:
         get_settings.cache_clear()
-    assert called == []
+    assert called == ["x"]  # with data: nothing more is downloaded

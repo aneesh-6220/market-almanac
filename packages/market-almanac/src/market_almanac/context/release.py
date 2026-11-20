@@ -85,9 +85,18 @@ def _retrieval_text(manifest: dict[str, Any], withheld: list[str]) -> str:
         "",
         f"Snapshot `{manifest['snapshot_id']}` (observation hash `{manifest['observation_hash']}`).",
         "",
-        "This artefact does not contain the observations of: " + (", ".join(withheld) or "(none)") + ".",
-        "Their redistribution is not confirmed (see `manifest.json`, `sources[].licence`), so only metadata,",
-        "citations, retrieval instructions and hashes are published. To obtain the data:",
+        *(
+            [
+                "This artefact does not contain the observations of: " + ", ".join(withheld) + ".",
+                "Their redistribution is not confirmed (see `manifest.json`, `sources[].licence`), so only metadata,",
+                "citations, retrieval instructions and hashes are published. To obtain the data:",
+            ]
+            if withheld
+            else [
+                "This artefact contains the observations of every source (see `manifest.json`, `sources[].licence`",
+                "for each source's terms and attribution). To retrieve the data yourself and compare it:",
+            ]
+        ),
         "",
         "```bash",
         "market-almanac context refresh        # IMF SDMX API + World Bank Pink Sheet, into your own DATA_DIR",

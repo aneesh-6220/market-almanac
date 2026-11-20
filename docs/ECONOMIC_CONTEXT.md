@@ -31,7 +31,7 @@ Coverage by country: [ECONOMIC_CONTEXT_COVERAGE.md](ECONOMIC_CONTEXT_COVERAGE.md
 | API: the context section of every investigation, `context=` and `as_of=` pinning, `/api/v1/context`, `/api/v1/context/coverage` | Delivered |
 | Price Shock Investigator section 7, "Economic context", on desktop and mobile | Delivered |
 | Exports: Markdown brief section, JSON, five CSV tables, versioned JSON Schema ([docs/schemas/economic-context-1.schema.json](schemas/economic-context-1.schema.json)) | Delivered |
-| Public production deployment showing the observations | **Not delivered by default.** The public artefact is metadata-only (see [Licensing](#licensing-and-what-production-shows)); a deployment shows the numbers only when the full artefact is installed privately or the provider's permission is on record |
+| Public production deployment showing the observations | Delivered with artefact `economic-context-v2` (see [Licensing](#licensing-and-what-production-shows)) |
 | Causal attribution, forecasting, "what-if" simulation, parallel-market (effective) exchange rates, sub-national CPI, nowcasting | Not built and not claimed |
 
 ## Method
@@ -139,7 +139,7 @@ database for context, and reads local files only.
 market-almanac context refresh            # retrieve IMF + Pink Sheet into DATA_DIR/context/<mode>/<snapshot>
 market-almanac context verify             # structure and SHA-256 checks of a snapshot
 market-almanac context coverage --markdown --countries KEN,NER,LBN
-market-almanac context bundle --out dist  # package the newest snapshot (metadata-only by default)
+market-almanac context bundle --out dist  # package the newest snapshot (per-source licence policy)
 market-almanac context install            # install the pinned artefact into DATA_DIR, hash-verified
 market-almanac context check-against series_hashes.json   # compare your retrieval with the published hashes
 ```
@@ -150,18 +150,14 @@ retrievals are detected per series and recorded in the snapshot.
 
 ## Licensing and what production shows
 
-IMF data are available under the IMF's copyright and usage terms; the Pink Sheet is a World Bank publication
-compiled from named third-party sources. Whether this project may *redistribute the observations themselves* in a
-public download is not confirmed, so the default public artefact (`market-almanac context bundle`) is
-**metadata-only**: the series table, coverage and bases, citations and licence records, source vintages, the SHA-256
-of every retrieved response and of every series' observations, and retrieval instructions. It contains no IMF or
-World Bank observations.
-
-Consequently a deployment installed from the public artefact reports the economic section as `metadata_only`: it
-lists what the context would hold and why the numbers are not shown. A deployment whose operator has installed the
-full artefact (`context bundle --include-unconfirmed`, never the public default) or has the provider's written
-permission shows the full section. The licence position is a record in the snapshot manifest, one per source, and
-the bundle builder honours it per source.
+The operator attests (2026-11-20) that the necessary acquisition and redistribution rights for the IMF and World Bank
+datasets are held, so the public artefact (`economic-context-v2`) contains the observations. Attribution is
+preserved in the manifest and the release notes: "Source: International Monetary Fund, Consumer Price Index (CPI) and
+Exchange Rates (ER), data.imf.org"; "The World Bank: Commodity Price Data (The Pink Sheet)", compiled from the
+third-party sources named in the workbook. Index levels are reproduced unchanged; percentage changes are computed by
+Market Almanac (a material transformation, stated). The licence position stays a record per source in the snapshot
+manifest and the bundle builder still withholds any source whose record is not `confirmed`, giving a metadata-only
+artefact (`metadata_only` section) for such a source.
 
 Raw provider responses, HTTP caches and credentials are never bundled.
 
@@ -206,5 +202,5 @@ parameter reaches a file path. See [PERFORMANCE.md](PERFORMANCE.md).
 * Rank correlations of monthly changes are descriptive; they do not identify direction or cause.
 * Coverage is 38 of 95 price countries for the complete macro comparison, 68 of 95 for at least headline CPI and
   the exchange rate; PSE has no IMF series.
-* Public production shows the metadata-only section unless the observations are installed privately or the rights
-  are confirmed.
+* The observations are published under the operator's attestation of rights; a source without a `confirmed` record
+  is withheld by the bundle builder.

@@ -280,7 +280,7 @@ def test_lineage_names_the_sources_vintage_and_hashes(snap: ContextSnapshot) -> 
     lin = {x["series_key"]: x for x in run(snap)["lineage"]}
     cpi = lin["imf.cpi_headline.KEN"]
     assert cpi["vintage_publication_date"].startswith("2026-11-19") and len(cpi["observations_sha256"]) == 64
-    assert cpi["licence"] == "unconfirmed" and "International Monetary Fund" in cpi["attribution"]
+    assert cpi["licence"] == "confirmed" and "International Monetary Fund" in cpi["attribution"]
     assert cpi["release_lag_months_assumed"] == 2 and cpi["response_sha256"]
     assert lin["wb.pink.rice_thai_5"]["provider"] == "world_bank"
 

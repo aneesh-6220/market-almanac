@@ -11,29 +11,17 @@ done when this was written and are updated as each is.
 | 4 | Engine, evidence, API, UI, exports | done | see [ECONOMIC_CONTEXT.md](ECONOMIC_CONTEXT.md) |
 | 5 | Tests | done locally | ruff, mypy (112 files), pytest, web typecheck, eslint, vitest (60) all pass; Playwright demo and live suites run in CI |
 | 6 | Worked investigations on real data | done | [Niger](examples/economic-context-niger-imported-rice-2024-06.md), [Lebanon](examples/economic-context-lebanon-sunflower-oil-2021-04.md), [Mozambique](examples/economic-context-mozambique-imported-rice-2022-10.md) |
-| 7 | Publish the metadata-only artefact, pin URL and SHA-256 | pending | `economic-context-v1`, SHA-256 `a2f540200927066b03f540481ef2973c06600108d56a7ff95781a7144af107ae`, 45,860 bytes; no IMF or World Bank observations (`data_included: none`) |
+| 7 | Publish the full artefact, pin URL and SHA-256 | done 2026-11-20 | `economic-context-v2`, SHA-256 `2cc2eac8e49f67682854026c9a6cf8f5e47b4892a978162f957475c4fd1b8820`, 860,620 bytes, snapshot `20261120T134942_14798b`, 138,977 observations, 703 series with data (`data_included: full`) |
 | 8 | Push branch, CI, merge to `main` without force | pending | |
-| 9 | Deploy and verify production | pending | expect a `metadata_only` section, v1.3 behaviour unchanged |
+| 9 | Deploy and verify production | pending | expect real CPI, food CPI, exchange-rate and benchmark values; v1.3 behaviour unchanged |
 
 ## Licensing decision
 
-The observations of the IMF and World Bank series are **not** published in the public artefact: redistribution of
-the data in bulk is not confirmed (see [DATA_SOURCES.md](DATA_SOURCES.md#redistribution-public-data-bundle)).
-Production therefore shows the economic section as `metadata_only` until the operator installs the full artefact
-privately or the providers' permission is on record. The worked examples contain derived percentages only.
-
-Source-by-source decision (terms read 2026-11-20):
-
-* **IMF (CPI, exchange rates)**: the Statistical Data terms allow copying and redistribution with attribution
-  ("Source: International Monetary Fund, Database Name, link", plus an explicit statement of any material
-  transformation), but the general terms prohibit bulk download by automated technology without explicit permission,
-  and commercial reuse requires a request to copyright@imf.org. Our retrieval is automated and bulk, so the
-  observations stay **restricted** until written permission is on record.
-* **World Bank Pink Sheet**: World Bank datasets default to CC BY 4.0 (attribution "The World Bank: Dataset name:
-  Data source"), but third-party data may not be redistributed without the original provider's consent, and the
-  Pink Sheet's own licence entry could not be confirmed (the Data Catalog page was not retrievable) while its
-  description lists third-party sources. The observations stay **restricted** until confirmed.
-* No observations were published; the artefact remains metadata-only and the UI states each provider's status.
+Superseding the 2026-11-20 morning decision (metadata-only): the operator confirmed in writing in the release request
+that they hold the necessary rights to acquire and publicly distribute the IMF and World Bank datasets. The artefact
+therefore includes the observations, with the attribution and third-party notices of the sources preserved, and the
+licence records in the snapshot manifest say `confirmed` (operator-attested). The bundle policy that withholds a source
+whose record is not `confirmed` is unchanged. Startup now upgrades a metadata-only snapshot from the pinned artefact.
 
 ## Neon (free plan, 5 GB egress per month, resets 2026-12-01)
 

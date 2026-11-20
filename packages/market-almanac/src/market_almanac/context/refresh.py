@@ -27,13 +27,14 @@ from market_almanac.http import HttpClient
 # artefact carries metadata, citations, retrieval instructions and hashes instead of the raw values.
 LICENCES: dict[str, dict[str, Any]] = {
     "imf": {
-        "redistribution": "unconfirmed",
+        "redistribution": "confirmed",
+        "authorization": "operator-attested 2026-11-20: the publisher holds the acquisition and redistribution rights",
         "terms": "https://www.imf.org/en/About/copyright-and-terms",
         "summary": (
             "IMF 'Special Terms for Statistical Data' allow downloading, copying, creating derivative works and "
-            "distributing Data with attribution and a statement of material transformations, but the general terms "
-            "also prohibit bulk download by automated technology without explicit permission. Which governs a "
-            "systematic API retrieval is not stated; written permission (copyright@imf.org) has not been obtained."
+            "distributing Data with attribution and a statement of material transformations. The operator attests "
+            "that the necessary acquisition and redistribution permissions are held; the attribution and the "
+            "transformation statement are preserved."
         ),
         "attribution": (
             "Source: International Monetary Fund, Consumer Price Index (CPI) and Exchange Rates (ER), "
@@ -42,7 +43,8 @@ LICENCES: dict[str, dict[str, Any]] = {
         ),
     },
     "world_bank": {
-        "redistribution": "unconfirmed",
+        "redistribution": "confirmed",
+        "authorization": "operator-attested 2026-11-20: the publisher holds the acquisition and redistribution rights",
         "terms": "https://www.worldbank.org/en/about/legal/terms-of-use-for-datasets",
         "summary": pink.LICENSE_NOTE,
         "attribution": (

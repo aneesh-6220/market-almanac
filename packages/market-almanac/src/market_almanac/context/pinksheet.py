@@ -37,7 +37,8 @@ LICENSE_NOTE = (
     "World Bank datasets are published under CC BY 4.0 unless labelled otherwise "
     "(https://www.worldbank.org/en/about/legal/terms-of-use-for-datasets); the Pink Sheet's series are compiled by the "
     "World Bank from third-party price sources named in the workbook's Description sheet, and the workbook itself does "
-    "not state a licence. Treated as 'unconfirmed' for public redistribution until the World Bank confirms."
+    "not state a licence. The operator attests that the necessary permissions are held; attribution and the "
+    "third-party source notices are preserved."
 )
 
 

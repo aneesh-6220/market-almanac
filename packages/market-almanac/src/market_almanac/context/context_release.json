@@ -1,11 +1,11 @@
 {
- "bytes": 45860,
- "data_included": "none",
+ "bytes": 860620,
+ "data_included": "full",
  "format": "market-almanac-economic-context-1",
- "observation_hash": "ba3846fda54217cccc13b3ea680d6416a2787fe345c17822de7a1c7e33b17134",
- "release": "economic-context-v1",
+ "observation_hash": "14798b89eb2476ae1b0a757bf97ae88ff8dd620a43472138ca77afb2af16af30",
+ "release": "economic-context-v2",
  "series": 783,
- "sha256": "a2f540200927066b03f540481ef2973c06600108d56a7ff95781a7144af107ae",
- "snapshot_id": "20261120T004928_ba3846",
- "url": "https://github.com/aneesh-6220/market-almanac/releases/download/economic-context-v1/market-almanac-economic-context-live-20261120T004952Z.tar.gz"
+ "sha256": "2cc2eac8e49f67682854026c9a6cf8f5e47b4892a978162f957475c4fd1b8820",
+ "snapshot_id": "20261120T134942_14798b",
+ "url": "https://github.com/aneesh-6220/market-almanac/releases/download/economic-context-v2/market-almanac-economic-context-live-20261120T135040Z.tar.gz"
 }

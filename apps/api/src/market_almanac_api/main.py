@@ -171,7 +171,7 @@ def _bootstrap_context() -> None:
         if (
             s.market_almanac_mode.value != "live"
             or not s.context_auto_install
-            or ContextStore.for_settings(s).latest_id() is not None  # metadata-only counts: do not fetch it again
+            or ContextStore.for_settings(s).latest_id(with_data=True) is not None  # metadata-only: upgrade
             or not (s.context_bundle_url or pinned_release())
         ):
             return

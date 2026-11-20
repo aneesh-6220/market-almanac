@@ -58,7 +58,7 @@ raise `DatasetNotAvailable`. Annual values are context only and never interpolat
 - `IMF.STA,ER` `{ISO3}.XDC_USD.EOP_RT.M` — national currency per USD, end of period.
 - Release lags applied: CPI 2 months, exchange rate 1 month.
 - Retrieved by `market-almanac context refresh` into immutable snapshots; see
-  [ECONOMIC_CONTEXT.md](ECONOMIC_CONTEXT.md). The public artefact holds metadata only.
+  [ECONOMIC_CONTEXT.md](ECONOMIC_CONTEXT.md). The public artefact (`economic-context-v2`) holds the observations.
 
 ## World Bank Commodity Price Data (the Pink Sheet)
 
@@ -117,8 +117,8 @@ sources. Checked 2026-11-17; confirm before each publication:
 | WFP food prices via HDX | HDX's licence guidance: CC BY-IGO permits copying, redistribution and adaptation, including commercially, if the licence is stated and notices kept | **Verified 2026-11-19** from the HDX catalogue metadata (`package_show`): "Global Food Prices Database" (WFP-VAM) and "HDX HAPI - Food Security, Nutrition & Poverty: Food Prices" both carry `license_id: cc-by-igo`. The price artefact's manifest states the licence, names WFP only, and says the catalogs are adapted material not endorsed by WFP, HDX or OCHA |
 | NASA POWER | Public; cite NASA POWER | Allowed with citation |
 | World Bank WDI | CC BY 4.0 | Allowed with attribution |
-| IMF data | IMF copyright and usage terms (effective 11 Oct 2024): data may be copied, distributed and used to create derivative works; **commercial reuse needs written permission** (copyright@imf.org) | Allowed for this non-commercial project with attribution. **Bulk redistribution of observations in a public file is not confirmed**: the economic-context artefact is metadata-only |
-| World Bank Commodity Price Data (Pink Sheet) | World Bank terms for the publication; the workbook compiles third-party sources named in it | **Unconfirmed**: observations are not redistributed; the public artefact is metadata-only |
+| IMF data | IMF copyright and usage terms (effective 11 Oct 2024): data may be copied, distributed and used to create derivative works; **commercial reuse needs written permission** (copyright@imf.org) | Redistributed in the economic-context artefact with attribution and a statement of transformation, on the operator's attestation (2026-11-20) that the rights are held |
+| World Bank Commodity Price Data (Pink Sheet) | World Bank terms for the publication; the workbook compiles third-party sources named in it | Redistributed in the economic-context artefact with attribution and the third-party source notices, on the operator's attestation (2026-11-20) that the rights are held |
 | FAOSTAT | CC BY 4.0 | Allowed with attribution |
 | IFPRI MapSPAM 2010 | CC BY 4.0 | Only derived crop weights are inside experiment results; raw rasters are not bundled |
 
