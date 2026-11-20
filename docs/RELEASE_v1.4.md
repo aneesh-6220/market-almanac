@@ -13,7 +13,7 @@ done when this was written and are updated as each is.
 | 6 | Worked investigations on real data | done | [Niger](examples/economic-context-niger-imported-rice-2024-06.md), [Lebanon](examples/economic-context-lebanon-sunflower-oil-2021-04.md), [Mozambique](examples/economic-context-mozambique-imported-rice-2022-10.md) |
 | 7 | Publish the full artefact, pin URL and SHA-256 | done 2026-11-20 | `economic-context-v2`, SHA-256 `2cc2eac8e49f67682854026c9a6cf8f5e47b4892a978162f957475c4fd1b8820`, 860,620 bytes, snapshot `20261120T134942_14798b`, 138,977 observations, 703 series with data (`data_included: full`) |
 | 8 | Push branch, CI, merge to `main` without force | pending | |
-| 9 | Deploy and verify production | pending | expect real CPI, food CPI, exchange-rate and benchmark values; v1.3 behaviour unchanged |
+| 9 | Deploy and verify production | done 2026-11-20 | `/api/v1/context` serves `20261120T134942_14798b`; Maradi, Lebanon and Mozambique investigations return `status: ok` with real values, Markdown and CSV exports 200; Neon `data_transfer_bytes` 4,698,524,480 before and after (no context reads) |
 
 ## Licensing decision
 
