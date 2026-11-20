@@ -199,3 +199,24 @@ def test_the_international_status_uses_the_median_benchmark_not_the_most_favoura
     prop = next(p for p in d["evidence"]["economic"]["propositions"] if p["proposition"].startswith("International"))
     if prop["status"] != "cannot_be_assessed":
         assert "at the median across" in prop["basis"] and "range" in prop["basis"]
+
+
+def test_the_economic_section_conforms_to_the_published_schema(snap: ContextSnapshot) -> None:
+    from tests.schema_check import validate
+
+    schema = json.loads((Path(__file__).parents[2] / "docs/schemas/economic-context-1.schema.json").read_text())
+    cases = [
+        doc_for(snap),
+        doc_for(snap, meta=_meta(iso3="NER", currency="XOF")),  # an empty food index
+        doc_for(snap, meta=_meta(iso3="SEN", currency="XOF")),  # a peg
+        doc_for(snap, meta=_meta(iso3="ECU", currency="USD")),  # dollarized
+        doc_for(snap, meta=_meta(iso3="XXX", commodity="Millet", currency="XXX")),  # no context
+        doc_for(unavailable("not installed here", "not_installed")),
+    ]
+    for d in cases:
+        assert validate(d["context"]["economic"], schema) == [], d["context"]["economic"]["status"]
+    bad = json.loads(json.dumps(cases[0]["context"]["economic"]))
+    del bad["lineage"]
+    bad["window"]["event"] = "2024-6"
+    errs = validate(bad, schema)
+    assert errs  # the checker is not vacuous
