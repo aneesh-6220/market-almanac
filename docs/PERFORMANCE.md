@@ -140,6 +140,21 @@ resident memory in a fresh process: 12 market pages 244 MB, the same 12 series i
 queries including the deepest page 230 MB. Details: [PRICE_SHOCK_INVESTIGATOR.md](PRICE_SHOCK_INVESTIGATOR.md#architecture-and-performance).
 Market-page endpoints are unchanged.
 
+## Economic context
+
+Read from local files only (no IMF or World Bank request, no Neon query). Measured locally on the 95-country lake with
+the full real snapshot (0.88 MB on disk), 40 distinct investigations through the in-process client
+(`scripts/ops/benchmark_economic_context.py`, process start included):
+
+| | peak RSS | RSS at end | latency p50 / p95 | first request |
+|---|---:|---:|---:|---:|
+| without context | 339 MB | 315 MB | 299 / 356 ms | 224 ms |
+| with context | 361 MB | 347 MB | 324 / 397 ms | 258 ms |
+
+About +22 MB peak and +25 ms median. A deployment holding only the metadata-only artefact (the public default) does
+not load observations and reports the section as `metadata_only` without computing it. Details:
+[ECONOMIC_CONTEXT.md](ECONOMIC_CONTEXT.md#performance-and-security).
+
 ## What would be next
 
 If more than a few simultaneous visitors are expected, the smallest justified change is more CPU (a paid

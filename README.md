@@ -202,6 +202,7 @@ Full list: [Research limitations](docs/RESEARCH_LIMITATIONS.md).
 [Data dictionary](docs/DATA_DICTIONARY.md) · [Methodology](docs/METHODOLOGY.md) ·
 [Results](docs/RESULTS.md) · [Reproducibility](docs/REPRODUCIBILITY.md) · [API](docs/API.md) ·
 [Price Shock Investigator](docs/PRICE_SHOCK_INVESTIGATOR.md) ·
+[Economic Context Engine](docs/ECONOMIC_CONTEXT.md) ([coverage](docs/ECONOMIC_CONTEXT_COVERAGE.md)) ·
 [Deployment](docs/DEPLOYMENT.md) · [Development](docs/DEVELOPMENT.md) ·
 [Engineering report](docs/FINAL_ENGINEERING_REPORT.md) · [Changelog](CHANGELOG.md)
 

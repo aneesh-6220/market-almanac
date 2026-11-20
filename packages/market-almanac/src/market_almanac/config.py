@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     global_prices_bundle_sha256: str | None = None
     global_prices_auto_install: bool = True
 
+    # Economic-context artefact (IMF consumer prices and exchange rates, World Bank benchmarks). Defaults to the release
+    # pinned in ``context/context_release.json``; set these to host it elsewhere. Live mode only.
+    context_bundle_url: str | None = None
+    context_bundle_sha256: str | None = None
+    context_auto_install: bool = True
+
     # Provider credentials. Never logged; never sent to the browser.
     hdx_hapi_app_identifier: SecretStr | None = None
     faostat_access_token: SecretStr | None = None

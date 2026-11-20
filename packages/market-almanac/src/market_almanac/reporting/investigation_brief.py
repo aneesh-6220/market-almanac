@@ -10,8 +10,9 @@ from typing import Any
 
 from market_almanac.analytics.evidence import STATUS_TEXT, month_name, nominal_breadth, pct, population_text
 from market_almanac.analytics.shocks import EPISODE_CAVEAT, SCREENING_CAVEAT
+from market_almanac.reporting.economic_export import ECONOMIC_TABLES, economic_markdown, economic_table_rows
 
-TABLES = ("signals", "peers", "market", "index")
+TABLES = ("signals", "peers", "market", "index", *ECONOMIC_TABLES)
 INFERENCE = {
     "descriptive": "descriptive",
     "associational": "associational",
@@ -37,6 +38,8 @@ def _num(v: Any, digits: int = 2) -> str:
 def table_rows(doc: dict[str, Any], table: str) -> list[dict[str, Any]]:
     """Rows of one exportable table (the data behind each figure)."""
     s = doc["subject"]
+    if table in ECONOMIC_TABLES:
+        return economic_table_rows(doc, table)
     if table == "signals":
         return [
             {
@@ -112,7 +115,7 @@ def render_markdown(doc: dict[str, Any], link: str | None = None) -> str:
     if link:
         q = (
             f"series={s['series_id']}&event={cfg['event']}&start={cfg['window']['start']}&end={cfg['window']['end']}"
-            f"&snapshot={cfg['snapshot_id']}"
+            f"&snapshot={cfg['snapshot_id']}{_context_query(doc)}"
         )
         L += [
             f"Reproduce this investigation: {link.rstrip('/')}/investigate?{q}",
@@ -254,6 +257,7 @@ def render_markdown(doc: dict[str, Any], link: str | None = None) -> str:
         ]
     L += ["- Missing context is reported as missing; it is never treated as zero."]
 
+    L += economic_markdown(doc, _table)
     L += ["", "## Possible mechanisms", ""]
     L += _table(
         ["Mechanism", "Assessment", "What the available data show", "What would be needed"],
@@ -321,10 +325,19 @@ def render_markdown(doc: dict[str, Any], link: str | None = None) -> str:
         "",
         "Retrieve the same analysis from the API: `GET /api/v1/investigations/"
         f"{s['series_id']}?event={cfg['event']}&start={cfg['window']['start']}&end={cfg['window']['end']}"
-        f"&snapshot={cfg['snapshot_id']}` (add the snapshot to be told if the data have since been revised).",
+        f"&snapshot={cfg['snapshot_id']}{_context_query(doc)}` (add the snapshots to be told if the data have since "
+        "been revised).",
         "",
     ]
     return "\n".join(L)
+
+
+def _context_query(doc: dict[str, Any]) -> str:
+    """The economic-context pin of a reproduction link; empty when the investigation had no usable context."""
+    eco = doc.get("context", {}).get("economic")
+    if not eco or eco.get("status") != "ok":
+        return ""
+    return f"&context={eco['snapshot']['snapshot_id']}" + (f"&as_of={eco['as_of']}" if eco.get("as_of") else "")
 
 
 def _mech_evidence(m: dict[str, Any]) -> str:

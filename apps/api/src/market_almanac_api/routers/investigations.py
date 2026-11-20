@@ -28,7 +28,7 @@ from market_almanac.analytics.investigation import (
 from market_almanac.globaldata.prices import GlobalPricesUnavailable
 from market_almanac.globaldata.shocks import MAX_OFFSET, MAX_PAGE, SORTS, query_shocks, shock_facets
 from market_almanac.reporting.investigation_brief import TABLES, render_markdown, table_rows
-from market_almanac_api.deps import cache, global_prices, resolve_series
+from market_almanac_api.deps import cache, economic_context_snapshot, global_prices, resolve_series
 from market_almanac_api.routers.markets import MONTH, SeriesId, _clean, _environment
 
 router = APIRouter(prefix="/api/v1", tags=["investigations"])
@@ -38,6 +38,13 @@ Month = Annotated[str | None, Query(pattern=MONTH)]
 SnapshotId = Annotated[
     str | None,
     Query(pattern=r"^[A-Za-z0-9_.\-]{1,64}$", description="require this price snapshot (409 if another is served)"),
+]
+ContextId = Annotated[
+    str | None,
+    Query(
+        pattern=r"^[A-Za-z0-9_.\-]{1,64}$",
+        description="require this economic-context snapshot (409 if another is served)",
+    ),
 ]
 LINK = r"^https?://[A-Za-z0-9.:\-]+(/[A-Za-z0-9._\-/]*)?$"
 
@@ -162,10 +169,14 @@ def build_investigation(
     start: str | None,
     end: str | None,
     snapshot: str | None = None,
+    context: str | None = None,
+    as_of: str | None = None,
 ) -> dict[str, Any]:
     """The investigation document. ``snapshot`` pins the price snapshot: only the newest snapshot of a country is
     installed here, so a different one cannot be served, and the request fails with 409 naming the one that is,
-    instead of silently returning a different dataset under a link that promised another."""
+    instead of silently returning a different dataset under a link that promised another. ``context`` pins the
+    economic-context snapshot the same way; ``as_of`` applies assumed release lags to it (both are optional and neither
+    changes the investigation's own configuration or ``config_id``)."""
     ref = resolve_series(series_id)
     gp = _gp()
     if snapshot is not None and snapshot != str(ref.snapshot_id):
@@ -175,7 +186,16 @@ def build_investigation(
             "country (older snapshots are not installed). The numbers may differ from the ones the link was made "
             "for; open it without the snapshot to see the current data.",
         )
-    key = (series_id, ref.snapshot_id, event, start, end)
+    eco_snap, eco_missing = economic_context_snapshot()
+    eco_id = eco_snap.snapshot_id if eco_snap is not None else (eco_missing or {}).get("status")
+    if context is not None and context != eco_id:
+        raise HTTPException(
+            409,
+            f"This link pins economic-context snapshot {context}, but this deployment serves {eco_id or 'none'}. "
+            "The context numbers may differ from the ones the link was made for; open it without the context "
+            "parameter to see the current data.",
+        )
+    key = (series_id, ref.snapshot_id, event, start, end, eco_id, as_of)
     with _DOCS_LOCK:
         if key in _DOCS:
             _DOCS.move_to_end(key)
@@ -203,6 +223,8 @@ def build_investigation(
             market_series=_series_inputs(gp, iso3, market_ids),
             macro=macro,
             environment=_environment(ref.row, 240),
+            economic=eco_snap if eco_snap is not None else eco_missing,
+            as_of=as_of,
             event=event,
             start=start,
             end=end,
@@ -240,6 +262,12 @@ SOURCES = [
         "licence": "IMF terms of use",
         "url": "https://data.imf.org/",
     },
+    {
+        "name": "World Bank Commodity Price Data (The Pink Sheet)",
+        "use": "international benchmark context, where installed",
+        "licence": "World Bank terms; third-party price sources are named in each benchmark's definition",
+        "url": "https://www.worldbank.org/en/research/commodity-markets",
+    },
 ]
 
 
@@ -252,15 +280,18 @@ def investigation(
     start: Annotated[str | None, Query(pattern=MONTH, description="window start (default: 24 months before)")] = None,
     end: Annotated[str | None, Query(pattern=MONTH, description="window end (default: 12 months after)")] = None,
     snapshot: SnapshotId = None,
+    context: ContextId = None,
+    as_of: Month = None,
 ) -> dict[str, Any]:
     """A reproducible investigation of one series around one month: magnitude, unusualness, persistence,
     seasonality, comparable markets, other foods in the market, available context, and structured evidence.
 
     The returned ``config`` (with its ``config_id``) reproduces the analysis; the same configuration on the same
     snapshot always returns the same document. With ``snapshot`` the request succeeds only if that is the snapshot
-    being served (409 otherwise): a link that names a snapshot never silently shows another.
+    being served (409 otherwise): a link that names a snapshot never silently shows another. ``context`` does the
+    same for the economic-context snapshot and ``as_of`` (a month) applies assumed publication lags to it.
     """
-    return build_investigation(series_id, event, start, end, snapshot)
+    return build_investigation(series_id, event, start, end, snapshot, context, as_of)
 
 
 @router.get("/investigations/{series_id}/export", response_model=None)
@@ -272,12 +303,14 @@ def export(
     start: Month = None,
     end: Month = None,
     snapshot: SnapshotId = None,
+    context: ContextId = None,
+    as_of: Month = None,
     link: Annotated[
         str | None, Query(max_length=300, pattern=r"^https?://[A-Za-z0-9.:\-]+(/[A-Za-z0-9._\-/]*)?$")
     ] = None,
 ) -> Response:
     """The research brief (Markdown), the full investigation (JSON) or one of its tables (CSV), as a download."""
-    doc = build_investigation(series_id, event, start, end, snapshot)
+    doc = build_investigation(series_id, event, start, end, snapshot, context, as_of)
     stem = f"price-shock-{series_id}-{doc['config']['event']}"
     if format == "json":
         body = json.dumps(doc, indent=1, sort_keys=True, default=str)

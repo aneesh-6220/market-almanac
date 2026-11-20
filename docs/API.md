@@ -48,6 +48,16 @@ request scans the price archive. Method and limits: [Price Shock Investigator](P
 | `GET /api/v1/investigations/{id}` | The investigation document: `config` (with `config_id`), subject, episode, magnitude, unusualness, persistence, seasonality, comparable markets (extent, rows, price index), other foods in the market, context (weather, CPI, exchange rate, each `null` when not integrated), observation quality, monthly signals, the research question and the evidence (facts, quantitative statements, possible mechanisms with statuses, gaps, unsupported conclusions, assessment cards). `event`, `start`, `end` (`YYYY-MM`) pin the configuration; the same configuration on the same snapshot always returns the same document. |
 | `GET /api/v1/investigations/{id}/export` | `format=md` (research brief; `link` adds a permalink), `json` (the full document) or `csv` with `table=signals|peers|market|index`, as a download. Takes the same `event`/`start`/`end`. |
 
+Economic context (v1.4; [ECONOMIC_CONTEXT.md](ECONOMIC_CONTEXT.md)). Read from local files only; the investigation's
+`config_id` does not depend on it.
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/v1/investigations/{id}?context=<snapshot>&as_of=YYYY-MM` | `context.economic` (the section, or `{status, reason}` with `demo_mode`, `not_installed` or `metadata_only`) and `evidence.economic`. `context` requires that economic-context snapshot (409 otherwise); `as_of` limits information to what was assumed published by that month. |
+| `GET /api/v1/investigations/{id}/export` | As above; `format=csv` also takes `table=economic_series|economic_changes|economic_lags|economic_lineage|economic_notes`. |
+| `GET /api/v1/context` | The installed snapshot, its sources and licence records, and whether observations are present. |
+| `GET /api/v1/context/coverage` | Country coverage, paged (`limit` <= 100, `offset` <= 1,000), `country`, `usable`; 404 when none installed. |
+
 ### Global price layer (every country with stored prices)
 
 Read-only, bounded queries over the partitioned lake: 95 countries, 4,835 markets, 125,202 series,

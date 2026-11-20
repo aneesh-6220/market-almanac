@@ -639,7 +639,8 @@ def _unsupported(doc: dict[str, Any]) -> list[dict[str, Any]]:
             )
         )
     mac = doc["context"]["macro"]
-    if not mac.get("cpi") and not mac.get("fx"):
+    eco_cpi, eco_fx = _economic_has(doc)
+    if not mac.get("cpi") and not mac.get("fx") and not eco_cpi and not eco_fx:
         out.append(
             _st(
                 "That inflation or currency depreciation was absent or unlikely. No price index or exchange rate is "
@@ -657,7 +658,7 @@ def _unsupported(doc: dict[str, Any]) -> list[dict[str, Any]]:
                 "causal",
             )
         )
-    if not doc["context"]["macro"].get("cpi"):
+    if not doc["context"]["macro"].get("cpi") and not eco_cpi:
         out.append(
             _st(
                 "How much purchasing power changed. Prices are nominal and no consumer price index is integrated for "
@@ -779,9 +780,25 @@ def _join(items: list[str], word: str) -> str:
     return items[0] if len(items) == 1 else ", ".join(items[:-1]) + f" {word} " + items[-1]
 
 
+def _economic_has(doc: dict[str, Any]) -> tuple[bool, bool]:
+    """(consumer price index, exchange rate) available from the economic-context section, when there is one."""
+    eco = doc["context"].get("economic") or {}
+    if eco.get("status") != "ok":
+        return False, False
+    infl, fx = eco["inflation"], eco["exchange_rate"]
+    cpi = infl["headline"]["state"] == "ok" or infl["food"]["state"] == "ok"
+    rate = fx["period_average"]["state"] == "ok" or fx["end_period"]["state"] == "ok"
+    return cpi, rate
+
+
 def build_evidence(doc: dict[str, Any]) -> dict[str, Any]:
     mechanisms = _mechanisms(doc)
-    return {
+    economic = None
+    if doc["context"].get("economic"):
+        from market_almanac.analytics.economic_evidence import apply
+
+        economic = apply(doc, mechanisms)
+    out = {
         "observed_facts": observed_facts(doc),
         "quantitative": quantitative(doc),
         "mechanisms": mechanisms,
@@ -796,6 +813,9 @@ def build_evidence(doc: dict[str, Any]) -> dict[str, Any]:
             "statuses": STATUS_TEXT,
         },
     }
+    if economic is not None:
+        out["economic"] = economic
+    return out
 
 
 def assessment(doc: dict[str, Any]) -> list[dict[str, Any]]:

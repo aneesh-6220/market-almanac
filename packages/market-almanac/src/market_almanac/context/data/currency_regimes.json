@@ -1,0 +1,123 @@
+{
+  "version": "regimes-1",
+  "last_reviewed": "2026-11-20",
+  "scope": "Only arrangements that are long-standing and well documented are classified. A country that is not listed is NOT classified (the engine says 'not classified'); it is never assumed to float. Entries describe the arrangement in general; dates inside notes are approximate and the authoritative statement is the central bank's and the IMF's Annual Report on Exchange Arrangements and Exchange Restrictions (AREAER). Review before relying on a specific month.",
+  "source": "IMF, Annual Report on Exchange Arrangements and Exchange Restrictions (AREAER); central-bank statutes of BCEAO, BEAC, Banque centrale des Comores, Banco de Cabo Verde, Central Bank of Djibouti, Royal Monetary Authority of Bhutan, Central Bank of Lesotho, Eswatini and Namibia, Central Bank of Jordan.",
+  "entries": [
+    {
+      "id": "xof",
+      "kind": "currency_union_peg",
+      "currency": "XOF",
+      "currency_name": "West African CFA franc",
+      "countries": ["BEN", "BFA", "CIV", "GNB", "MLI", "NER", "SEN", "TGO"],
+      "union": "West African Economic and Monetary Union (WAEMU/UEMOA); issuer BCEAO",
+      "anchor": "EUR",
+      "fixed_rate": 655.957,
+      "fixed_rate_quote": "XOF per EUR",
+      "since": "1999-01 (euro introduction; previously the French franc since 1994)",
+      "interpretation": "The XOF is fixed to the euro, so XOF per US dollar moves one-for-one with the euro's value against the dollar. A change in XOF/USD reflects the euro-dollar rate, not independent domestic monetary depreciation. It can still matter for the local cost of dollar-denominated imports, but it does not show that import costs reached local prices, and members share one currency, so it cannot distinguish one member's conditions from another's."
+    },
+    {
+      "id": "xaf",
+      "kind": "currency_union_peg",
+      "currency": "XAF",
+      "currency_name": "Central African CFA franc",
+      "countries": ["CMR", "CAF", "TCD", "COG", "GAB", "GNQ"],
+      "union": "Economic and Monetary Community of Central Africa (CEMAC); issuer BEAC",
+      "anchor": "EUR",
+      "fixed_rate": 655.957,
+      "fixed_rate_quote": "XAF per EUR",
+      "since": "1999-01 (euro introduction; previously the French franc since 1994)",
+      "interpretation": "The XAF is fixed to the euro, so XAF per US dollar moves one-for-one with the euro's value against the dollar. A change in XAF/USD reflects the euro-dollar rate, not independent domestic monetary depreciation, and members share one currency."
+    },
+    {
+      "id": "kmf",
+      "kind": "peg",
+      "currency": "KMF",
+      "currency_name": "Comorian franc",
+      "countries": ["COM"],
+      "anchor": "EUR",
+      "fixed_rate": 491.96775,
+      "fixed_rate_quote": "KMF per EUR",
+      "since": "1999-01",
+      "interpretation": "The KMF is fixed to the euro; its movement against the dollar mirrors the euro-dollar rate."
+    },
+    {
+      "id": "cve",
+      "kind": "peg",
+      "currency": "CVE",
+      "currency_name": "Cape Verde escudo",
+      "countries": ["CPV"],
+      "anchor": "EUR",
+      "fixed_rate": 110.265,
+      "fixed_rate_quote": "CVE per EUR",
+      "since": "1999-01",
+      "interpretation": "The CVE is fixed to the euro; its movement against the dollar mirrors the euro-dollar rate."
+    },
+    {
+      "id": "djf",
+      "kind": "peg",
+      "currency": "DJF",
+      "currency_name": "Djibouti franc",
+      "countries": ["DJI"],
+      "anchor": "USD",
+      "fixed_rate": 177.721,
+      "fixed_rate_quote": "DJF per USD",
+      "since": "1973",
+      "interpretation": "The DJF is fixed to the US dollar, so the official DJF/USD rate does not move. Dollar-based import costs reach Djibouti without an exchange-rate effect, and the euro and other currencies still move against both."
+    },
+    {
+      "id": "jod",
+      "kind": "peg",
+      "currency": "JOD",
+      "currency_name": "Jordanian dinar",
+      "countries": ["JOR"],
+      "anchor": "USD",
+      "fixed_rate": 0.709,
+      "fixed_rate_quote": "JOD per USD",
+      "since": "1995",
+      "interpretation": "The JOD is fixed to the US dollar; the official JOD/USD rate does not move."
+    },
+    {
+      "id": "btn",
+      "kind": "peg",
+      "currency": "BTN",
+      "currency_name": "Bhutanese ngultrum",
+      "countries": ["BTN"],
+      "anchor": "INR",
+      "fixed_rate": 1.0,
+      "fixed_rate_quote": "BTN per INR",
+      "since": "1974",
+      "interpretation": "The ngultrum is fixed one-for-one to the Indian rupee; BTN/USD therefore moves with INR/USD."
+    },
+    {
+      "id": "cma",
+      "kind": "peg",
+      "currency": "LSL/SZL/NAD",
+      "currency_name": "Lesotho loti, Eswatini lilangeni, Namibian dollar",
+      "countries": ["LSO", "SWZ", "NAM"],
+      "anchor": "ZAR",
+      "fixed_rate": 1.0,
+      "fixed_rate_quote": "domestic currency per ZAR",
+      "since": "Common Monetary Area (Lesotho, Eswatini, Namibia and South Africa)",
+      "interpretation": "These currencies are fixed one-for-one to the South African rand, so their movement against the dollar mirrors ZAR/USD, and South African conditions pass through directly."
+    },
+    {
+      "id": "usd",
+      "kind": "dollarized",
+      "currency": "USD",
+      "currency_name": "US dollar used as legal tender",
+      "countries": ["ECU", "SLV", "PAN", "TLS"],
+      "anchor": "USD",
+      "interpretation": "The US dollar circulates as the main currency (Panama also issues the balboa at par), so there is no domestic-currency exchange rate against the dollar to move. The IMF series is not informative about import costs for these economies."
+    },
+    {
+      "id": "official_rate_caution",
+      "kind": "official_rate_caution",
+      "currency": "various",
+      "countries": ["LBN", "SYR", "YEM", "SSD", "SDN", "ZWE", "VEN", "IRN", "LBY", "AFG", "ARG", "NGA", "EGY", "ETH", "MWI", "MMR", "BDI"],
+      "interpretation": "Official exchange rates in these countries diverged from rates actually used in markets (parallel or multiple rates, controls, or abrupt reforms) during parts of 2017-2026. The IMF series is the official rate; it may not describe the rate at which importers or households transacted, and step changes in it can reflect an administrative revaluation rather than a market movement. Which months are affected differs by country and is not asserted here.",
+      "since": "varies by country"
+    }
+  ]
+}

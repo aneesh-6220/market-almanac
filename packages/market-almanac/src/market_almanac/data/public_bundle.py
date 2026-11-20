@@ -39,7 +39,8 @@ from typing import Any
 
 BUNDLE_FORMAT = "market-almanac-public-bundle-1"
 PRICES_BUNDLE_FORMAT = "market-almanac-global-prices-1"
-SUPPORTED_FORMATS = (BUNDLE_FORMAT, PRICES_BUNDLE_FORMAT)
+CONTEXT_BUNDLE_FORMAT = "market-almanac-economic-context-1"
+SUPPORTED_FORMATS = (BUNDLE_FORMAT, PRICES_BUNDLE_FORMAT, CONTEXT_BUNDLE_FORMAT)
 MANIFEST_NAME = "BUNDLE_MANIFEST.json"
 EXPERIMENT_FILES = ("results.json", "predictions.parquet", "config.json", "manifest.json")
 MAX_DOWNLOAD_BYTES = 2 * 1024**3
@@ -314,7 +315,11 @@ def install_bundle(source: str, data_dir: Path, expected_sha256: str | None = No
             written += 1
         record = data_dir / "bundles"
         record.mkdir(parents=True, exist_ok=True)
-        marker = "installed" if manifest["format"] == BUNDLE_FORMAT else "global-prices-installed"
+        marker = {
+            BUNDLE_FORMAT: "installed",
+            PRICES_BUNDLE_FORMAT: "global-prices-installed",
+            CONTEXT_BUNDLE_FORMAT: "context-installed",
+        }[manifest["format"]]
         (record / f"{manifest['mode']}-{marker}.json").write_text(
             json.dumps({k: v for k, v in manifest.items() if k != "files"} | {"archive_sha256": digest}, indent=1)
         )

@@ -329,6 +329,34 @@ def _macro(macro: pd.DataFrame | None, iso3: str, month: pd.Timestamp, yoy: floa
     return out
 
 
+def _economic(
+    snap: Any,
+    meta: dict[str, Any],
+    prices: pd.Series,
+    ev: pd.Timestamp,
+    onset: pd.Timestamp,
+    peak: pd.Timestamp,
+    s0: pd.Timestamp,
+    e0: pd.Timestamp,
+    as_of: str | None,
+) -> dict[str, Any]:
+    from market_almanac.context.engine import economic_context
+
+    return economic_context(
+        snap,
+        iso3=str(meta.get("country_iso3")),
+        commodity_name=str(meta.get("commodity_name")),
+        currency=meta.get("currency"),
+        price=prices,
+        event=ev,
+        onset=onset,
+        peak=peak,
+        window_start=s0,
+        window_end=e0,
+        as_of=_month(as_of),
+    )
+
+
 def _weather(env: dict[str, Any] | None, month: pd.Timestamp) -> dict[str, Any]:
     out: dict[str, Any] = {"status": "unavailable", "market_cell": None, "production_region": None}
     if not env or env.get("status") != "ok":
@@ -394,6 +422,8 @@ def investigate(
     market_series: dict[str, tuple[dict[str, Any], pd.Series]] | None = None,
     macro: pd.DataFrame | None = None,
     environment: dict[str, Any] | None = None,
+    economic: Any = None,
+    as_of: str | None = None,
     event: str | None = None,
     start: str | None = None,
     end: str | None = None,
@@ -405,6 +435,11 @@ def investigate(
 
     ``peers_available`` and ``market_available`` are how many comparable markets and other foods exist before the
     caps on how many are read; they let the evidence say how many of the markets found were actually assessed.
+
+    ``economic`` is the economic-context snapshot (:class:`~market_almanac.context.store.ContextSnapshot`) or an
+    already-built "unavailable" section; ``as_of`` (``YYYY-MM``) applies assumed release lags to it. With ``economic``
+    omitted the document is exactly what v1.3 produced: ``config`` and ``config_id`` never depend on it, and the new
+    ``context.economic`` section carries its own ``context_id``.
     """
     from market_almanac.analytics.evidence import build_evidence
 
@@ -540,6 +575,12 @@ def investigate(
         "observation_quality": _observation_quality(raw, sig, s0, e0),
         "signals": _signal_rows(sig, s0, e0),
     }
+    if economic is not None:
+        doc["context"]["economic"] = (
+            economic
+            if isinstance(economic, dict)
+            else _economic(economic, meta, prices, ev, onset, peak, s0, e0, as_of)
+        )
     doc["question"] = research_question(doc)
     doc["evidence"] = build_evidence(doc)
     return doc

@@ -28,6 +28,8 @@ ALLOWED_HOSTS = frozenset(
         "hapi.humdata.org",
         "power.larc.nasa.gov",
         "api.worldbank.org",
+        "www.worldbank.org",
+        "thedocs.worldbank.org",
         "api.imf.org",
         "faostatservices.fao.org",
         "bulks-faostat.fao.org",
@@ -217,6 +219,59 @@ class HttpClient:
                     self._write_cache(cache_path, resp.status_code, text, hdrs)
                 return CachedResponse(resp.status_code, text, hdrs, from_cache=False)
         raise ProviderHTTPError(f"Request failed: {last_exc}", retryable=True)
+
+    async def download(self, url: str, dest: Path, *, max_bytes: int = 50 * 1024**2) -> dict[str, Any]:
+        """Stream a (binary) file to ``dest`` with the same host allow-list, bounded size and retry/backoff as
+        :meth:`request`. Returns its SHA-256 and size. The file is written to a temporary name and renamed, so a
+        failed or truncated download never leaves a plausible-looking file behind. Never cached."""
+        self._check_host(url)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        tmp = dest.with_name(dest.name + ".part")
+        last: Exception | None = None
+        for attempt in range(self.config.max_retries + 1):
+            h = hashlib.sha256()
+            n = 0
+            try:
+                async with (
+                    self._semaphore,
+                    httpx.AsyncClient(
+                        timeout=self.config.timeout_seconds, transport=self._transport, follow_redirects=True
+                    ) as client,
+                    client.stream("GET", url, headers={"User-Agent": self.config.user_agent}) as resp,
+                ):
+                    self.request_count += 1
+                    if resp.status_code in RETRYABLE_STATUS and attempt < self.config.max_retries:
+                        await self._sleep(
+                            backoff_delay(attempt, self.config.backoff_base_seconds, self.config.backoff_max_seconds)
+                        )
+                        continue
+                    if resp.status_code >= 400:
+                        raise ProviderHTTPError(
+                            f"{urlparse(url).hostname} returned HTTP {resp.status_code}", status_code=resp.status_code
+                        )
+                    with tmp.open("wb") as fh:
+                        async for chunk in resp.aiter_bytes(1 << 16):
+                            n += len(chunk)
+                            if n > max_bytes:
+                                raise ProviderHTTPError(
+                                    f"download from {urlparse(url).hostname} exceeds {max_bytes} bytes"
+                                )
+                            h.update(chunk)
+                            fh.write(chunk)
+                tmp.replace(dest)
+                return {"sha256": h.hexdigest(), "bytes": n}
+            except (httpx.TimeoutException, httpx.TransportError) as exc:
+                last = exc
+                tmp.unlink(missing_ok=True)
+                if attempt < self.config.max_retries:
+                    await self._sleep(
+                        backoff_delay(attempt, self.config.backoff_base_seconds, self.config.backoff_max_seconds)
+                    )
+                    continue
+        tmp.unlink(missing_ok=True)
+        raise ProviderHTTPError(
+            f"Network error downloading from {urlparse(url).hostname}: {type(last).__name__}", retryable=True
+        )
 
     async def get_json(self, url: str, **kw: Any) -> Any:
         r = await self.request("GET", url, **kw)

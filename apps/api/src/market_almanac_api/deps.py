@@ -55,6 +55,48 @@ def global_prices() -> Any:
 
 def reset_global_prices() -> None:
     _global_prices.clear()
+    _context.clear()
+
+
+_context: dict[tuple[str, str], tuple[str | None, Any]] = {}
+_context_lock = threading.Lock()
+
+
+def economic_context_snapshot() -> tuple[Any, dict[str, Any] | None]:
+    """The installed economic-context snapshot, loaded once, or why there is none.
+
+    Returns ``(snapshot, None)`` or ``(None, section)`` where ``section`` is the explicit "unavailable" document the
+    investigation embeds (state ``demo_mode``, ``not_installed`` or ``metadata_only``). Snapshots are immutable and
+    about 1 MB, so the loaded object is kept until a newer snapshot appears. Reads local files only: no network and no
+    database, which is what keeps this off the Neon egress budget.
+    """
+    from market_almanac.context.engine import unavailable
+    from market_almanac.context.store import ContextSnapshot, ContextStore
+
+    s = get_settings()
+    if s.market_almanac_mode.value != "live":
+        return None, unavailable("economic context is available in live mode only", "demo_mode")
+    store = ContextStore.for_settings(s)
+    key = (str(s.data_dir), s.market_almanac_mode.value)
+    sid = store.latest_id(with_data=True)
+    with _context_lock:
+        hit = _context.get(key)
+        if sid is None:
+            _context.pop(key, None)
+        elif hit is None or hit[0] != sid:
+            _context[key] = (sid, ContextSnapshot(store.path(sid)))
+        hit = _context.get(key)
+    if hit is not None:
+        return hit[1], None
+    any_id = store.latest_id()
+    if any_id is not None:
+        return None, unavailable(
+            "this deployment holds the economic-context metadata (sources, hashes, retrieval instructions) but not the "
+            "observations: their redistribution is not confirmed, so the public artefact withholds them",
+            "metadata_only",
+            {"snapshot_id": any_id},
+        )
+    return None, unavailable("the economic-context artefact is not installed on this deployment", "not_installed")
 
 
 def db_dep() -> Iterator[Session]:

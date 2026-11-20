@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://market-almanac-app.vercel.app/schemas/economic-context-1.schema.json",
+  "title": "Market Almanac economic-context section (economic-context-1)",
+  "description": "The `context.economic` object of an investigation document. A section for a deployment without the artefact carries `status` and `reason` only (demo_mode, not_installed, metadata_only); an installed one carries every key under `$defs.available`, with status ok or no_context. Missing values are null with a reason, never zero. Additional properties are allowed so that minor releases can add fields; removing or retyping a listed field requires a new format version.",
+  "oneOf": [
+    { "$ref": "#/$defs/available" },
+    { "$ref": "#/$defs/unavailable" }
+  ],
+  "$defs": {
+    "month": { "type": "string", "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$" },
+    "nullableNumber": { "type": ["number", "null"] },
+    "unavailable": {
+      "type": "object",
+      "required": ["format", "status", "reason"],
+      "properties": {
+        "format": { "const": "economic-context-1" },
+        "status": { "enum": ["demo_mode", "not_installed", "metadata_only"] },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["n_obs", "months_in_window", "months_observed_in_window", "months_missing_in_window"],
+      "properties": {
+        "first_period": { "type": ["string", "null"] },
+        "last_period": { "type": ["string", "null"] },
+        "n_obs": { "type": "integer", "minimum": 0 },
+        "n_source_empty": { "type": "integer", "minimum": 0 },
+        "n_rejected": { "type": "integer", "minimum": 0 },
+        "months_in_window": { "type": "integer", "minimum": 0 },
+        "months_observed_in_window": { "type": "integer", "minimum": 0 },
+        "months_missing_in_window": { "type": "integer", "minimum": 0 },
+        "ends_before_event": { "type": "boolean" },
+        "stale": { "type": "boolean" },
+        "release_lag_months": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "indicator": {
+      "type": "object",
+      "required": ["series_key", "label", "unit", "state"],
+      "properties": {
+        "series_key": { "type": "string" },
+        "label": { "type": "string" },
+        "unit": { "type": "string" },
+        "state": { "type": "string" },
+        "reason": { "type": ["string", "null"] },
+        "base_period": { "type": ["string", "null"] },
+        "source_ref": { "type": ["string", "null"], "description": "null when no series exists for the country" },
+        "coverage": { "oneOf": [{ "$ref": "#/$defs/coverage" }, { "type": "null" }] },
+        "level_at_event": { "$ref": "#/$defs/nullableNumber" },
+        "yoy_pct": { "$ref": "#/$defs/nullableNumber" },
+        "mom_pct": { "$ref": "#/$defs/nullableNumber" },
+        "baseline_to_peak_pct": { "$ref": "#/$defs/nullableNumber" },
+        "chart_index": { "type": "array", "items": { "$ref": "#/$defs/nullableNumber" } }
+      }
+    },
+    "available": {
+      "type": "object",
+      "required": [
+        "format", "method_version", "status", "context_id", "snapshot", "as_of", "assumptions", "window",
+        "inflation", "exchange_rate", "price", "relative_changes", "international", "lags", "charts", "missing",
+        "warnings", "lineage", "transformations"
+      ],
+      "properties": {
+        "format": { "const": "economic-context-1" },
+        "method_version": { "type": "string" },
+        "status": {
+          "enum": ["ok", "no_context"],
+          "description": "no_context: the context is installed but holds nothing usable for this country and commodity; every indicator then states why."
+        },
+        "context_id": { "type": "string", "minLength": 8 },
+        "snapshot": {
+          "type": "object",
+          "required": ["snapshot_id", "observation_hash", "vintage"],
+          "properties": {
+            "snapshot_id": { "type": "string", "pattern": "^[0-9]{8}T[0-9]{6}_[0-9a-f]{6}$" },
+            "observation_hash": { "type": "string" },
+            "created_at": { "type": "string" },
+            "vintage": { "type": "string" }
+          }
+        },
+        "as_of": { "oneOf": [{ "$ref": "#/$defs/month" }, { "type": "null" }] },
+        "assumptions": {
+          "type": "object",
+          "required": ["release_lags_months", "note"],
+          "properties": {
+            "release_lags_months": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+            "note": { "type": "string" }
+          }
+        },
+        "window": {
+          "type": "object",
+          "required": ["start", "end", "event", "baseline_start", "baseline_end"],
+          "properties": {
+            "start": { "$ref": "#/$defs/month" },
+            "end": { "$ref": "#/$defs/month" },
+            "event": { "$ref": "#/$defs/month" },
+            "onset": { "oneOf": [{ "$ref": "#/$defs/month" }, { "type": "null" }] },
+            "peak": { "oneOf": [{ "$ref": "#/$defs/month" }, { "type": "null" }] },
+            "baseline_start": { "$ref": "#/$defs/month" },
+            "baseline_end": { "$ref": "#/$defs/month" }
+          }
+        },
+        "inflation": {
+          "type": "object",
+          "required": ["headline", "food"],
+          "properties": {
+            "headline": { "$ref": "#/$defs/indicator" },
+            "food": { "$ref": "#/$defs/indicator" },
+            "food_minus_headline_yoy_pp": { "$ref": "#/$defs/nullableNumber" }
+          }
+        },
+        "exchange_rate": {
+          "type": "object",
+          "required": ["quote", "price_currency", "applicability", "period_average", "end_period"],
+          "properties": {
+            "quote": { "type": "string", "pattern": "domestic currency per US dollar" },
+            "price_currency": { "type": "string" },
+            "applicability": {
+              "enum": ["applies", "price_in_usd", "dollarized", "currency_mismatch", "no_series"]
+            },
+            "currency_verified": { "type": "boolean" },
+            "regime": { "type": ["array", "null"], "items": { "type": "object", "required": ["id", "kind"] } },
+            "period_average": { "$ref": "#/$defs/indicator" },
+            "end_period": { "$ref": "#/$defs/indicator" }
+          }
+        },
+        "price": {
+          "type": "object",
+          "required": ["currency", "yoy_pct", "chart_index"],
+          "properties": {
+            "currency": { "type": "string" },
+            "yoy_pct": { "$ref": "#/$defs/nullableNumber" },
+            "baseline_to_peak_pct": { "$ref": "#/$defs/nullableNumber" },
+            "chart_index": { "type": "array", "items": { "$ref": "#/$defs/nullableNumber" } }
+          }
+        },
+        "relative_changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "label", "horizon", "status"],
+            "properties": {
+              "key": { "type": "string" },
+              "label": { "type": "string" },
+              "horizon": { "type": "string" },
+              "status": { "type": "string" },
+              "nominal_pct": { "$ref": "#/$defs/nullableNumber" },
+              "deflator_pct": { "$ref": "#/$defs/nullableNumber" },
+              "relative_pct": { "$ref": "#/$defs/nullableNumber" },
+              "reason": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "international": {
+          "type": "object",
+          "required": ["status", "items"],
+          "properties": {
+            "status": { "type": "string" },
+            "confidence": { "type": "string" },
+            "limitations": { "type": "array", "items": { "type": "string" } },
+            "unit_note": { "type": "string" },
+            "items": { "type": "array", "items": { "$ref": "#/$defs/indicator" } }
+          }
+        },
+        "lags": {
+          "type": "object",
+          "required": ["method", "lags_months", "pairs", "caution"],
+          "properties": {
+            "method": { "type": "string" },
+            "lags_months": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+            "caution": { "type": "string" },
+            "pairs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["key", "label", "rows"],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["lag", "n", "status"],
+                      "properties": {
+                        "lag": { "type": "integer" },
+                        "n": { "type": "integer" },
+                        "spearman": { "$ref": "#/$defs/nullableNumber" },
+                        "status": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "charts": {
+          "type": "object",
+          "required": ["months", "baseline", "event", "unit"],
+          "properties": {
+            "months": { "type": "array", "items": { "$ref": "#/$defs/month" } },
+            "event": { "$ref": "#/$defs/month" },
+            "unit": { "type": "string" }
+          }
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "label", "state", "reason"],
+            "properties": { "reason": { "type": "string", "minLength": 1 } }
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["code", "severity", "text"],
+            "properties": { "severity": { "enum": ["info", "caution", "warning"] } }
+          }
+        },
+        "lineage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "series_key", "provider", "dataset", "source_ref", "vintage_publication_date", "retrieved_at",
+              "response_sha256", "licence", "attribution"
+            ],
+            "properties": {
+              "observations_sha256": { "type": ["string", "null"] },
+              "licence": { "type": "string" }
+            }
+          }
+        },
+        "transformations": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    }
+  }
+}

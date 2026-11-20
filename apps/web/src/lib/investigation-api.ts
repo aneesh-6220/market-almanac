@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { apiGet, apiUrl } from "./api";
+import { EconomicEvidence, EconomicSection, isAvailable } from "./economic-context";
 
 /* Price Shock Investigator: discovery of unusual movements and single-series investigations. */
 
@@ -291,6 +292,8 @@ export const InvestigationSchema = z.object({
       note: z.string().optional(),
     }),
     macro: z.object({ cpi: MacroIndicator.nullable(), fx: MacroIndicator.nullable(), real_yoy_pct: num, available: z.array(z.string()) }),
+    // v1.4: absent in documents from before the economic-context engine
+    economic: EconomicSection.optional(),
   }),
   observation_quality: z.object({
     months_in_window: z.number(),
@@ -327,6 +330,7 @@ export const InvestigationSchema = z.object({
     conclusion: z.object({ text: z.string(), inference: z.string() }),
     assessment: z.array(z.object({ key: z.string(), label: z.string(), value: z.string(), tone: z.string(), detail: str })),
     rules: z.object({ screening: str.optional(), episode: str.optional() }).passthrough().optional(),
+    economic: EconomicEvidence.optional(),
   }),
   sources: z.array(z.object({ name: z.string(), use: z.string(), licence: z.string(), url: z.string() })),
 });
@@ -368,8 +372,9 @@ export const useShockFacets = (country?: string) =>
     ...long,
   });
 
-/** `snapshot` pins the price snapshot: the API answers 409 rather than serve different data under that link. */
-export type InvestigationParams = { event?: string; start?: string; end?: string; snapshot?: string };
+/** `snapshot` pins the price snapshot and `context` the economic-context snapshot: the API answers 409 rather than
+ *  serve different data under that link. `as_of` limits the context to what was assumed published by that month. */
+export type InvestigationParams = { event?: string; start?: string; end?: string; snapshot?: string; context?: string; as_of?: string };
 
 export const useInvestigation = (id: string | undefined, params: InvestigationParams) =>
   useQuery({
@@ -384,11 +389,18 @@ export const zText = (z: number | null | undefined): string =>
   z == null || !Number.isFinite(z) ? "—" : Math.abs(z) >= 10 ? `beyond ${z > 0 ? "+" : "−"}10` : `${z > 0 ? "+" : ""}${z.toFixed(1)}`;
 
 /** The configuration that reproduces a document exactly (snapshot aside, which the document records). */
-export const configParams = (d: Investigation): Required<Omit<InvestigationParams, "snapshot">> => ({
+export const configParams = (d: Investigation): Required<Pick<InvestigationParams, "event" | "start" | "end">> => ({
   event: d.config.event,
   start: d.config.window.start,
   end: d.config.window.end,
 });
+
+/** The economic-context pin of a document (its snapshot and, when set, the as-of month); empty when none was used. */
+export function contextPins(d: Investigation): { context?: string; as_of?: string } {
+  const e = d.context.economic;
+  if (!e || !isAvailable(e) || e.status !== "ok") return {};
+  return { context: e.snapshot.snapshot_id, ...(e.as_of ? { as_of: e.as_of } : {}) };
+}
 
 /**
  * A link that names the price snapshot it was made from. Only the newest snapshot of a country is served, so after a
@@ -398,13 +410,16 @@ export const configParams = (d: Investigation): Required<Omit<InvestigationParam
 export function permalink(origin: string, d: Investigation, pinned = true): string {
   const p = configParams(d);
   const base = `${origin}/investigate?series=${d.config.series_id}&event=${p.event}&start=${p.start}&end=${p.end}`;
-  return pinned ? `${base}&snapshot=${d.config.snapshot_id}` : base;
+  if (!pinned) return base;
+  const c = contextPins(d);
+  return `${base}&snapshot=${d.config.snapshot_id}${c.context ? `&context=${c.context}` : ""}${c.as_of ? `&as_of=${c.as_of}` : ""}`;
 }
 
 export function exportUrl(d: Investigation, format: "md" | "json" | "csv", opts: { table?: string; link?: string } = {}): string {
   return apiUrl(`/api/v1/investigations/${d.config.series_id}/export`, {
     ...configParams(d),
     snapshot: d.config.snapshot_id,
+    ...contextPins(d),
     format,
     ...opts,
   });

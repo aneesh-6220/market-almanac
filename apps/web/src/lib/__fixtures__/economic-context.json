@@ -1,0 +1,3580 @@
+{
+ "full": {
+  "economic": {
+   "as_of": null,
+   "assumptions": {
+    "note": "release lags are assumptions, not verified publication dates",
+    "release_lags_months": {
+     "cpi_food": 2,
+     "cpi_headline": 2,
+     "fx_end_period": 1,
+     "fx_period_avg": 1
+    }
+   },
+   "charts": {
+    "baseline": {
+     "end": "2024-05",
+     "start": "2023-06"
+    },
+    "event": "2024-09",
+    "months": [
+     "2022-06",
+     "2022-07",
+     "2022-08",
+     "2022-09",
+     "2022-10",
+     "2022-11",
+     "2022-12",
+     "2023-01",
+     "2023-02",
+     "2023-03",
+     "2023-04",
+     "2023-05",
+     "2023-06",
+     "2023-07",
+     "2023-08",
+     "2023-09",
+     "2023-10",
+     "2023-11",
+     "2023-12",
+     "2024-01",
+     "2024-02",
+     "2024-03",
+     "2024-04",
+     "2024-05",
+     "2024-06",
+     "2024-07",
+     "2024-08",
+     "2024-09",
+     "2024-10",
+     "2024-11",
+     "2024-12",
+     "2025-01",
+     "2025-02",
+     "2025-03",
+     "2025-04",
+     "2025-05",
+     "2025-06",
+     "2025-07",
+     "2025-08",
+     "2025-09",
+     "2025-10",
+     "2025-11",
+     "2025-12",
+     "2026-01",
+     "2026-02",
+     "2026-03",
+     "2026-04",
+     "2026-05"
+    ],
+    "unit": "index, 100 = each series' own mean over the baseline months"
+   },
+   "context_id": "d913afa76214a8c5",
+   "exchange_rate": {
+    "applicability": "applies",
+    "average_vs_end_period_yoy_pp": 0.0,
+    "currency_verified": false,
+    "end_period": {
+     "base_breaks": [],
+     "base_breaks_in_window": [],
+     "base_period": "",
+     "baseline_to_peak_pct": 0.01304761660906717,
+     "baseline_to_peak_unavailable_reason": null,
+     "chart_index": [
+      96.56161964213555,
+      96.754743299245,
+      96.94825270782634,
+      97.14214960159404,
+      97.3364339805481,
+      97.53110671154575,
+      97.72616866144425,
+      97.9216206971008,
+      98.11746455222993,
+      98.3136993599744,
+      98.51032685404861,
+      98.70734703445267,
+      98.90476163490099,
+      99.10257152225084,
+      99.3007766965022,
+      99.49937802451231,
+      99.69837723999568,
+      99.89777347609505,
+      100.09756933338214,
+      100.29776394499969,
+      100.49835991151944,
+      100.69935636608417,
+      100.90075504240835,
+      101.10255680734919,
+      101.3047616609067,
+      101.5073713367954,
+      101.71038583501524,
+      101.91380688928074,
+      102.11763449959189,
+      102.32186953280588,
+      102.52651372263726,
+      102.73156620222876,
+      102.93702957215211,
+      103.14290383240728,
+      103.34918984985154,
+      103.55588762448491,
+      103.76299975687905,
+      103.97052538017677,
+      104.17846709494977,
+      104.38682403434082,
+      104.59559706520714,
+      104.80478878812048,
+      105.01439833622358,
+      105.22442657637366,
+      105.4348761091425,
+      105.64574520081557,
+      105.85703731882182,
+      106.06875072944682
+     ],
+     "coverage": {
+      "ends_before_event": false,
+      "first_period": "2018-01",
+      "last_period": "2026-09",
+      "months_in_window": 48,
+      "months_missing_in_window": 0,
+      "months_observed_in_window": 48,
+      "n_obs": 105,
+      "n_rejected": 0,
+      "n_source_empty": 0,
+      "release_lag_months": 1,
+      "removed_by_as_of": 0,
+      "stale": false
+     },
+     "label": "Exchange rate, end of period (domestic currency per US dollar)",
+     "level_at_event": 117.567002,
+     "mom_pct": 0.002000002778432819,
+     "mom_unavailable_reason": null,
+     "reason": null,
+     "series_key": "imf.fx_end_period.KEN",
+     "source_ref": "IMF.STA,ER/KEN.XDC_USD.EOP_RT.M",
+     "state": "ok",
+     "step_changes_in_window": [],
+     "unit": "domestic currency per USD",
+     "usd_value_change_yoy_pct": -0.023690890748409132,
+     "yoy_pct": 0.02426576841690009,
+     "yoy_unavailable_reason": null
+    },
+    "period_average": {
+     "base_breaks": [],
+     "base_breaks_in_window": [],
+     "base_period": "",
+     "baseline_to_peak_pct": 0.01304761660906717,
+     "baseline_to_peak_unavailable_reason": null,
+     "chart_index": [
+      96.56161964213555,
+      96.754743299245,
+      96.94825270782634,
+      97.14214960159404,
+      97.3364339805481,
+      97.53110671154575,
+      97.72616866144425,
+      97.9216206971008,
+      98.11746455222993,
+      98.3136993599744,
+      98.51032685404861,
+      98.70734703445267,
+      98.90476163490099,
+      99.10257152225084,
+      99.3007766965022,
+      99.49937802451231,
+      99.69837723999568,
+      99.89777347609505,
+      100.09756933338214,
+      100.29776394499969,
+      100.49835991151944,
+      100.69935636608417,
+      100.90075504240835,
+      101.10255680734919,
+      101.3047616609067,
+      101.5073713367954,
+      101.71038583501524,
+      101.91380688928074,
+      102.11763449959189,
+      102.32186953280588,
+      102.52651372263726,
+      102.73156620222876,
+      102.93702957215211,
+      103.14290383240728,
+      103.34918984985154,
+      103.55588762448491,
+      103.76299975687905,
+      103.97052538017677,
+      104.17846709494977,
+      104.38682403434082,
+      104.59559706520714,
+      104.80478878812048,
+      105.01439833622358,
+      105.22442657637366,
+      105.4348761091425,
+      105.64574520081557,
+      105.85703731882182,
+      106.06875072944682
+     ],
+     "coverage": {
+      "ends_before_event": false,
+      "first_period": "2018-01",
+      "last_period": "2026-09",
+      "months_in_window": 48,
+      "months_missing_in_window": 0,
+      "months_observed_in_window": 48,
+      "n_obs": 105,
+      "n_rejected": 0,
+      "n_source_empty": 0,
+      "release_lag_months": 1,
+      "removed_by_as_of": 0,
+      "stale": false
+     },
+     "label": "Exchange rate, period average (domestic currency per US dollar)",
+     "level_at_event": 117.567002,
+     "mom_pct": 0.002000002778432819,
+     "mom_unavailable_reason": null,
+     "reason": null,
+     "series_key": "imf.fx_period_avg.KEN",
+     "source_ref": "IMF.STA,ER/KEN.XDC_USD.PA_RT.M",
+     "state": "ok",
+     "step_changes_in_window": [],
+     "unit": "domestic currency per USD",
+     "usd_value_change_yoy_pct": -0.023690890748409132,
+     "yoy_pct": 0.02426576841690009,
+     "yoy_unavailable_reason": null
+    },
+    "price_currency": "KES",
+    "quote": "domestic currency per US dollar: a rise means more units of the local currency per dollar (a weaker local currency against the dollar); the dollar value of one local unit moves as 1/(1+x) - 1",
+    "regime": [],
+    "regime_reference": {
+     "reviewed": "2026-11-20",
+     "version": "regimes-1"
+    }
+   },
+   "format": "economic-context-1",
+   "inflation": {
+    "food": {
+     "base_breaks": [],
+     "base_breaks_in_window": [],
+     "base_period": "2010",
+     "baseline_to_peak_pct": 0.12258189878584891,
+     "baseline_to_peak_unavailable_reason": null,
+     "chart_index": [
+      90.04150394326705,
+      90.58175321332828,
+      91.12524351228087,
+      91.67199504766614,
+      92.22202737516932,
+      92.77535939861941,
+      93.33201132555777,
+      93.89200336352572,
+      94.45535572006466,
+      95.02208795085977,
+      95.59222026345239,
+      96.16577351724005,
+      96.74276791976413,
+      97.32322498227833,
+      97.90716426046782,
+      98.49460726558631,
+      99.08557485703133,
+      99.68008789420043,
+      100.27816854020347,
+      100.87983765443794,
+      101.48511674815762,
+      102.09402733261618,
+      102.70659157092346,
+      103.32283097433321,
+      112.25818987858489,
+      112.93173852114201,
+      113.60932932382688,
+      114.29098510160557,
+      114.97673127686879,
+      115.66659131643881,
+      116.36059129456252,
+      117.05875467806214,
+      117.76110688932842,
+      118.46767400260826,
+      119.17847948472388,
+      119.89355071363455,
+      120.61291180801868,
+      121.33658949397933,
+      122.06460919390724,
+      122.79699633019318,
+      123.53377828079637,
+      124.27498111996375,
+      125.02063092194226,
+      125.7707550646911,
+      126.52537962245717,
+      127.28453197319982,
+      128.0482388430221,
+      128.81652826173936
+     ],
+     "coverage": {
+      "ends_before_event": false,
+      "first_period": "2018-01",
+      "last_period": "2026-09",
+      "months_in_window": 48,
+      "months_missing_in_window": 0,
+      "months_observed_in_window": 48,
+      "n_obs": 105,
+      "n_rejected": 0,
+      "n_source_empty": 0,
+      "release_lag_months": 2,
+      "removed_by_as_of": 0,
+      "stale": false
+     },
+     "label": "Consumer price index (food and non-alcoholic beverages)",
+     "level_at_event": 175.331599,
+     "mom_pct": 0.0059999982557394915,
+     "mom_unavailable_reason": null,
+     "reason": null,
+     "series_key": "imf.cpi_food.KEN",
+     "source_ref": "IMF.STA,CPI/KEN.CPI.CP01.IX.M",
+     "state": "ok",
+     "unit": "index",
+     "yoy_pct": 0.16037809860417052,
+     "yoy_unavailable_reason": null
+    },
+    "food_minus_headline_yoy_pp": 11.130789629080184,
+    "headline": {
+     "base_breaks": [],
+     "base_breaks_in_window": [],
+     "base_period": "2010",
+     "baseline_to_peak_pct": 0.026190275964291132,
+     "baseline_to_peak_unavailable_reason": null,
+     "chart_index": [
+      93.24354737000344,
+      93.61652148131499,
+      93.99098755822081,
+      94.36695161368048,
+      94.74441966065358,
+      95.12339771209969,
+      95.50389102935843,
+      95.88590637700932,
+      96.26944976801194,
+      96.65452796694579,
+      97.04114623515053,
+      97.42931058558571,
+      97.81902778283086,
+      98.21030383984557,
+      98.60314552120929,
+      98.99755808826174,
+      99.39354830558239,
+      99.7911221861308,
+      100.19028649448654,
+      100.5910479952291,
+      100.99341194969813,
+      101.39738587409303,
+      101.80297502975354,
+      102.21018693287903,
+      102.6190275964291,
+      103.02950378498329,
+      103.44162226312112,
+      103.8553882921822,
+      104.27081013998595,
+      104.687893067872,
+      105.10664459203981,
+      105.5270714770689,
+      105.94917973591885,
+      106.37297613316919,
+      106.79846818501937,
+      107.22566190442899,
+      107.6545648075975,
+      108.08518290748445,
+      108.51752372028933,
+      108.95159401059169,
+      109.387400542971,
+      109.82495008200681,
+      110.26424939227863,
+      110.70530674160587,
+      111.14812814294812,
+      111.5927203608849,
+      112.03909166323562,
+      112.48724806295984
+     ],
+     "coverage": {
+      "ends_before_event": false,
+      "first_period": "2018-01",
+      "last_period": "2026-09",
+      "months_in_window": 48,
+      "months_missing_in_window": 0,
+      "months_observed_in_window": 48,
+      "n_obs": 105,
+      "n_rejected": 0,
+      "n_source_empty": 0,
+      "release_lag_months": 2,
+      "removed_by_as_of": 0,
+      "stale": false
+     },
+     "label": "Consumer price index (all items)",
+     "level_at_event": 138.175402,
+     "mom_pct": 0.003999995553130464,
+     "mom_unavailable_reason": null,
+     "reason": null,
+     "series_key": "imf.cpi_headline.KEN",
+     "source_ref": "IMF.STA,CPI/KEN.CPI._T.IX.M",
+     "state": "ok",
+     "unit": "index",
+     "yoy_pct": 0.04907020231336867,
+     "yoy_unavailable_reason": null
+    }
+   },
+   "international": {
+    "commodity": "Rice (imported)",
+    "confidence": "medium",
+    "confidence_text": "The benchmark is the same commodity, traded internationally, and a plausible reference for imported supplies of this product. It still differs from the local price in grade, place, stage of the supply chain and currency.",
+    "items": [
+     {
+      "base_breaks": [],
+      "base_breaks_in_window": [],
+      "base_period": null,
+      "baseline_to_peak_pct": 0.017735334242837686,
+      "baseline_to_peak_unavailable_reason": null,
+      "benchmark_id": "rice_thai_5",
+      "chart_index": [
+       95.22510231923602,
+       95.49795361527967,
+       95.77080491132332,
+       96.04365620736698,
+       96.31650750341065,
+       96.5893587994543,
+       96.86221009549796,
+       97.13506139154161,
+       97.40791268758527,
+       97.68076398362892,
+       97.95361527967258,
+       98.22646657571623,
+       98.49931787175989,
+       98.77216916780355,
+       99.04502046384721,
+       99.31787175989086,
+       99.59072305593452,
+       99.86357435197817,
+       100.13642564802183,
+       100.40927694406548,
+       100.68212824010914,
+       100.95497953615279,
+       101.22783083219645,
+       101.50068212824011,
+       101.77353342428377,
+       102.04638472032742,
+       102.31923601637108,
+       102.59208731241473,
+       102.86493860845839,
+       103.13778990450204,
+       103.4106412005457,
+       103.68349249658935,
+       103.95634379263302,
+       104.22919508867668,
+       104.50204638472033,
+       104.77489768076398,
+       105.04774897680764,
+       105.3206002728513,
+       105.59345156889495,
+       105.8663028649386,
+       106.13915416098226,
+       106.41200545702593,
+       106.68485675306958,
+       106.95770804911324,
+       107.23055934515689,
+       107.50341064120055,
+       107.7762619372442,
+       108.04911323328785
+      ],
+      "coverage": {
+       "ends_before_event": false,
+       "first_period": "2010-01",
+       "last_period": "2026-09",
+       "months_in_window": 48,
+       "months_missing_in_window": 0,
+       "months_observed_in_window": 48,
+       "n_obs": 201,
+       "n_rejected": 0,
+       "n_source_empty": 0,
+       "release_lag_months": 1,
+       "removed_by_as_of": 0,
+       "stale": false
+      },
+      "definition": {
+       "sources": "Synthetic source for rice_thai_5",
+       "text": "Rice (Thailand), 5% broken (synthetic test description)"
+      },
+      "label": "Rice, Thailand 5% broken, white, milled",
+      "level_at_event": 188.0,
+      "local_currency": {
+       "baseline_to_peak_pct": 0.030947380242845934,
+       "baseline_to_peak_unavailable_reason": null,
+       "chart_index": [
+        91.94492799636309,
+        92.39279767212481,
+        92.84209057352045,
+        93.29281152294323,
+        93.74496369196211,
+        94.19855108938359,
+        94.6535777334745,
+        95.11004765196192,
+        95.56796572636591,
+        96.02733431703395,
+        96.48815832204167,
+        96.95044095552946,
+        97.41418713922376,
+        97.87940095761354,
+        98.3460856461249,
+        98.81424530107222,
+        99.28388489148342,
+        99.755006808452,
+        100.22761690554489,
+        100.7017175833158,
+        101.17731472371271,
+        101.65441073674963,
+        102.13301065531164,
+        102.61311865139557,
+        103.0947380242846,
+        103.57787384234,
+        104.06252941903546,
+        104.54870984638293,
+        105.0364184520466,
+        105.52565945768991,
+        106.01643799080104,
+        106.50875650160033,
+        107.00262103522607,
+        107.49803495481858,
+        107.99500252934284,
+        108.49352712903439,
+        108.99361485579341,
+        109.49526818822112,
+        109.99849325659864,
+        110.50329254898753,
+        111.00967038401946,
+        111.5176329345469,
+        112.02718270282186,
+        112.53832403585696,
+        113.05106314907604,
+        113.56540162708109,
+        114.08134664078726,
+        114.59889977952673
+       ],
+       "decomposition_yoy": {
+        "exchange_rate_log": 0.023976032412403345,
+        "local_currency_change": 0.05803277177130349,
+        "local_currency_log": 0.0564113081655573,
+        "usd_benchmark_log": 0.032435275753153955
+       },
+       "yoy_pct": 0.05803277177130339,
+       "yoy_unavailable_reason": null
+      },
+      "mom_pct": 0.002666666666666595,
+      "mom_unavailable_reason": null,
+      "reason": null,
+      "series_key": "wb.pink.rice_thai_5",
+      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 5%",
+      "state": "ok",
+      "summary": "Weekly indicative export price, government standard, f.o.b. Bangkok.",
+      "unit": "USD per metric ton",
+      "yoy_pct": 0.03296703296703307,
+      "yoy_unavailable_reason": null
+     },
+     {
+      "base_breaks": [],
+      "base_breaks_in_window": [],
+      "base_period": null,
+      "baseline_to_peak_pct": 0.017173051519154603,
+      "baseline_to_peak_unavailable_reason": null,
+      "benchmark_id": "rice_viet_5",
+      "chart_index": [
+       95.37648612945839,
+       95.64068692206077,
+       95.90488771466315,
+       96.16908850726553,
+       96.4332892998679,
+       96.69749009247028,
+       96.96169088507266,
+       97.22589167767504,
+       97.49009247027742,
+       97.75429326287978,
+       98.01849405548217,
+       98.28269484808455,
+       98.54689564068693,
+       98.8110964332893,
+       99.07529722589167,
+       99.33949801849406,
+       99.60369881109644,
+       99.86789960369882,
+       100.13210039630118,
+       100.39630118890356,
+       100.66050198150594,
+       100.92470277410833,
+       101.1889035667107,
+       101.45310435931307,
+       101.71730515191545,
+       101.98150594451783,
+       102.24570673712022,
+       102.50990752972258,
+       102.77410832232496,
+       103.03830911492734,
+       103.30250990752972,
+       103.5667107001321,
+       103.83091149273447,
+       104.09511228533685,
+       104.35931307793923,
+       104.62351387054161,
+       104.887714663144,
+       105.15191545574636,
+       105.41611624834874,
+       105.68031704095112,
+       105.9445178335535,
+       106.20871862615589,
+       106.47291941875825,
+       106.73712021136063,
+       107.00132100396301,
+       107.2655217965654,
+       107.52972258916776,
+       107.79392338177014
+      ],
+      "coverage": {
+       "ends_before_event": false,
+       "first_period": "2010-01",
+       "last_period": "2026-09",
+       "months_in_window": 48,
+       "months_missing_in_window": 0,
+       "months_observed_in_window": 48,
+       "n_obs": 201,
+       "n_rejected": 0,
+       "n_source_empty": 0,
+       "release_lag_months": 1,
+       "removed_by_as_of": 0,
+       "stale": false
+      },
+      "definition": {
+       "sources": "Synthetic source for rice_viet_5",
+       "text": "Rice (Vietnam), 5% broken (synthetic test description)"
+      },
+      "label": "Rice, Viet Nam 5% broken, white, milled",
+      "level_at_event": 194.0,
+      "local_currency": {
+       "baseline_to_peak_pct": 0.030379920129829152,
+       "baseline_to_peak_unavailable_reason": null,
+       "chart_index": [
+        92.0912868207964,
+        92.53108051256791,
+        92.97226453986275,
+        93.41484362715653,
+        93.85882084547286,
+        94.30420010401183,
+        94.75098532113392,
+        95.19918042436002,
+        95.64879019541816,
+        96.09981689234664,
+        96.55226531290417,
+        97.00613856933616,
+        97.46144148230239,
+        97.9181780342861,
+        98.37635135814361,
+        98.83596544780873,
+        99.29702516974315,
+        99.75953281175647,
+        100.22349412428882,
+        100.68891140431018,
+        101.15579042974194,
+        101.62413350671446,
+        102.09394556352214,
+        102.56523066738195,
+        103.0379920129829,
+        103.51223456297092,
+        103.9879615257756,
+        104.46517788694386,
+        104.94388686864589,
+        105.42409258619077,
+        105.90580005947685,
+        106.38901163356626,
+        106.87373324439723,
+        107.35996814849143,
+        107.84772050695992,
+        108.33699358319468,
+        108.8277933680964,
+        109.32012223420831,
+        109.81398619991225,
+        110.30938764691186,
+        110.80633078441026,
+        111.30482167201113,
+        111.80486270515868,
+        112.30645812053726,
+        112.8096140189723,
+        113.31433187986819,
+        113.82061875673179,
+        114.32847613354772
+       ],
+       "decomposition_yoy": {
+        "exchange_rate_log": 0.023976032412403345,
+        "local_currency_change": 0.056955101451482,
+        "local_currency_log": 0.05539222864578226,
+        "usd_benchmark_log": 0.031416196233378914
+       },
+       "yoy_pct": 0.05695510145148197,
+       "yoy_unavailable_reason": null
+      },
+      "mom_pct": 0.0025839793281654533,
+      "mom_unavailable_reason": null,
+      "reason": null,
+      "series_key": "wb.pink.rice_viet_5",
+      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Viet Namese 5%",
+      "state": "ok",
+      "summary": "Weekly indicative survey price, f.o.b. Hanoi.",
+      "unit": "USD per metric ton",
+      "yoy_pct": 0.03191489361702127,
+      "yoy_unavailable_reason": null
+     },
+     {
+      "base_breaks": [],
+      "base_breaks_in_window": [],
+      "base_period": null,
+      "baseline_to_peak_pct": 0.01744966442953011,
+      "baseline_to_peak_unavailable_reason": null,
+      "benchmark_id": "rice_thai_25",
+      "chart_index": [
+       95.30201342281879,
+       95.57046979865771,
+       95.83892617449665,
+       96.10738255033557,
+       96.3758389261745,
+       96.64429530201342,
+       96.91275167785236,
+       97.18120805369128,
+       97.4496644295302,
+       97.71812080536913,
+       97.98657718120805,
+       98.25503355704699,
+       98.52348993288591,
+       98.79194630872483,
+       99.06040268456375,
+       99.32885906040268,
+       99.59731543624162,
+       99.86577181208054,
+       100.13422818791946,
+       100.40268456375838,
+       100.67114093959732,
+       100.93959731543625,
+       101.20805369127517,
+       101.47651006711409,
+       101.74496644295301,
+       102.01342281879195,
+       102.28187919463087,
+       102.5503355704698,
+       102.81879194630872,
+       103.08724832214764,
+       103.35570469798658,
+       103.6241610738255,
+       103.89261744966443,
+       104.16107382550335,
+       104.42953020134229,
+       104.69798657718121,
+       104.96644295302013,
+       105.23489932885906,
+       105.50335570469798,
+       105.77181208053692,
+       106.04026845637584,
+       106.30872483221476,
+       106.57718120805369,
+       106.84563758389261,
+       107.11409395973155,
+       107.38255033557047,
+       107.6510067114094,
+       107.91946308724832
+      ],
+      "coverage": {
+       "ends_before_event": false,
+       "first_period": "2010-01",
+       "last_period": "2026-09",
+       "months_in_window": 48,
+       "months_missing_in_window": 0,
+       "months_observed_in_window": 48,
+       "n_obs": 201,
+       "n_rejected": 0,
+       "n_source_empty": 0,
+       "release_lag_months": 1,
+       "removed_by_as_of": 0,
+       "stale": false
+      },
+      "definition": {
+       "sources": "Synthetic source for rice_thai_25",
+       "text": "Rice (Thailand), 25% broken (synthetic test description)"
+      },
+      "label": "Rice, Thailand 25% broken, white, milled",
+      "level_at_event": 191.0,
+      "local_currency": {
+       "baseline_to_peak_pct": 0.030659080329870525,
+       "baseline_to_peak_unavailable_reason": null,
+       "chart_index": [
+        92.01928606203046,
+        92.46305270847228,
+        92.90822587062289,
+        93.3548103211281,
+        93.80280918047454,
+        94.25222640686333,
+        94.70306596780354,
+        95.15533184011218,
+        95.6090288546097,
+        96.06415931966505,
+        96.52072808238749,
+        96.9787383051494,
+        97.43819485832995,
+        97.89910177459382,
+        98.36146223725612,
+        98.8252802906165,
+        99.29056085159385,
+        99.75730625880784,
+        100.22552231343158,
+        100.69521136339272,
+        101.16637923778818,
+        101.63902829385357,
+        102.11316351133634,
+        102.58878900899957,
+        103.06590803298705,
+        103.54452559795104,
+        104.0246449639972,
+        104.50627116904766,
+        104.98940748717,
+        105.47405808599399,
+        105.96022803834647,
+        106.44791974102178,
+        106.93713918367881,
+        107.42788967528995,
+        107.9201754300246,
+        108.41399976383616,
+        108.9093687222311,
+        109.40628472992756,
+        109.90475386035588,
+        110.40477854754216,
+        110.90636305452256,
+        111.40951349661303,
+        111.91423232180172,
+        112.42052382104845,
+        112.92839415155508,
+        113.4378448444776,
+        113.94888301108148,
+        114.46151018717677
+       ],
+       "decomposition_yoy": {
+        "exchange_rate_log": 0.023976032412403345,
+        "local_currency_change": 0.05748519874393458,
+        "local_currency_log": 0.055893635380708295,
+        "usd_benchmark_log": 0.031917602968304946
+       },
+       "yoy_pct": 0.05748519874393487,
+       "yoy_unavailable_reason": null
+      },
+      "mom_pct": 0.002624671916010568,
+      "mom_unavailable_reason": null,
+      "reason": null,
+      "series_key": "wb.pink.rice_thai_25",
+      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 25%",
+      "state": "ok",
+      "summary": "Indicative survey price, f.o.b. Bangkok.",
+      "unit": "USD per metric ton",
+      "yoy_pct": 0.03243243243243232,
+      "yoy_unavailable_reason": null
+     }
+    ],
+    "limitations": [
+     "Imported rice in much of West and Central Africa is Thai, Indian, Pakistani or Vietnamese rice, often parboiled or in broken grades; the benchmarks are white-rice export quotations f.o.b. Bangkok or Hanoi, so freight, insurance, port charges, import duties, traders' margins and the grade differences are not captured.",
+     "India, the largest exporter, is not a Pink Sheet benchmark and its export policy has moved world rice trade."
+    ],
+    "reference": {
+     "reviewed": "2026-11-20",
+     "version": "benchmarks-1"
+    },
+    "role": "imported supply",
+    "status": "ok",
+    "unit_note": "Benchmark levels are never compared with the local price: units, grades and places differ. Only changes and indexed paths are compared."
+   },
+   "lags": {
+    "caution": "Descriptive. Seven lags are examined, monthly changes are autocorrelated and nothing about timing identifies a mechanism: the strongest lag is not a finding.",
+    "lags_months": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ],
+    "method": "Spearman correlation between monthly log changes of the local price at t and of the reference at t - lag; no p-values; fewer than 24 paired months is insufficient",
+    "pairs": [
+     {
+      "any_sufficient": true,
+      "key": "benchmark:rice_thai_5",
+      "label": "Rice, Thailand 5% broken, white, milled (USD)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 1,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 2,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 3,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 4,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 5,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 6,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       }
+      ]
+     },
+     {
+      "any_sufficient": true,
+      "key": "benchmark:rice_viet_5",
+      "label": "Rice, Viet Nam 5% broken, white, milled (USD)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 1,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 2,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 3,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 4,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 5,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 6,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       }
+      ]
+     },
+     {
+      "any_sufficient": true,
+      "key": "benchmark:rice_thai_25",
+      "label": "Rice, Thailand 25% broken, white, milled (USD)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 1,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 2,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 3,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 4,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 5,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 6,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       }
+      ]
+     },
+     {
+      "any_sufficient": true,
+      "key": "exchange_rate",
+      "label": "Exchange rate (domestic currency per USD)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": 0.09553872952533181,
+        "status": "ok"
+       },
+       {
+        "lag": 1,
+        "n": 99,
+        "spearman": -0.15899483277740856,
+        "status": "ok"
+       },
+       {
+        "lag": 2,
+        "n": 98,
+        "spearman": 0.12622106875139608,
+        "status": "ok"
+       },
+       {
+        "lag": 3,
+        "n": 97,
+        "spearman": -0.19185307423781472,
+        "status": "ok"
+       },
+       {
+        "lag": 4,
+        "n": 96,
+        "spearman": 0.21097957662657452,
+        "status": "ok"
+       },
+       {
+        "lag": 5,
+        "n": 95,
+        "spearman": -0.1344067469637312,
+        "status": "ok"
+       },
+       {
+        "lag": 6,
+        "n": 94,
+        "spearman": 0.1838653217832741,
+        "status": "ok"
+       }
+      ]
+     },
+     {
+      "any_sufficient": true,
+      "key": "cpi_headline",
+      "label": "Consumer price index (all items)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": -0.02964283712741471,
+        "status": "ok"
+       },
+       {
+        "lag": 1,
+        "n": 99,
+        "spearman": -0.04163142060332608,
+        "status": "ok"
+       },
+       {
+        "lag": 2,
+        "n": 98,
+        "spearman": 0.11743956849901475,
+        "status": "ok"
+       },
+       {
+        "lag": 3,
+        "n": 97,
+        "spearman": -0.12117751607308991,
+        "status": "ok"
+       },
+       {
+        "lag": 4,
+        "n": 96,
+        "spearman": 0.1042530733893157,
+        "status": "ok"
+       },
+       {
+        "lag": 5,
+        "n": 95,
+        "spearman": 0.05222943286008647,
+        "status": "ok"
+       },
+       {
+        "lag": 6,
+        "n": 94,
+        "spearman": -0.1465802327510138,
+        "status": "ok"
+       }
+      ]
+     },
+     {
+      "any_sufficient": true,
+      "key": "cpi_food",
+      "label": "Consumer price index (food)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": 0.016243019073448717,
+        "status": "ok"
+       },
+       {
+        "lag": 1,
+        "n": 99,
+        "spearman": 0.10580015160845274,
+        "status": "ok"
+       },
+       {
+        "lag": 2,
+        "n": 98,
+        "spearman": -0.15422923371135913,
+        "status": "ok"
+       },
+       {
+        "lag": 3,
+        "n": 97,
+        "spearman": 0.2823915708647684,
+        "status": "ok"
+       },
+       {
+        "lag": 4,
+        "n": 96,
+        "spearman": -0.27149881984157187,
+        "status": "ok"
+       },
+       {
+        "lag": 5,
+        "n": 95,
+        "spearman": 0.0625605294697739,
+        "status": "ok"
+       },
+       {
+        "lag": 6,
+        "n": 94,
+        "spearman": 0.15138441489249752,
+        "status": "ok"
+       }
+      ]
+     }
+    ],
+    "through": "2026-05"
+   },
+   "lineage": [
+    {
+     "attribution": "Source: International Monetary Fund, Consumer Price Index (CPI) and Exchange Rates (ER), https://data.imf.org/en/datasets/IMF.STA:CPI and https://data.imf.org/en/datasets/IMF.STA:ER. Index levels are reproduced unchanged; percentage changes shown by Market Almanac are computed from them.",
+     "base_period": "2010",
+     "concept": "cpi_headline",
+     "dataset": "CPI",
+     "first_period": "2018-01",
+     "label": "Consumer price index, all items",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "080e99b2b429fd1d750978ea5b9a52b7e273f7f0f62546cdacbf9bfe8a4cce22",
+     "provider": "imf",
+     "release_lag_months_assumed": 2,
+     "response_sha256": "b4ea6a9ba9a333ae4d9cd781137ed1881c0ab125b176c79ce91f9a0c65e8b11f",
+     "retrieved_at": "2026-11-20T11:32:47.444219+00:00",
+     "series_key": "imf.cpi_headline.KEN",
+     "source_ref": "IMF.STA,CPI/KEN.CPI._T.IX.M",
+     "unit": "index",
+     "vintage_publication_date": "2026-11-19T07:43:56Z"
+    },
+    {
+     "attribution": "Source: International Monetary Fund, Consumer Price Index (CPI) and Exchange Rates (ER), https://data.imf.org/en/datasets/IMF.STA:CPI and https://data.imf.org/en/datasets/IMF.STA:ER. Index levels are reproduced unchanged; percentage changes shown by Market Almanac are computed from them.",
+     "base_period": "2010",
+     "concept": "cpi_food",
+     "dataset": "CPI",
+     "first_period": "2018-01",
+     "label": "Consumer price index, food and non-alcoholic beverages",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "1815abe2ef996a5eb796ea7c7063040cc8fb0411e32e5cb97f53ae7aa04caced",
+     "provider": "imf",
+     "release_lag_months_assumed": 2,
+     "response_sha256": "426f2fdbab3f7f4def3f32c1f0606abb00cf90a1c35e5d0e15a7ac0e86fc0014",
+     "retrieved_at": "2026-11-20T11:32:47.445334+00:00",
+     "series_key": "imf.cpi_food.KEN",
+     "source_ref": "IMF.STA,CPI/KEN.CPI.CP01.IX.M",
+     "unit": "index",
+     "vintage_publication_date": "2026-11-19T07:43:56Z"
+    },
+    {
+     "attribution": "Source: International Monetary Fund, Consumer Price Index (CPI) and Exchange Rates (ER), https://data.imf.org/en/datasets/IMF.STA:CPI and https://data.imf.org/en/datasets/IMF.STA:ER. Index levels are reproduced unchanged; percentage changes shown by Market Almanac are computed from them.",
+     "base_period": "",
+     "concept": "fx_period_avg",
+     "dataset": "ER",
+     "first_period": "2018-01",
+     "label": "Exchange rate, domestic currency per US dollar, period average",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "d47e3779d76918cce0542c0dd7147baa5af33fa57a5283964b8aa687dc7d659c",
+     "provider": "imf",
+     "release_lag_months_assumed": 1,
+     "response_sha256": "087a6a31cfaf2a02968927f1ba5157c8adec1cd5cceaa83cec120326b2ae9db4",
+     "retrieved_at": "2026-11-20T11:32:47.446799+00:00",
+     "series_key": "imf.fx_period_avg.KEN",
+     "source_ref": "IMF.STA,ER/KEN.XDC_USD.PA_RT.M",
+     "unit": "domestic currency per USD",
+     "vintage_publication_date": "2026-11-19T07:43:56Z"
+    },
+    {
+     "attribution": "Source: International Monetary Fund, Consumer Price Index (CPI) and Exchange Rates (ER), https://data.imf.org/en/datasets/IMF.STA:CPI and https://data.imf.org/en/datasets/IMF.STA:ER. Index levels are reproduced unchanged; percentage changes shown by Market Almanac are computed from them.",
+     "base_period": "",
+     "concept": "fx_end_period",
+     "dataset": "ER",
+     "first_period": "2018-01",
+     "label": "Exchange rate, domestic currency per US dollar, end of period",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "d47e3779d76918cce0542c0dd7147baa5af33fa57a5283964b8aa687dc7d659c",
+     "provider": "imf",
+     "release_lag_months_assumed": 1,
+     "response_sha256": "c9ab0e86fe79b2b23e1252dea5304807a8fc4df7d3cb69e6459a03b3aa59c623",
+     "retrieved_at": "2026-11-20T11:32:47.447598+00:00",
+     "series_key": "imf.fx_end_period.KEN",
+     "source_ref": "IMF.STA,ER/KEN.XDC_USD.EOP_RT.M",
+     "unit": "domestic currency per USD",
+     "vintage_publication_date": "2026-11-19T07:43:56Z"
+    },
+    {
+     "attribution": "The World Bank: Commodity Price Data (The Pink Sheet): data compiled by the World Bank from the third-party sources named in the workbook (e.g. Bloomberg Finance L.P., S&P Global, US Department of Agriculture). https://www.worldbank.org/en/research/commodity-markets",
+     "base_period": null,
+     "concept": "commodity_usd",
+     "dataset": "PINK_SHEET",
+     "first_period": "2010-01",
+     "label": "Rice, Thailand 5% broken, white, milled",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "5fcd82ce21e886e04d7ab864f58658360fd9cb848668b0006ac4e4907b915239",
+     "provider": "world_bank",
+     "release_lag_months_assumed": 1,
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
+     "retrieved_at": "2026-11-20T00:00:00+00:00",
+     "series_key": "wb.pink.rice_thai_5",
+     "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 5%",
+     "unit": "USD per metric ton",
+     "vintage_publication_date": "November 3, 2026"
+    },
+    {
+     "attribution": "The World Bank: Commodity Price Data (The Pink Sheet): data compiled by the World Bank from the third-party sources named in the workbook (e.g. Bloomberg Finance L.P., S&P Global, US Department of Agriculture). https://www.worldbank.org/en/research/commodity-markets",
+     "base_period": null,
+     "concept": "commodity_usd",
+     "dataset": "PINK_SHEET",
+     "first_period": "2010-01",
+     "label": "Rice, Viet Nam 5% broken, white, milled",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "363c14658c8792e6522b434d999e609a3abd11d3212e51f5f2033470885627d7",
+     "provider": "world_bank",
+     "release_lag_months_assumed": 1,
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
+     "retrieved_at": "2026-11-20T00:00:00+00:00",
+     "series_key": "wb.pink.rice_viet_5",
+     "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Viet Namese 5%",
+     "unit": "USD per metric ton",
+     "vintage_publication_date": "November 3, 2026"
+    },
+    {
+     "attribution": "The World Bank: Commodity Price Data (The Pink Sheet): data compiled by the World Bank from the third-party sources named in the workbook (e.g. Bloomberg Finance L.P., S&P Global, US Department of Agriculture). https://www.worldbank.org/en/research/commodity-markets",
+     "base_period": null,
+     "concept": "commodity_usd",
+     "dataset": "PINK_SHEET",
+     "first_period": "2010-01",
+     "label": "Rice, Thailand 25% broken, white, milled",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "9f027a1da3e644a66a9a41ab96e4a918b6e8a45e5c9a870c92524a66e8b2db90",
+     "provider": "world_bank",
+     "release_lag_months_assumed": 1,
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
+     "retrieved_at": "2026-11-20T00:00:00+00:00",
+     "series_key": "wb.pink.rice_thai_25",
+     "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 25%",
+     "unit": "USD per metric ton",
+     "vintage_publication_date": "November 3, 2026"
+    }
+   ],
+   "method_version": "context-1",
+   "missing": [],
+   "price": {
+    "baseline_to_peak_pct": 0.5803909850420008,
+    "baseline_to_peak_unavailable_reason": null,
+    "chart_index": [
+     94.88781649894229,
+     95.1724799484391,
+     95.45799738828441,
+     95.74437138044925,
+     96.0316044945906,
+     96.31969930807435,
+     96.60865840599855,
+     96.89848438121655,
+     97.18917983436017,
+     97.48074737386327,
+     97.77318961598486,
+     98.06650918483278,
+     98.36070871238726,
+     98.65579083852442,
+     98.95175821103999,
+     99.2486134856731,
+     99.54635932613012,
+     99.84499840410848,
+     100.14453339932079,
+     100.44496699951874,
+     100.7463019005173,
+     101.04854080621884,
+     101.35168642863748,
+     101.65574148792338,
+     158.03909850420007,
+     158.5132157997127,
+     158.9887554471118,
+     159.46572171345312,
+     159.94411887859346,
+     160.42395123522923,
+     160.90522308893486,
+     161.38793875820167,
+     161.87210257447626,
+     162.35771888219966,
+     162.84479203884626,
+     163.33332641496276,
+     163.82332639420764,
+     164.31479637339024,
+     164.8077407625104,
+     165.30216398479786,
+     165.7980704767523,
+     166.29546468818253,
+     166.79435108224703,
+     167.29473413549377,
+     167.79661833790024,
+     168.30000819291394,
+     168.80490821749265,
+     169.31132294214513
+    ],
+    "currency": "KES",
+    "yoy_pct": 0.6067299694466015,
+    "yoy_unavailable_reason": null
+   },
+   "relative_changes": [
+    {
+     "deflator": "headline CPI",
+     "deflator_pct": 0.04907020231336867,
+     "horizon": "12-month change at the event month",
+     "key": "price_vs_headline_cpi",
+     "label": "Price relative to headline CPI",
+     "nominal_pct": 0.6067299694466015,
+     "reason": null,
+     "relative_pct": 0.5315752615063352,
+     "status": "ok"
+    },
+    {
+     "deflator": "food CPI",
+     "deflator_pct": 0.16037809860417052,
+     "horizon": "12-month change at the event month",
+     "key": "price_vs_food_cpi",
+     "label": "Price relative to food CPI",
+     "nominal_pct": 0.6067299694466015,
+     "reason": null,
+     "relative_pct": 0.3846607165193412,
+     "status": "ok"
+    },
+    {
+     "deflator": "headline CPI",
+     "deflator_pct": 0.026190275964291132,
+     "horizon": "change from the pre-episode baseline to the peak",
+     "key": "price_vs_headline_cpi",
+     "label": "Price relative to headline CPI",
+     "nominal_pct": 0.5803909850420008,
+     "reason": null,
+     "relative_pct": 0.5400564808090176,
+     "status": "ok"
+    },
+    {
+     "deflator": "food CPI",
+     "deflator_pct": 0.12258189878584891,
+     "horizon": "change from the pre-episode baseline to the peak",
+     "key": "price_vs_food_cpi",
+     "label": "Price relative to food CPI",
+     "nominal_pct": 0.5803909850420008,
+     "reason": null,
+     "relative_pct": 0.407817983481922,
+     "status": "ok"
+    }
+   ],
+   "snapshot": {
+    "created_at": "2026-11-20T00:00:00+00:00",
+    "observation_hash": "2439c9fb71bbdc0b0a0747a68ed050e94be7b00066d18ee7bce4700d6cfcacad",
+    "snapshot_id": "20261120T000000_2439c9",
+    "vintage": "current archived vintage at retrieval: historical values may since have been revised, so comparisons of past months are exploratory, not a reconstruction of what was known then"
+   },
+   "status": "ok",
+   "transformations": {
+    "baseline": "change from the mean level over the 12 months before the episode onset to the level at the peak; withheld with fewer than 3 baseline months, a missing peak month or a base break in between",
+    "index": "each series indexed to 100 = its own mean over the baseline months, so series in different units share one axis; withheld on the far side of a base break",
+    "lag": "Spearman correlation between monthly log changes of the local price at t and of the reference at t - lag; no p-values; fewer than 24 paired months is insufficient",
+    "local_benchmark": "benchmark USD price x domestic currency per USD (period average); its log change splits exactly into the benchmark's log change and the exchange rate's",
+    "relative": "(1 + price change) / (1 + deflator change) - 1: how the price moved relative to the national basket; not purchasing power, not a causal share",
+    "usd_price": "local price / domestic currency per USD (period average), month by month: an indicative dollar value at the official rate",
+    "yoy": "12-month change = level(t) / level(t-12) - 1 over calendar months; withheld if either month is missing or a base break lies between them"
+   },
+   "usd_price": {
+    "baseline_to_peak_pct": 0.560073281246628,
+    "baseline_to_peak_unavailable_reason": null,
+    "chart_index": [
+     98.26892965830724,
+     98.3670020176098,
+     98.46517275754387,
+     98.56344099899638,
+     98.66180762574342,
+     98.76027264230298,
+     98.85883605523146,
+     98.95749787311819,
+     99.05625723142826,
+     99.15511589397806,
+     99.25407299939485,
+     99.35312943687265,
+     99.45228435080878,
+     99.55153776187655,
+     99.65089056265732,
+     99.75034277519815,
+     99.84989355536018,
+     99.94954466638006,
+     100.04929440077204,
+     100.14914452225061,
+     100.24909333073897,
+     100.34914259041481,
+     100.4492914715605,
+     100.5495400119823,
+     156.00732812466282,
+     156.16302382619995,
+     156.31887552308515,
+     156.47488195099746,
+     156.6310445131532,
+     156.7873632821436,
+     156.94383700658102,
+     157.10046842023178,
+     157.2572549520043,
+     157.4141980132893,
+     157.5712976914664,
+     157.72855539718125,
+     157.88596858168978,
+     158.04353998049618,
+     158.2012670559659,
+     158.3591525441393,
+     158.51719654593597,
+     158.67539654030986,
+     158.83375526406977,
+     158.99227282678575,
+     159.15094672390538,
+     159.30978100014613,
+     159.46877185209385,
+     159.62792332230842
+    ],
+    "note": "indicative: local price divided by the official period-average rate; households may have faced a different rate",
+    "yoy_pct": 0.5686651052782474,
+    "yoy_unavailable_reason": null
+   },
+   "warnings": [
+    {
+     "code": "regime_unclassified",
+     "severity": "info",
+     "text": "KEN's exchange-rate arrangement is not classified in the reference table (it is not assumed to float)."
+    },
+    {
+     "code": "currency_assumed",
+     "severity": "info",
+     "text": "The price's currency is assumed to be the national currency of the IMF exchange-rate series (not independently verifiable here)."
+    },
+    {
+     "code": "vintage_exploratory",
+     "severity": "info",
+     "text": "Historical comparisons use the current archived vintage of each series; revisions and re-basing since publication mean this is an exploratory reading, not what was visible at the time. Set an as-of month to apply the assumed release lags."
+    }
+   ],
+   "window": {
+    "baseline_end": "2024-05",
+    "baseline_start": "2023-06",
+    "end": "2026-05",
+    "event": "2024-09",
+    "onset": "2024-06",
+    "peak": "2024-06",
+    "start": "2022-06"
+   }
+  },
+  "evidence": {
+   "causal": [
+    {
+     "evidence": [],
+     "inference": "causal",
+     "text": "That inflation, depreciation or an international price caused the local price movement. The context places magnitudes side by side; attributing the movement to any of them requires a design that separates it from the others, which move together."
+    },
+    {
+     "evidence": [],
+     "inference": "causal",
+     "text": "That a lead-lag pattern in monthly changes shows transmission from a benchmark, a currency or an index. Seven lags are examined and monthly changes are autocorrelated."
+    },
+    {
+     "evidence": [],
+     "inference": "causal",
+     "text": "That a benchmark's path describes the cost of the product sold locally. A world export quotation differs from the local product in grade, place, stage of the chain and currency."
+    },
+    {
+     "evidence": [],
+     "inference": "causal",
+     "text": "That a relative price change is a change in households' purchasing power or welfare."
+    }
+   ],
+   "consistent": [
+    {
+     "evidence": [
+      "imf.cpi_food.KEN"
+     ],
+     "inference": "associational",
+     "text": "The figures show the same direction but a smaller magnitude for this. This compares sizes only. Proposition: the food component of the consumer price index rose by a comparable amount to this price (food CPI changed +16.0% against +60.7% for this price (31% of its log change))."
+    }
+   ],
+   "context_id": "d913afa76214a8c5",
+   "format": "economic-context-1",
+   "gaps": [
+    "sub-national consumer price indices (the IMF series are national averages)",
+    "the exchange rate actually faced by importers and traders, where it differs from the official rate"
+   ],
+   "observed": [
+    {
+     "evidence": [
+      "imf.cpi_headline.KEN"
+     ],
+     "inference": "descriptive",
+     "text": "The IMF headline consumer price index for Kenya is available from January 2018 to September 2026 (105 months; 0 of 48 window months missing)."
+    },
+    {
+     "evidence": [
+      "imf.cpi_food.KEN"
+     ],
+     "inference": "descriptive",
+     "text": "The IMF food consumer price index for Kenya is available from January 2018 to September 2026 (105 months; 0 of 48 window months missing)."
+    },
+    {
+     "evidence": [
+      "imf.fx_period_avg.KEN"
+     ],
+     "inference": "descriptive",
+     "text": "The IMF exchange rate for Kenya is available from January 2018 to September 2026 (105 months; 0 of 48 window months missing)."
+    },
+    {
+     "evidence": [
+      "context.economic.international"
+     ],
+     "inference": "descriptive",
+     "text": "Rice (imported) is mapped to Rice, Thailand 5% broken, white, milled, Rice, Viet Nam 5% broken, white, milled, Rice, Thailand 25% broken, white, milled with medium confidence (imported supply). The benchmark is the same commodity, traded internationally, and a plausible reference for imported supplies of this product. It still differs from the local price in grade, place, stage of the supply chain and currency."
+    }
+   ],
+   "propositions": [
+    {
+     "basis": "the national consumer price index changed +4.9% against +60.7% for this price, 10% of its log change. The index is a national average of a different basket, so a small figure says nothing about whether general inflation matters, because the basket differs from this product",
+     "evidence": [
+      "imf.cpi_headline.KEN"
+     ],
+     "proposition": "The national consumer price index rose by a comparable amount to this price",
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
+    },
+    {
+     "basis": "food CPI changed +16.0% against +60.7% for this price (31% of its log change)",
+     "evidence": [
+      "imf.cpi_food.KEN"
+     ],
+     "proposition": "The food component of the consumer price index rose by a comparable amount to this price",
+     "status": "partly_consistent",
+     "verdict": "same direction, smaller magnitude"
+    },
+    {
+     "basis": "units of local currency per dollar changed +2.4% against +60.7% for the price (5% of its log change)",
+     "evidence": [
+      "imf.fx_period_avg.KEN"
+     ],
+     "proposition": "The local currency lost value against the US dollar by a comparable amount to the price rise",
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
+    },
+    {
+     "basis": "Rice, Thailand 5% broken, white, milled changed +5.8% in local currency; Rice, Viet Nam 5% broken, white, milled changed +5.7% in local currency; Rice, Thailand 25% broken, white, milled changed +5.7% in local currency against +60.7% for this price; the share of the price's log change is 12% at the median across 3 benchmarks (range 12% to 12%). The median is used so that the most favourable of several alternative quotations does not decide the status. Grade, place, freight, duties and margins differ between the benchmark and the local product",
+     "evidence": [
+      "wb.pink.rice_thai_5",
+      "wb.pink.rice_viet_5",
+      "wb.pink.rice_thai_25"
+     ],
+     "proposition": "International benchmark prices, in local currency, moved by a comparable amount to this price",
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
+    }
+   ],
+   "quantitative": [
+    {
+     "evidence": [
+      "context.economic.price"
+     ],
+     "inference": "descriptive",
+     "text": "The local price changed +60.7% over the 12 months to September 2024 (nominal, KES)."
+    },
+    {
+     "evidence": [
+      "imf.cpi_headline.KEN"
+     ],
+     "inference": "descriptive",
+     "text": "The national consumer price index changed +4.9% over the same 12 months (IMF/World Bank snapshot 20261120T000000_2439c9). A change in one food's price and the change in the general price level are different quantities."
+    },
+    {
+     "evidence": [
+      "imf.cpi_food.KEN"
+     ],
+     "inference": "descriptive",
+     "text": "The food component of the consumer price index changed +16.0%."
+    },
+    {
+     "evidence": [
+      "context.economic.inflation"
+     ],
+     "inference": "descriptive",
+     "text": "Food inflation exceeded headline inflation by +11.1 percentage points."
+    },
+    {
+     "evidence": [
+      "context.economic.relative_changes"
+     ],
+     "inference": "descriptive",
+     "text": "Price relative to headline CPI (12-month change at the event month): the price changed +60.7% against +4.9% for the headline CPI, a relative change of +53.2%. This is the price relative to the national average basket, not a change in any household's purchasing power."
+    },
+    {
+     "evidence": [
+      "context.economic.relative_changes"
+     ],
+     "inference": "descriptive",
+     "text": "Price relative to food CPI (12-month change at the event month): the price changed +60.7% against +16.0% for the food CPI, a relative change of +38.5%. This is the price relative to the national average basket, not a change in any household's purchasing power."
+    },
+    {
+     "evidence": [
+      "context.economic.relative_changes"
+     ],
+     "inference": "descriptive",
+     "text": "Price relative to headline CPI (change from the pre-episode baseline to the peak): the price changed +58.0% against +2.6% for the headline CPI, a relative change of +54.0%. This is the price relative to the national average basket, not a change in any household's purchasing power."
+    },
+    {
+     "evidence": [
+      "context.economic.relative_changes"
+     ],
+     "inference": "descriptive",
+     "text": "Price relative to food CPI (change from the pre-episode baseline to the peak): the price changed +58.0% against +12.3% for the food CPI, a relative change of +40.8%. This is the price relative to the national average basket, not a change in any household's purchasing power."
+    },
+    {
+     "evidence": [
+      "imf.fx_period_avg.KEN"
+     ],
+     "inference": "descriptive",
+     "text": "Domestic currency per US dollar changed +2.4% over the 12 months (more units per dollar), a -2.4% change in the dollar value of one unit of the local currency (official rate, period average)."
+    },
+    {
+     "evidence": [
+      "context.economic.usd_price"
+     ],
+     "inference": "descriptive",
+     "text": "At the official period-average rate the price in US dollars changed +56.9% (indicative; households may have faced a different rate)."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_5"
+     ],
+     "inference": "descriptive",
+     "text": "Rice, Thailand 5% broken, white, milled changed +3.3% in US dollars over the 12 months to September 2024."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_5"
+     ],
+     "inference": "descriptive",
+     "text": "In local currency the same benchmark changed +5.8%: a +3.3% change in dollars combined with a +2.4% change in the exchange rate (log changes +0.032 and +0.024, adding exactly). The split is arithmetic and does not show why either part moved."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_5"
+     ],
+     "inference": "descriptive",
+     "text": "The benchmark's local-currency change is 12% of the price's 12-month log change (arithmetic ratio of two logarithmic changes)."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_viet_5"
+     ],
+     "inference": "descriptive",
+     "text": "Rice, Viet Nam 5% broken, white, milled changed +3.2% in US dollars over the 12 months to September 2024."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_viet_5"
+     ],
+     "inference": "descriptive",
+     "text": "In local currency the same benchmark changed +5.7%: a +3.2% change in dollars combined with a +2.4% change in the exchange rate (log changes +0.031 and +0.024, adding exactly). The split is arithmetic and does not show why either part moved."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_viet_5"
+     ],
+     "inference": "descriptive",
+     "text": "The benchmark's local-currency change is 12% of the price's 12-month log change (arithmetic ratio of two logarithmic changes)."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_25"
+     ],
+     "inference": "descriptive",
+     "text": "Rice, Thailand 25% broken, white, milled changed +3.2% in US dollars over the 12 months to September 2024."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_25"
+     ],
+     "inference": "descriptive",
+     "text": "In local currency the same benchmark changed +5.7%: a +3.2% change in dollars combined with a +2.4% change in the exchange rate (log changes +0.032 and +0.024, adding exactly). The split is arithmetic and does not show why either part moved."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_25"
+     ],
+     "inference": "descriptive",
+     "text": "The benchmark's local-currency change is 12% of the price's 12-month log change (arithmetic ratio of two logarithmic changes)."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "associational",
+     "text": "Rank correlations between monthly changes in this price and Rice, Thailand 5% broken, white, milled (USD) led by 0 to 6 months ranged from -0.01 to -0.01 (up to 100 paired months through May 2026). Descriptive; no lag is singled out."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "associational",
+     "text": "Rank correlations between monthly changes in this price and Rice, Viet Nam 5% broken, white, milled (USD) led by 0 to 6 months ranged from -0.01 to -0.01 (up to 100 paired months through May 2026). Descriptive; no lag is singled out."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "associational",
+     "text": "Rank correlations between monthly changes in this price and Rice, Thailand 25% broken, white, milled (USD) led by 0 to 6 months ranged from -0.01 to -0.01 (up to 100 paired months through May 2026). Descriptive; no lag is singled out."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "associational",
+     "text": "Rank correlations between monthly changes in this price and Exchange rate (domestic currency per USD) led by 0 to 6 months ranged from -0.19 to +0.21 (up to 100 paired months through May 2026). Descriptive; no lag is singled out."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "associational",
+     "text": "Rank correlations between monthly changes in this price and Consumer price index (all items) led by 0 to 6 months ranged from -0.15 to +0.12 (up to 100 paired months through May 2026). Descriptive; no lag is singled out."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "associational",
+     "text": "Rank correlations between monthly changes in this price and Consumer price index (food) led by 0 to 6 months ranged from -0.27 to +0.28 (up to 100 paired months through May 2026). Descriptive; no lag is singled out."
+    }
+   ],
+   "statuses": {
+    "cannot_be_assessed": "Cannot be assessed with the data integrated here",
+    "consistent": "Same direction and a comparable or larger magnitude; descriptive, not causal",
+    "context_only": "Smaller magnitude, opposite direction or weak mapping; descriptive, not evidence against",
+    "not_indicated": "Not indicated by the available evidence",
+    "partly_consistent": "Same direction but a smaller magnitude; descriptive, not causal"
+   },
+   "unresolved": [
+    {
+     "evidence": [
+      "context.economic"
+     ],
+     "inference": "descriptive",
+     "text": "Local supply conditions (harvest, stocks), transport and border costs, trade and price policy, conflict and access, demand shifts and recording changes can each coincide with the movements shown above; the integrated data cannot separate them."
+    }
+   ]
+  },
+  "series_id": "ps_ac2524e4a1788986"
+ },
+ "missing_food": {
+  "economic": {
+   "as_of": null,
+   "assumptions": {
+    "note": "release lags are assumptions, not verified publication dates",
+    "release_lags_months": {
+     "cpi_food": 2,
+     "cpi_headline": 2,
+     "fx_end_period": 1,
+     "fx_period_avg": 1
+    }
+   },
+   "charts": {
+    "baseline": {
+     "end": "2024-05",
+     "start": "2023-06"
+    },
+    "event": "2024-09",
+    "months": [
+     "2022-06",
+     "2022-07",
+     "2022-08",
+     "2022-09",
+     "2022-10",
+     "2022-11",
+     "2022-12",
+     "2023-01",
+     "2023-02",
+     "2023-03",
+     "2023-04",
+     "2023-05",
+     "2023-06",
+     "2023-07",
+     "2023-08",
+     "2023-09",
+     "2023-10",
+     "2023-11",
+     "2023-12",
+     "2024-01",
+     "2024-02",
+     "2024-03",
+     "2024-04",
+     "2024-05",
+     "2024-06",
+     "2024-07",
+     "2024-08",
+     "2024-09",
+     "2024-10",
+     "2024-11",
+     "2024-12",
+     "2025-01",
+     "2025-02",
+     "2025-03",
+     "2025-04",
+     "2025-05",
+     "2025-06",
+     "2025-07",
+     "2025-08",
+     "2025-09",
+     "2025-10",
+     "2025-11",
+     "2025-12",
+     "2026-01",
+     "2026-02",
+     "2026-03",
+     "2026-04",
+     "2026-05"
+    ],
+    "unit": "index, 100 = each series' own mean over the baseline months"
+   },
+   "context_id": "d913afa76214a8c5",
+   "exchange_rate": {
+    "applicability": "applies",
+    "average_vs_end_period_yoy_pp": 0.0,
+    "currency_verified": true,
+    "end_period": {
+     "base_breaks": [],
+     "base_breaks_in_window": [],
+     "base_period": "",
+     "baseline_to_peak_pct": 0.0,
+     "baseline_to_peak_unavailable_reason": null,
+     "chart_index": [
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0
+     ],
+     "coverage": {
+      "ends_before_event": false,
+      "first_period": "2018-01",
+      "last_period": "2026-09",
+      "months_in_window": 48,
+      "months_missing_in_window": 0,
+      "months_observed_in_window": 48,
+      "n_obs": 105,
+      "n_rejected": 0,
+      "n_source_empty": 0,
+      "release_lag_months": 1,
+      "removed_by_as_of": 0,
+      "stale": false
+     },
+     "label": "Exchange rate, end of period (domestic currency per US dollar)",
+     "level_at_event": 600.0,
+     "mom_pct": 0.0,
+     "mom_unavailable_reason": null,
+     "reason": null,
+     "series_key": "imf.fx_end_period.NER",
+     "source_ref": "IMF.STA,ER/NER.XDC_USD.EOP_RT.M",
+     "state": "ok",
+     "step_changes_in_window": [],
+     "unit": "domestic currency per USD",
+     "usd_value_change_yoy_pct": 0.0,
+     "yoy_pct": 0.0,
+     "yoy_unavailable_reason": null
+    },
+    "period_average": {
+     "base_breaks": [],
+     "base_breaks_in_window": [],
+     "base_period": "",
+     "baseline_to_peak_pct": 0.0,
+     "baseline_to_peak_unavailable_reason": null,
+     "chart_index": [
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0
+     ],
+     "coverage": {
+      "ends_before_event": false,
+      "first_period": "2018-01",
+      "last_period": "2026-09",
+      "months_in_window": 48,
+      "months_missing_in_window": 0,
+      "months_observed_in_window": 48,
+      "n_obs": 105,
+      "n_rejected": 0,
+      "n_source_empty": 0,
+      "release_lag_months": 1,
+      "removed_by_as_of": 0,
+      "stale": false
+     },
+     "label": "Exchange rate, period average (domestic currency per US dollar)",
+     "level_at_event": 600.0,
+     "mom_pct": 0.0,
+     "mom_unavailable_reason": null,
+     "reason": null,
+     "series_key": "imf.fx_period_avg.NER",
+     "source_ref": "IMF.STA,ER/NER.XDC_USD.PA_RT.M",
+     "state": "ok",
+     "step_changes_in_window": [],
+     "unit": "domestic currency per USD",
+     "usd_value_change_yoy_pct": 0.0,
+     "yoy_pct": 0.0,
+     "yoy_unavailable_reason": null
+    },
+    "price_currency": "XOF",
+    "quote": "domestic currency per US dollar: a rise means more units of the local currency per dollar (a weaker local currency against the dollar); the dollar value of one local unit moves as 1/(1+x) - 1",
+    "regime": [
+     {
+      "anchor": "EUR",
+      "currency": "XOF",
+      "currency_name": "West African CFA franc",
+      "fixed_rate": 655.957,
+      "fixed_rate_quote": "XOF per EUR",
+      "id": "xof",
+      "interpretation": "The XOF is fixed to the euro, so XOF per US dollar moves one-for-one with the euro's value against the dollar. A change in XOF/USD reflects the euro-dollar rate, not independent domestic monetary depreciation. It can still matter for the local cost of dollar-denominated imports, but it does not show that import costs reached local prices, and members share one currency, so it cannot distinguish one member's conditions from another's.",
+      "kind": "currency_union_peg",
+      "since": "1999-01 (euro introduction; previously the French franc since 1994)",
+      "union": "West African Economic and Monetary Union (WAEMU/UEMOA); issuer BCEAO"
+     }
+    ],
+    "regime_reference": {
+     "reviewed": "2026-11-20",
+     "version": "regimes-1"
+    }
+   },
+   "format": "economic-context-1",
+   "inflation": {
+    "food": {
+     "base_period": "2014",
+     "coverage": {
+      "ends_before_event": false,
+      "first_period": null,
+      "last_period": null,
+      "months_in_window": 48,
+      "months_missing_in_window": 48,
+      "months_observed_in_window": 0,
+      "n_obs": 0,
+      "n_rejected": 0,
+      "n_source_empty": 105,
+      "release_lag_months": 2,
+      "removed_by_as_of": 0,
+      "stale": false
+     },
+     "label": "Consumer price index (food and non-alcoholic beverages)",
+     "reason": "the series exists but all 105 of its months are empty in the source",
+     "series_key": "imf.cpi_food.NER",
+     "source_ref": "IMF.STA,CPI/NER.CPI.CP01.IX.M",
+     "state": "empty_series",
+     "unit": "index"
+    },
+    "headline": {
+     "base_breaks": [],
+     "base_breaks_in_window": [],
+     "base_period": "2014",
+     "baseline_to_peak_pct": 0.05019529841120751,
+     "baseline_to_peak_unavailable_reason": null,
+     "chart_index": [
+      94.88781643793037,
+      95.17248026418825,
+      95.45799725942804,
+      95.74437145945382,
+      96.03160447858721,
+      96.31969954547147,
+      96.60865827442822,
+      96.89848470126157,
+      97.1891796331323,
+      97.48074710584451,
+      97.77318954088064,
+      98.06650935972314,
+      98.36070898385444,
+      98.655790834757,
+      98.9517581410741,
+      99.24861332428814,
+      99.54635961304243,
+      99.84499862165855,
+      100.14453357877981,
+      100.44496690588863,
+      100.74630183162829,
+      101.0485407774812,
+      101.35168616492986,
+      101.65574122261748,
+      105.01952984112074,
+      105.33458892220506,
+      105.6505923814434,
+      105.96754425463986,
+      106.28544696327691,
+      106.60430292883697,
+      106.92411618712411,
+      107.24488835245997,
+      107.56662346064864,
+      107.88932312601173,
+      108.21299057719251,
+      108.5376298499951,
+      108.86324255874105,
+      109.18983273923449,
+      109.51740200579702,
+      109.84595439423278,
+      110.17549232602414,
+      110.50601822265358,
+      110.837536927086,
+      111.1700492464822,
+      111.50355921664628,
+      111.83807006622146,
+      112.17358421669023,
+      112.51010489669582
+     ],
+     "coverage": {
+      "ends_before_event": false,
+      "first_period": "2018-01",
+      "last_period": "2026-09",
+      "months_in_window": 48,
+      "months_missing_in_window": 0,
+      "months_observed_in_window": 48,
+      "n_obs": 105,
+      "n_rejected": 0,
+      "n_source_empty": 0,
+      "release_lag_months": 2,
+      "removed_by_as_of": 0,
+      "stale": false
+     },
+     "label": "Consumer price index (all items)",
+     "level_at_event": 131.284302,
+     "mom_pct": 0.003000000909149092,
+     "mom_unavailable_reason": null,
+     "reason": null,
+     "series_key": "imf.cpi_headline.NER",
+     "source_ref": "IMF.STA,CPI/NER.CPI._T.IX.M",
+     "state": "ok",
+     "unit": "index",
+     "yoy_pct": 0.06769798292695617,
+     "yoy_unavailable_reason": null
+    }
+   },
+   "international": {
+    "commodity": "Rice (imported)",
+    "confidence": "medium",
+    "confidence_text": "The benchmark is the same commodity, traded internationally, and a plausible reference for imported supplies of this product. It still differs from the local price in grade, place, stage of the supply chain and currency.",
+    "items": [
+     {
+      "base_breaks": [],
+      "base_breaks_in_window": [],
+      "base_period": null,
+      "baseline_to_peak_pct": 0.017735334242837686,
+      "baseline_to_peak_unavailable_reason": null,
+      "benchmark_id": "rice_thai_5",
+      "chart_index": [
+       95.22510231923602,
+       95.49795361527967,
+       95.77080491132332,
+       96.04365620736698,
+       96.31650750341065,
+       96.5893587994543,
+       96.86221009549796,
+       97.13506139154161,
+       97.40791268758527,
+       97.68076398362892,
+       97.95361527967258,
+       98.22646657571623,
+       98.49931787175989,
+       98.77216916780355,
+       99.04502046384721,
+       99.31787175989086,
+       99.59072305593452,
+       99.86357435197817,
+       100.13642564802183,
+       100.40927694406548,
+       100.68212824010914,
+       100.95497953615279,
+       101.22783083219645,
+       101.50068212824011,
+       101.77353342428377,
+       102.04638472032742,
+       102.31923601637108,
+       102.59208731241473,
+       102.86493860845839,
+       103.13778990450204,
+       103.4106412005457,
+       103.68349249658935,
+       103.95634379263302,
+       104.22919508867668,
+       104.50204638472033,
+       104.77489768076398,
+       105.04774897680764,
+       105.3206002728513,
+       105.59345156889495,
+       105.8663028649386,
+       106.13915416098226,
+       106.41200545702593,
+       106.68485675306958,
+       106.95770804911324,
+       107.23055934515689,
+       107.50341064120055,
+       107.7762619372442,
+       108.04911323328785
+      ],
+      "coverage": {
+       "ends_before_event": false,
+       "first_period": "2010-01",
+       "last_period": "2026-09",
+       "months_in_window": 48,
+       "months_missing_in_window": 0,
+       "months_observed_in_window": 48,
+       "n_obs": 201,
+       "n_rejected": 0,
+       "n_source_empty": 0,
+       "release_lag_months": 1,
+       "removed_by_as_of": 0,
+       "stale": false
+      },
+      "definition": {
+       "sources": "Synthetic source for rice_thai_5",
+       "text": "Rice (Thailand), 5% broken (synthetic test description)"
+      },
+      "label": "Rice, Thailand 5% broken, white, milled",
+      "level_at_event": 188.0,
+      "local_currency": {
+       "baseline_to_peak_pct": 0.017735334242837686,
+       "baseline_to_peak_unavailable_reason": null,
+       "chart_index": [
+        95.22510231923602,
+        95.49795361527967,
+        95.77080491132332,
+        96.04365620736698,
+        96.31650750341065,
+        96.5893587994543,
+        96.86221009549796,
+        97.13506139154161,
+        97.40791268758527,
+        97.68076398362892,
+        97.95361527967258,
+        98.22646657571623,
+        98.49931787175989,
+        98.77216916780355,
+        99.04502046384721,
+        99.31787175989086,
+        99.59072305593452,
+        99.86357435197817,
+        100.13642564802183,
+        100.40927694406548,
+        100.68212824010914,
+        100.95497953615279,
+        101.22783083219645,
+        101.50068212824011,
+        101.77353342428377,
+        102.04638472032742,
+        102.31923601637108,
+        102.59208731241473,
+        102.86493860845839,
+        103.13778990450204,
+        103.4106412005457,
+        103.68349249658935,
+        103.95634379263302,
+        104.22919508867668,
+        104.50204638472033,
+        104.77489768076398,
+        105.04774897680764,
+        105.3206002728513,
+        105.59345156889495,
+        105.8663028649386,
+        106.13915416098226,
+        106.41200545702593,
+        106.68485675306958,
+        106.95770804911324,
+        107.23055934515689,
+        107.50341064120055,
+        107.7762619372442,
+        108.04911323328785
+       ],
+       "decomposition_yoy": {
+        "exchange_rate_log": 0.0,
+        "local_currency_change": 0.03296703296703307,
+        "local_currency_log": 0.032435275753153955,
+        "usd_benchmark_log": 0.032435275753153955
+       },
+       "yoy_pct": 0.03296703296703307,
+       "yoy_unavailable_reason": null
+      },
+      "mom_pct": 0.002666666666666595,
+      "mom_unavailable_reason": null,
+      "reason": null,
+      "series_key": "wb.pink.rice_thai_5",
+      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 5%",
+      "state": "ok",
+      "summary": "Weekly indicative export price, government standard, f.o.b. Bangkok.",
+      "unit": "USD per metric ton",
+      "yoy_pct": 0.03296703296703307,
+      "yoy_unavailable_reason": null
+     },
+     {
+      "base_breaks": [],
+      "base_breaks_in_window": [],
+      "base_period": null,
+      "baseline_to_peak_pct": 0.017173051519154603,
+      "baseline_to_peak_unavailable_reason": null,
+      "benchmark_id": "rice_viet_5",
+      "chart_index": [
+       95.37648612945839,
+       95.64068692206077,
+       95.90488771466315,
+       96.16908850726553,
+       96.4332892998679,
+       96.69749009247028,
+       96.96169088507266,
+       97.22589167767504,
+       97.49009247027742,
+       97.75429326287978,
+       98.01849405548217,
+       98.28269484808455,
+       98.54689564068693,
+       98.8110964332893,
+       99.07529722589167,
+       99.33949801849406,
+       99.60369881109644,
+       99.86789960369882,
+       100.13210039630118,
+       100.39630118890356,
+       100.66050198150594,
+       100.92470277410833,
+       101.1889035667107,
+       101.45310435931307,
+       101.71730515191545,
+       101.98150594451783,
+       102.24570673712022,
+       102.50990752972258,
+       102.77410832232496,
+       103.03830911492734,
+       103.30250990752972,
+       103.5667107001321,
+       103.83091149273447,
+       104.09511228533685,
+       104.35931307793923,
+       104.62351387054161,
+       104.887714663144,
+       105.15191545574636,
+       105.41611624834874,
+       105.68031704095112,
+       105.9445178335535,
+       106.20871862615589,
+       106.47291941875825,
+       106.73712021136063,
+       107.00132100396301,
+       107.2655217965654,
+       107.52972258916776,
+       107.79392338177014
+      ],
+      "coverage": {
+       "ends_before_event": false,
+       "first_period": "2010-01",
+       "last_period": "2026-09",
+       "months_in_window": 48,
+       "months_missing_in_window": 0,
+       "months_observed_in_window": 48,
+       "n_obs": 201,
+       "n_rejected": 0,
+       "n_source_empty": 0,
+       "release_lag_months": 1,
+       "removed_by_as_of": 0,
+       "stale": false
+      },
+      "definition": {
+       "sources": "Synthetic source for rice_viet_5",
+       "text": "Rice (Vietnam), 5% broken (synthetic test description)"
+      },
+      "label": "Rice, Viet Nam 5% broken, white, milled",
+      "level_at_event": 194.0,
+      "local_currency": {
+       "baseline_to_peak_pct": 0.017173051519154603,
+       "baseline_to_peak_unavailable_reason": null,
+       "chart_index": [
+        95.37648612945839,
+        95.64068692206077,
+        95.90488771466315,
+        96.16908850726553,
+        96.4332892998679,
+        96.69749009247028,
+        96.96169088507266,
+        97.22589167767504,
+        97.49009247027742,
+        97.75429326287978,
+        98.01849405548217,
+        98.28269484808455,
+        98.54689564068693,
+        98.8110964332893,
+        99.07529722589167,
+        99.33949801849406,
+        99.60369881109644,
+        99.86789960369882,
+        100.13210039630118,
+        100.39630118890356,
+        100.66050198150594,
+        100.92470277410833,
+        101.1889035667107,
+        101.45310435931307,
+        101.71730515191545,
+        101.98150594451783,
+        102.24570673712022,
+        102.50990752972258,
+        102.77410832232496,
+        103.03830911492734,
+        103.30250990752972,
+        103.5667107001321,
+        103.83091149273447,
+        104.09511228533685,
+        104.35931307793923,
+        104.62351387054161,
+        104.887714663144,
+        105.15191545574636,
+        105.41611624834874,
+        105.68031704095112,
+        105.9445178335535,
+        106.20871862615589,
+        106.47291941875825,
+        106.73712021136063,
+        107.00132100396301,
+        107.2655217965654,
+        107.52972258916776,
+        107.79392338177014
+       ],
+       "decomposition_yoy": {
+        "exchange_rate_log": 0.0,
+        "local_currency_change": 0.03191489361702127,
+        "local_currency_log": 0.031416196233378914,
+        "usd_benchmark_log": 0.031416196233378914
+       },
+       "yoy_pct": 0.03191489361702127,
+       "yoy_unavailable_reason": null
+      },
+      "mom_pct": 0.0025839793281654533,
+      "mom_unavailable_reason": null,
+      "reason": null,
+      "series_key": "wb.pink.rice_viet_5",
+      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Viet Namese 5%",
+      "state": "ok",
+      "summary": "Weekly indicative survey price, f.o.b. Hanoi.",
+      "unit": "USD per metric ton",
+      "yoy_pct": 0.03191489361702127,
+      "yoy_unavailable_reason": null
+     },
+     {
+      "base_breaks": [],
+      "base_breaks_in_window": [],
+      "base_period": null,
+      "baseline_to_peak_pct": 0.01744966442953011,
+      "baseline_to_peak_unavailable_reason": null,
+      "benchmark_id": "rice_thai_25",
+      "chart_index": [
+       95.30201342281879,
+       95.57046979865771,
+       95.83892617449665,
+       96.10738255033557,
+       96.3758389261745,
+       96.64429530201342,
+       96.91275167785236,
+       97.18120805369128,
+       97.4496644295302,
+       97.71812080536913,
+       97.98657718120805,
+       98.25503355704699,
+       98.52348993288591,
+       98.79194630872483,
+       99.06040268456375,
+       99.32885906040268,
+       99.59731543624162,
+       99.86577181208054,
+       100.13422818791946,
+       100.40268456375838,
+       100.67114093959732,
+       100.93959731543625,
+       101.20805369127517,
+       101.47651006711409,
+       101.74496644295301,
+       102.01342281879195,
+       102.28187919463087,
+       102.5503355704698,
+       102.81879194630872,
+       103.08724832214764,
+       103.35570469798658,
+       103.6241610738255,
+       103.89261744966443,
+       104.16107382550335,
+       104.42953020134229,
+       104.69798657718121,
+       104.96644295302013,
+       105.23489932885906,
+       105.50335570469798,
+       105.77181208053692,
+       106.04026845637584,
+       106.30872483221476,
+       106.57718120805369,
+       106.84563758389261,
+       107.11409395973155,
+       107.38255033557047,
+       107.6510067114094,
+       107.91946308724832
+      ],
+      "coverage": {
+       "ends_before_event": false,
+       "first_period": "2010-01",
+       "last_period": "2026-09",
+       "months_in_window": 48,
+       "months_missing_in_window": 0,
+       "months_observed_in_window": 48,
+       "n_obs": 201,
+       "n_rejected": 0,
+       "n_source_empty": 0,
+       "release_lag_months": 1,
+       "removed_by_as_of": 0,
+       "stale": false
+      },
+      "definition": {
+       "sources": "Synthetic source for rice_thai_25",
+       "text": "Rice (Thailand), 25% broken (synthetic test description)"
+      },
+      "label": "Rice, Thailand 25% broken, white, milled",
+      "level_at_event": 191.0,
+      "local_currency": {
+       "baseline_to_peak_pct": 0.01744966442953011,
+       "baseline_to_peak_unavailable_reason": null,
+       "chart_index": [
+        95.30201342281879,
+        95.57046979865771,
+        95.83892617449665,
+        96.10738255033557,
+        96.3758389261745,
+        96.64429530201342,
+        96.91275167785236,
+        97.18120805369128,
+        97.4496644295302,
+        97.71812080536913,
+        97.98657718120805,
+        98.25503355704699,
+        98.52348993288591,
+        98.79194630872483,
+        99.06040268456375,
+        99.32885906040268,
+        99.59731543624162,
+        99.86577181208054,
+        100.13422818791946,
+        100.40268456375838,
+        100.67114093959732,
+        100.93959731543625,
+        101.20805369127517,
+        101.47651006711409,
+        101.74496644295301,
+        102.01342281879195,
+        102.28187919463087,
+        102.5503355704698,
+        102.81879194630872,
+        103.08724832214764,
+        103.35570469798658,
+        103.6241610738255,
+        103.89261744966443,
+        104.16107382550335,
+        104.42953020134229,
+        104.69798657718121,
+        104.96644295302013,
+        105.23489932885906,
+        105.50335570469798,
+        105.77181208053692,
+        106.04026845637584,
+        106.30872483221476,
+        106.57718120805369,
+        106.84563758389261,
+        107.11409395973155,
+        107.38255033557047,
+        107.6510067114094,
+        107.91946308724832
+       ],
+       "decomposition_yoy": {
+        "exchange_rate_log": 0.0,
+        "local_currency_change": 0.03243243243243232,
+        "local_currency_log": 0.031917602968304946,
+        "usd_benchmark_log": 0.031917602968304946
+       },
+       "yoy_pct": 0.03243243243243232,
+       "yoy_unavailable_reason": null
+      },
+      "mom_pct": 0.002624671916010568,
+      "mom_unavailable_reason": null,
+      "reason": null,
+      "series_key": "wb.pink.rice_thai_25",
+      "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 25%",
+      "state": "ok",
+      "summary": "Indicative survey price, f.o.b. Bangkok.",
+      "unit": "USD per metric ton",
+      "yoy_pct": 0.03243243243243232,
+      "yoy_unavailable_reason": null
+     }
+    ],
+    "limitations": [
+     "Imported rice in much of West and Central Africa is Thai, Indian, Pakistani or Vietnamese rice, often parboiled or in broken grades; the benchmarks are white-rice export quotations f.o.b. Bangkok or Hanoi, so freight, insurance, port charges, import duties, traders' margins and the grade differences are not captured.",
+     "India, the largest exporter, is not a Pink Sheet benchmark and its export policy has moved world rice trade."
+    ],
+    "reference": {
+     "reviewed": "2026-11-20",
+     "version": "benchmarks-1"
+    },
+    "role": "imported supply",
+    "status": "ok",
+    "unit_note": "Benchmark levels are never compared with the local price: units, grades and places differ. Only changes and indexed paths are compared."
+   },
+   "lags": {
+    "caution": "Descriptive. Seven lags are examined, monthly changes are autocorrelated and nothing about timing identifies a mechanism: the strongest lag is not a finding.",
+    "lags_months": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ],
+    "method": "Spearman correlation between monthly log changes of the local price at t and of the reference at t - lag; no p-values; fewer than 24 paired months is insufficient",
+    "pairs": [
+     {
+      "any_sufficient": true,
+      "key": "benchmark:rice_thai_5",
+      "label": "Rice, Thailand 5% broken, white, milled (USD)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 1,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 2,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 3,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 4,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 5,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 6,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       }
+      ]
+     },
+     {
+      "any_sufficient": true,
+      "key": "benchmark:rice_viet_5",
+      "label": "Rice, Viet Nam 5% broken, white, milled (USD)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 1,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 2,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 3,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 4,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 5,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 6,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       }
+      ]
+     },
+     {
+      "any_sufficient": true,
+      "key": "benchmark:rice_thai_25",
+      "label": "Rice, Thailand 25% broken, white, milled (USD)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 1,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 2,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 3,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 4,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 5,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       },
+       {
+        "lag": 6,
+        "n": 100,
+        "spearman": -0.009148470157326196,
+        "status": "ok"
+       }
+      ]
+     },
+     {
+      "any_sufficient": false,
+      "key": "exchange_rate",
+      "label": "Exchange rate (domestic currency per USD)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": null,
+        "status": "no_variation"
+       },
+       {
+        "lag": 1,
+        "n": 99,
+        "spearman": null,
+        "status": "no_variation"
+       },
+       {
+        "lag": 2,
+        "n": 98,
+        "spearman": null,
+        "status": "no_variation"
+       },
+       {
+        "lag": 3,
+        "n": 97,
+        "spearman": null,
+        "status": "no_variation"
+       },
+       {
+        "lag": 4,
+        "n": 96,
+        "spearman": null,
+        "status": "no_variation"
+       },
+       {
+        "lag": 5,
+        "n": 95,
+        "spearman": null,
+        "status": "no_variation"
+       },
+       {
+        "lag": 6,
+        "n": 94,
+        "spearman": null,
+        "status": "no_variation"
+       }
+      ]
+     },
+     {
+      "any_sufficient": true,
+      "key": "cpi_headline",
+      "label": "Consumer price index (all items)",
+      "n_pairs_lag0": 100,
+      "rows": [
+       {
+        "lag": 0,
+        "n": 100,
+        "spearman": 0.027723452212054116,
+        "status": "ok"
+       },
+       {
+        "lag": 1,
+        "n": 99,
+        "spearman": 0.11587197251513977,
+        "status": "ok"
+       },
+       {
+        "lag": 2,
+        "n": 98,
+        "spearman": -0.0011437691394382274,
+        "status": "ok"
+       },
+       {
+        "lag": 3,
+        "n": 97,
+        "spearman": -0.06617096214983025,
+        "status": "ok"
+       },
+       {
+        "lag": 4,
+        "n": 96,
+        "spearman": -0.03157612459108136,
+        "status": "ok"
+       },
+       {
+        "lag": 5,
+        "n": 95,
+        "spearman": -0.09148350033538696,
+        "status": "ok"
+       },
+       {
+        "lag": 6,
+        "n": 94,
+        "spearman": 0.2373329190815847,
+        "status": "ok"
+       }
+      ]
+     }
+    ],
+    "through": "2026-05"
+   },
+   "lineage": [
+    {
+     "attribution": "Source: International Monetary Fund, Consumer Price Index (CPI) and Exchange Rates (ER), https://data.imf.org/en/datasets/IMF.STA:CPI and https://data.imf.org/en/datasets/IMF.STA:ER. Index levels are reproduced unchanged; percentage changes shown by Market Almanac are computed from them.",
+     "base_period": "2014",
+     "concept": "cpi_headline",
+     "dataset": "CPI",
+     "first_period": "2018-01",
+     "label": "Consumer price index, all items",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "a91ccb10131734072a80debac86cb6f99b7108fcfcad5854bdada83d945d0a44",
+     "provider": "imf",
+     "release_lag_months_assumed": 2,
+     "response_sha256": "b4ea6a9ba9a333ae4d9cd781137ed1881c0ab125b176c79ce91f9a0c65e8b11f",
+     "retrieved_at": "2026-11-20T11:32:47.444219+00:00",
+     "series_key": "imf.cpi_headline.NER",
+     "source_ref": "IMF.STA,CPI/NER.CPI._T.IX.M",
+     "unit": "index",
+     "vintage_publication_date": "2026-11-19T07:43:56Z"
+    },
+    {
+     "attribution": "Source: International Monetary Fund, Consumer Price Index (CPI) and Exchange Rates (ER), https://data.imf.org/en/datasets/IMF.STA:CPI and https://data.imf.org/en/datasets/IMF.STA:ER. Index levels are reproduced unchanged; percentage changes shown by Market Almanac are computed from them.",
+     "base_period": "2014",
+     "concept": "cpi_food",
+     "dataset": "CPI",
+     "first_period": null,
+     "label": "Consumer price index, food and non-alcoholic beverages",
+     "last_period": null,
+     "licence": "unconfirmed",
+     "observations_sha256": null,
+     "provider": "imf",
+     "release_lag_months_assumed": 2,
+     "response_sha256": "426f2fdbab3f7f4def3f32c1f0606abb00cf90a1c35e5d0e15a7ac0e86fc0014",
+     "retrieved_at": "2026-11-20T11:32:47.445334+00:00",
+     "series_key": "imf.cpi_food.NER",
+     "source_ref": "IMF.STA,CPI/NER.CPI.CP01.IX.M",
+     "unit": "index",
+     "vintage_publication_date": "2026-11-19T07:43:56Z"
+    },
+    {
+     "attribution": "Source: International Monetary Fund, Consumer Price Index (CPI) and Exchange Rates (ER), https://data.imf.org/en/datasets/IMF.STA:CPI and https://data.imf.org/en/datasets/IMF.STA:ER. Index levels are reproduced unchanged; percentage changes shown by Market Almanac are computed from them.",
+     "base_period": "",
+     "concept": "fx_period_avg",
+     "dataset": "ER",
+     "first_period": "2018-01",
+     "label": "Exchange rate, domestic currency per US dollar, period average",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "d8925bc278f2149370f64ce4cee5147de9cc9dad8dafd8b815e2dab56caa9c7d",
+     "provider": "imf",
+     "release_lag_months_assumed": 1,
+     "response_sha256": "087a6a31cfaf2a02968927f1ba5157c8adec1cd5cceaa83cec120326b2ae9db4",
+     "retrieved_at": "2026-11-20T11:32:47.446799+00:00",
+     "series_key": "imf.fx_period_avg.NER",
+     "source_ref": "IMF.STA,ER/NER.XDC_USD.PA_RT.M",
+     "unit": "domestic currency per USD",
+     "vintage_publication_date": "2026-11-19T07:43:56Z"
+    },
+    {
+     "attribution": "Source: International Monetary Fund, Consumer Price Index (CPI) and Exchange Rates (ER), https://data.imf.org/en/datasets/IMF.STA:CPI and https://data.imf.org/en/datasets/IMF.STA:ER. Index levels are reproduced unchanged; percentage changes shown by Market Almanac are computed from them.",
+     "base_period": "",
+     "concept": "fx_end_period",
+     "dataset": "ER",
+     "first_period": "2018-01",
+     "label": "Exchange rate, domestic currency per US dollar, end of period",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "d8925bc278f2149370f64ce4cee5147de9cc9dad8dafd8b815e2dab56caa9c7d",
+     "provider": "imf",
+     "release_lag_months_assumed": 1,
+     "response_sha256": "c9ab0e86fe79b2b23e1252dea5304807a8fc4df7d3cb69e6459a03b3aa59c623",
+     "retrieved_at": "2026-11-20T11:32:47.447598+00:00",
+     "series_key": "imf.fx_end_period.NER",
+     "source_ref": "IMF.STA,ER/NER.XDC_USD.EOP_RT.M",
+     "unit": "domestic currency per USD",
+     "vintage_publication_date": "2026-11-19T07:43:56Z"
+    },
+    {
+     "attribution": "The World Bank: Commodity Price Data (The Pink Sheet): data compiled by the World Bank from the third-party sources named in the workbook (e.g. Bloomberg Finance L.P., S&P Global, US Department of Agriculture). https://www.worldbank.org/en/research/commodity-markets",
+     "base_period": null,
+     "concept": "commodity_usd",
+     "dataset": "PINK_SHEET",
+     "first_period": "2010-01",
+     "label": "Rice, Thailand 5% broken, white, milled",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "5fcd82ce21e886e04d7ab864f58658360fd9cb848668b0006ac4e4907b915239",
+     "provider": "world_bank",
+     "release_lag_months_assumed": 1,
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
+     "retrieved_at": "2026-11-20T00:00:00+00:00",
+     "series_key": "wb.pink.rice_thai_5",
+     "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 5%",
+     "unit": "USD per metric ton",
+     "vintage_publication_date": "November 3, 2026"
+    },
+    {
+     "attribution": "The World Bank: Commodity Price Data (The Pink Sheet): data compiled by the World Bank from the third-party sources named in the workbook (e.g. Bloomberg Finance L.P., S&P Global, US Department of Agriculture). https://www.worldbank.org/en/research/commodity-markets",
+     "base_period": null,
+     "concept": "commodity_usd",
+     "dataset": "PINK_SHEET",
+     "first_period": "2010-01",
+     "label": "Rice, Viet Nam 5% broken, white, milled",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "363c14658c8792e6522b434d999e609a3abd11d3212e51f5f2033470885627d7",
+     "provider": "world_bank",
+     "release_lag_months_assumed": 1,
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
+     "retrieved_at": "2026-11-20T00:00:00+00:00",
+     "series_key": "wb.pink.rice_viet_5",
+     "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Viet Namese 5%",
+     "unit": "USD per metric ton",
+     "vintage_publication_date": "November 3, 2026"
+    },
+    {
+     "attribution": "The World Bank: Commodity Price Data (The Pink Sheet): data compiled by the World Bank from the third-party sources named in the workbook (e.g. Bloomberg Finance L.P., S&P Global, US Department of Agriculture). https://www.worldbank.org/en/research/commodity-markets",
+     "base_period": null,
+     "concept": "commodity_usd",
+     "dataset": "PINK_SHEET",
+     "first_period": "2010-01",
+     "label": "Rice, Thailand 25% broken, white, milled",
+     "last_period": "2026-09",
+     "licence": "unconfirmed",
+     "observations_sha256": "9f027a1da3e644a66a9a41ab96e4a918b6e8a45e5c9a870c92524a66e8b2db90",
+     "provider": "world_bank",
+     "release_lag_months_assumed": 1,
+     "response_sha256": "046338e7fc5e1c819577ed085a6e690e139627d9a6fb4a4c3b06e0efb78ddd2f",
+     "retrieved_at": "2026-11-20T00:00:00+00:00",
+     "series_key": "wb.pink.rice_thai_25",
+     "source_ref": "CMO-Historical-Data-Monthly.xlsx / Monthly Prices / Rice, Thai 25%",
+     "unit": "USD per metric ton",
+     "vintage_publication_date": "November 3, 2026"
+    }
+   ],
+   "method_version": "context-1",
+   "missing": [
+    {
+     "key": "imf.cpi_food.NER",
+     "label": "Consumer price index (food and non-alcoholic beverages)",
+     "reason": "the series exists but all 105 of its months are empty in the source",
+     "state": "empty_series"
+    }
+   ],
+   "price": {
+    "baseline_to_peak_pct": 0.5803909850420008,
+    "baseline_to_peak_unavailable_reason": null,
+    "chart_index": [
+     94.88781649894229,
+     95.1724799484391,
+     95.45799738828441,
+     95.74437138044925,
+     96.0316044945906,
+     96.31969930807435,
+     96.60865840599855,
+     96.89848438121655,
+     97.18917983436017,
+     97.48074737386327,
+     97.77318961598486,
+     98.06650918483278,
+     98.36070871238726,
+     98.65579083852442,
+     98.95175821103999,
+     99.2486134856731,
+     99.54635932613012,
+     99.84499840410848,
+     100.14453339932079,
+     100.44496699951874,
+     100.7463019005173,
+     101.04854080621884,
+     101.35168642863748,
+     101.65574148792338,
+     158.03909850420007,
+     158.5132157997127,
+     158.9887554471118,
+     159.46572171345312,
+     159.94411887859346,
+     160.42395123522923,
+     160.90522308893486,
+     161.38793875820167,
+     161.87210257447626,
+     162.35771888219966,
+     162.84479203884626,
+     163.33332641496276,
+     163.82332639420764,
+     164.31479637339024,
+     164.8077407625104,
+     165.30216398479786,
+     165.7980704767523,
+     166.29546468818253,
+     166.79435108224703,
+     167.29473413549377,
+     167.79661833790024,
+     168.30000819291394,
+     168.80490821749265,
+     169.31132294214513
+    ],
+    "currency": "XOF",
+    "yoy_pct": 0.6067299694466015,
+    "yoy_unavailable_reason": null
+   },
+   "relative_changes": [
+    {
+     "deflator": "headline CPI",
+     "deflator_pct": 0.06769798292695617,
+     "horizon": "12-month change at the event month",
+     "key": "price_vs_headline_cpi",
+     "label": "Price relative to headline CPI",
+     "nominal_pct": 0.6067299694466015,
+     "reason": null,
+     "relative_pct": 0.5048543643792964,
+     "status": "ok"
+    },
+    {
+     "deflator": "food CPI",
+     "deflator_pct": null,
+     "horizon": "12-month change at the event month",
+     "key": "price_vs_food_cpi",
+     "label": "Price relative to food CPI",
+     "nominal_pct": 0.6067299694466015,
+     "reason": "the series exists but all 105 of its months are empty in the source",
+     "relative_pct": null,
+     "status": "withheld"
+    },
+    {
+     "deflator": "headline CPI",
+     "deflator_pct": 0.05019529841120751,
+     "horizon": "change from the pre-episode baseline to the peak",
+     "key": "price_vs_headline_cpi",
+     "label": "Price relative to headline CPI",
+     "nominal_pct": 0.5803909850420008,
+     "reason": null,
+     "relative_pct": 0.5048543708326463,
+     "status": "ok"
+    },
+    {
+     "deflator": "food CPI",
+     "deflator_pct": null,
+     "horizon": "change from the pre-episode baseline to the peak",
+     "key": "price_vs_food_cpi",
+     "label": "Price relative to food CPI",
+     "nominal_pct": 0.5803909850420008,
+     "reason": "the series exists but all 105 of its months are empty in the source",
+     "relative_pct": null,
+     "status": "withheld"
+    }
+   ],
+   "snapshot": {
+    "created_at": "2026-11-20T00:00:00+00:00",
+    "observation_hash": "2439c9fb71bbdc0b0a0747a68ed050e94be7b00066d18ee7bce4700d6cfcacad",
+    "snapshot_id": "20261120T000000_2439c9",
+    "vintage": "current archived vintage at retrieval: historical values may since have been revised, so comparisons of past months are exploratory, not a reconstruction of what was known then"
+   },
+   "status": "ok",
+   "transformations": {
+    "baseline": "change from the mean level over the 12 months before the episode onset to the level at the peak; withheld with fewer than 3 baseline months, a missing peak month or a base break in between",
+    "index": "each series indexed to 100 = its own mean over the baseline months, so series in different units share one axis; withheld on the far side of a base break",
+    "lag": "Spearman correlation between monthly log changes of the local price at t and of the reference at t - lag; no p-values; fewer than 24 paired months is insufficient",
+    "local_benchmark": "benchmark USD price x domestic currency per USD (period average); its log change splits exactly into the benchmark's log change and the exchange rate's",
+    "relative": "(1 + price change) / (1 + deflator change) - 1: how the price moved relative to the national basket; not purchasing power, not a causal share",
+    "usd_price": "local price / domestic currency per USD (period average), month by month: an indicative dollar value at the official rate",
+    "yoy": "12-month change = level(t) / level(t-12) - 1 over calendar months; withheld if either month is missing or a base break lies between them"
+   },
+   "usd_price": {
+    "baseline_to_peak_pct": 0.5803909850420008,
+    "baseline_to_peak_unavailable_reason": null,
+    "chart_index": [
+     94.88781649894231,
+     95.1724799484391,
+     95.45799738828443,
+     95.74437138044925,
+     96.03160449459061,
+     96.31969930807435,
+     96.60865840599855,
+     96.89848438121656,
+     97.1891798343602,
+     97.48074737386327,
+     97.77318961598486,
+     98.06650918483278,
+     98.36070871238726,
+     98.65579083852444,
+     98.95175821103999,
+     99.2486134856731,
+     99.54635932613012,
+     99.84499840410848,
+     100.14453339932079,
+     100.44496699951875,
+     100.74630190051731,
+     101.04854080621884,
+     101.35168642863749,
+     101.6557414879234,
+     158.0390985042001,
+     158.5132157997127,
+     158.98875544711177,
+     159.46572171345312,
+     159.94411887859346,
+     160.42395123522923,
+     160.9052230889349,
+     161.3879387582017,
+     161.87210257447626,
+     162.35771888219966,
+     162.84479203884626,
+     163.33332641496273,
+     163.82332639420764,
+     164.31479637339024,
+     164.80774076251043,
+     165.3021639847979,
+     165.79807047675232,
+     166.29546468818256,
+     166.79435108224703,
+     167.29473413549377,
+     167.79661833790027,
+     168.3000081929139,
+     168.80490821749265,
+     169.31132294214513
+    ],
+    "note": "indicative: local price divided by the official period-average rate; households may have faced a different rate",
+    "yoy_pct": 0.6067299694466017,
+    "yoy_unavailable_reason": null
+   },
+   "warnings": [
+    {
+     "code": "peg",
+     "severity": "info",
+     "text": "West African CFA franc (XOF): The XOF is fixed to the euro, so XOF per US dollar moves one-for-one with the euro's value against the dollar. A change in XOF/USD reflects the euro-dollar rate, not independent domestic monetary depreciation. It can still matter for the local cost of dollar-denominated imports, but it does not show that import costs reached local prices, and members share one currency, so it cannot distinguish one member's conditions from another's."
+    },
+    {
+     "code": "vintage_exploratory",
+     "severity": "info",
+     "text": "Historical comparisons use the current archived vintage of each series; revisions and re-basing since publication mean this is an exploratory reading, not what was visible at the time. Set an as-of month to apply the assumed release lags."
+    }
+   ],
+   "window": {
+    "baseline_end": "2024-05",
+    "baseline_start": "2023-06",
+    "end": "2026-05",
+    "event": "2024-09",
+    "onset": "2024-06",
+    "peak": "2024-06",
+    "start": "2022-06"
+   }
+  },
+  "evidence": {
+   "causal": [
+    {
+     "evidence": [],
+     "inference": "causal",
+     "text": "That inflation, depreciation or an international price caused the local price movement. The context places magnitudes side by side; attributing the movement to any of them requires a design that separates it from the others, which move together."
+    },
+    {
+     "evidence": [],
+     "inference": "causal",
+     "text": "That a lead-lag pattern in monthly changes shows transmission from a benchmark, a currency or an index. Seven lags are examined and monthly changes are autocorrelated."
+    },
+    {
+     "evidence": [],
+     "inference": "causal",
+     "text": "That a benchmark's path describes the cost of the product sold locally. A world export quotation differs from the local product in grade, place, stage of the chain and currency."
+    },
+    {
+     "evidence": [],
+     "inference": "causal",
+     "text": "That a relative price change is a change in households' purchasing power or welfare."
+    }
+   ],
+   "consistent": [],
+   "context_id": "d913afa76214a8c5",
+   "format": "economic-context-1",
+   "gaps": [
+    "Consumer price index (food and non-alcoholic beverages): the series exists but all 105 of its months are empty in the source",
+    "sub-national consumer price indices (the IMF series are national averages)",
+    "the exchange rate actually faced by importers and traders, where it differs from the official rate"
+   ],
+   "observed": [
+    {
+     "evidence": [
+      "imf.cpi_headline.NER"
+     ],
+     "inference": "descriptive",
+     "text": "The IMF headline consumer price index for Niger is available from January 2018 to September 2026 (105 months; 0 of 48 window months missing)."
+    },
+    {
+     "evidence": [
+      "imf.cpi_food.NER"
+     ],
+     "inference": "descriptive",
+     "text": "No usable IMF food consumer price index for Niger: the series exists but all 105 of its months are empty in the source."
+    },
+    {
+     "evidence": [
+      "imf.fx_period_avg.NER"
+     ],
+     "inference": "descriptive",
+     "text": "The IMF exchange rate for Niger is available from January 2018 to September 2026 (105 months; 0 of 48 window months missing)."
+    },
+    {
+     "evidence": [
+      "context.economic.international"
+     ],
+     "inference": "descriptive",
+     "text": "Rice (imported) is mapped to Rice, Thailand 5% broken, white, milled, Rice, Viet Nam 5% broken, white, milled, Rice, Thailand 25% broken, white, milled with medium confidence (imported supply). The benchmark is the same commodity, traded internationally, and a plausible reference for imported supplies of this product. It still differs from the local price in grade, place, stage of the supply chain and currency."
+    }
+   ],
+   "propositions": [
+    {
+     "basis": "the national consumer price index changed +6.8% against +60.7% for this price, 14% of its log change. The index is a national average of a different basket, so a small figure says nothing about whether general inflation matters, because the basket differs from this product",
+     "evidence": [
+      "imf.cpi_headline.NER"
+     ],
+     "proposition": "The national consumer price index rose by a comparable amount to this price",
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
+    },
+    {
+     "basis": "no usable food index: the series exists but all 105 of its months are empty in the source",
+     "evidence": [
+      "imf.cpi_food.NER"
+     ],
+     "proposition": "The food component of the consumer price index rose by a comparable amount to this price",
+     "status": "cannot_be_assessed",
+     "verdict": "not assessable"
+    },
+    {
+     "basis": "units of local currency per dollar changed +0.0% against +60.7% for the price (0% of its log change). The currency is pegged (XOF to EUR), so this movement mirrors the anchor currency's value against the dollar",
+     "evidence": [
+      "imf.fx_period_avg.NER"
+     ],
+     "proposition": "The local currency lost value against the US dollar by a comparable amount to the price rise",
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
+    },
+    {
+     "basis": "Rice, Thailand 5% broken, white, milled changed +3.3% in local currency; Rice, Viet Nam 5% broken, white, milled changed +3.2% in local currency; Rice, Thailand 25% broken, white, milled changed +3.2% in local currency against +60.7% for this price; the share of the price's log change is 7% at the median across 3 benchmarks (range 7% to 7%). The median is used so that the most favourable of several alternative quotations does not decide the status. Grade, place, freight, duties and margins differ between the benchmark and the local product",
+     "evidence": [
+      "wb.pink.rice_thai_5",
+      "wb.pink.rice_viet_5",
+      "wb.pink.rice_thai_25"
+     ],
+     "proposition": "International benchmark prices, in local currency, moved by a comparable amount to this price",
+     "status": "context_only",
+     "verdict": "much smaller magnitude, or opposite direction; not evidence against any mechanism"
+    }
+   ],
+   "quantitative": [
+    {
+     "evidence": [
+      "context.economic.price"
+     ],
+     "inference": "descriptive",
+     "text": "The local price changed +60.7% over the 12 months to September 2024 (nominal, XOF)."
+    },
+    {
+     "evidence": [
+      "imf.cpi_headline.NER"
+     ],
+     "inference": "descriptive",
+     "text": "The national consumer price index changed +6.8% over the same 12 months (IMF/World Bank snapshot 20261120T000000_2439c9). A change in one food's price and the change in the general price level are different quantities."
+    },
+    {
+     "evidence": [
+      "context.economic.relative_changes"
+     ],
+     "inference": "descriptive",
+     "text": "Price relative to headline CPI (12-month change at the event month): the price changed +60.7% against +6.8% for the headline CPI, a relative change of +50.5%. This is the price relative to the national average basket, not a change in any household's purchasing power."
+    },
+    {
+     "evidence": [
+      "context.economic.relative_changes"
+     ],
+     "inference": "descriptive",
+     "text": "Price relative to food CPI cannot be computed: the series exists but all 105 of its months are empty in the source."
+    },
+    {
+     "evidence": [
+      "context.economic.relative_changes"
+     ],
+     "inference": "descriptive",
+     "text": "Price relative to headline CPI (change from the pre-episode baseline to the peak): the price changed +58.0% against +5.0% for the headline CPI, a relative change of +50.5%. This is the price relative to the national average basket, not a change in any household's purchasing power."
+    },
+    {
+     "evidence": [
+      "imf.fx_period_avg.NER"
+     ],
+     "inference": "descriptive",
+     "text": "Domestic currency per US dollar changed +0.0% over the 12 months (the official rate did not move), a +0.0% change in the dollar value of one unit of the local currency (official rate, period average)."
+    },
+    {
+     "evidence": [
+      "context.economic.usd_price"
+     ],
+     "inference": "descriptive",
+     "text": "At the official period-average rate the price in US dollars changed +60.7% (indicative; households may have faced a different rate)."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_5"
+     ],
+     "inference": "descriptive",
+     "text": "Rice, Thailand 5% broken, white, milled changed +3.3% in US dollars over the 12 months to September 2024."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_5"
+     ],
+     "inference": "descriptive",
+     "text": "In local currency the same benchmark changed +3.3%: a +3.3% change in dollars combined with a +0.0% change in the exchange rate (log changes +0.032 and +0.000, adding exactly). The split is arithmetic and does not show why either part moved."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_5"
+     ],
+     "inference": "descriptive",
+     "text": "The benchmark's local-currency change is 7% of the price's 12-month log change (arithmetic ratio of two logarithmic changes)."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_viet_5"
+     ],
+     "inference": "descriptive",
+     "text": "Rice, Viet Nam 5% broken, white, milled changed +3.2% in US dollars over the 12 months to September 2024."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_viet_5"
+     ],
+     "inference": "descriptive",
+     "text": "In local currency the same benchmark changed +3.2%: a +3.2% change in dollars combined with a +0.0% change in the exchange rate (log changes +0.031 and +0.000, adding exactly). The split is arithmetic and does not show why either part moved."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_viet_5"
+     ],
+     "inference": "descriptive",
+     "text": "The benchmark's local-currency change is 7% of the price's 12-month log change (arithmetic ratio of two logarithmic changes)."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_25"
+     ],
+     "inference": "descriptive",
+     "text": "Rice, Thailand 25% broken, white, milled changed +3.2% in US dollars over the 12 months to September 2024."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_25"
+     ],
+     "inference": "descriptive",
+     "text": "In local currency the same benchmark changed +3.2%: a +3.2% change in dollars combined with a +0.0% change in the exchange rate (log changes +0.032 and +0.000, adding exactly). The split is arithmetic and does not show why either part moved."
+    },
+    {
+     "evidence": [
+      "wb.pink.rice_thai_25"
+     ],
+     "inference": "descriptive",
+     "text": "The benchmark's local-currency change is 7% of the price's 12-month log change (arithmetic ratio of two logarithmic changes)."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "associational",
+     "text": "Rank correlations between monthly changes in this price and Rice, Thailand 5% broken, white, milled (USD) led by 0 to 6 months ranged from -0.01 to -0.01 (up to 100 paired months through May 2026). Descriptive; no lag is singled out."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "associational",
+     "text": "Rank correlations between monthly changes in this price and Rice, Viet Nam 5% broken, white, milled (USD) led by 0 to 6 months ranged from -0.01 to -0.01 (up to 100 paired months through May 2026). Descriptive; no lag is singled out."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "associational",
+     "text": "Rank correlations between monthly changes in this price and Rice, Thailand 25% broken, white, milled (USD) led by 0 to 6 months ranged from -0.01 to -0.01 (up to 100 paired months through May 2026). Descriptive; no lag is singled out."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "descriptive",
+     "text": "Monthly changes of Exchange rate (domestic currency per USD) take too few distinct values in the overlapping months (100) for a rank correlation to be defined (for example an administered rate that did not move)."
+    },
+    {
+     "evidence": [
+      "context.economic.lags"
+     ],
+     "inference": "associational",
+     "text": "Rank correlations between monthly changes in this price and Consumer price index (all items) led by 0 to 6 months ranged from -0.09 to +0.24 (up to 100 paired months through May 2026). Descriptive; no lag is singled out."
+    }
+   ],
+   "statuses": {
+    "cannot_be_assessed": "Cannot be assessed with the data integrated here",
+    "consistent": "Same direction and a comparable or larger magnitude; descriptive, not causal",
+    "context_only": "Smaller magnitude, opposite direction or weak mapping; descriptive, not evidence against",
+    "not_indicated": "Not indicated by the available evidence",
+    "partly_consistent": "Same direction but a smaller magnitude; descriptive, not causal"
+   },
+   "unresolved": [
+    {
+     "evidence": [
+      "context.economic"
+     ],
+     "inference": "descriptive",
+     "text": "Local supply conditions (harvest, stocks), transport and border costs, trade and price policy, conflict and access, demand shifts and recording changes can each coincide with the movements shown above; the integrated data cannot separate them."
+    }
+   ]
+  },
+  "series_id": "ps_18a9320c92a65c43"
+ },
+ "not_installed": {
+  "economic": {
+   "format": "economic-context-1",
+   "lineage": [],
+   "method_version": "context-1",
+   "missing": [],
+   "reason": "the economic-context artefact is not installed on this deployment",
+   "snapshot": null,
+   "status": "not_installed",
+   "warnings": []
+  },
+  "evidence": null,
+  "series_id": "ps_ac2524e4a1788986"
+ }
+}

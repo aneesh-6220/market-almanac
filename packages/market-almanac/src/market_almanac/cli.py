@@ -639,6 +639,134 @@ def global_install_prices(
     _echo_json(install_prices(_settings(mode), source, sha256))
 
 
+context_app = typer.Typer(
+    help="Economic context: IMF consumer prices and exchange rates, World Bank commodity benchmarks.",
+    no_args_is_help=True,
+)
+app.add_typer(context_app, name="context")
+
+
+def _context_store(s):  # type: ignore[no-untyped-def]
+    from market_almanac.context.store import ContextStore
+
+    return ContextStore.for_settings(s)
+
+
+@context_app.command("refresh")
+def context_refresh(
+    start: Annotated[str, typer.Option(help="first reference month to retrieve (YYYY-MM)")] = "2010-01",
+    fresh: Annotated[bool, typer.Option(help="ignore completed retrievals in the work directory")] = False,
+    pink_workbook: Annotated[
+        Path | None, typer.Option(help="use this Pink Sheet workbook instead of downloading")
+    ] = None,
+    mode: ModeOpt = None,
+) -> None:
+    """Retrieve the IMF and World Bank sources and write an immutable snapshot (idempotent, resumable). Offline tool:
+    the API never calls these sources."""
+    from market_almanac.context.refresh import refresh
+    from market_almanac.providers import http_from_settings
+
+    s = _settings(mode)
+    if s.market_almanac_mode != RunMode.LIVE:
+        raise typer.BadParameter("context refresh requires --mode live")
+    store = _context_store(s)
+    work = s.data_dir / "context" / "work"
+    out = asyncio.run(
+        refresh(store, http_from_settings(s), work, start_period=start, resume=not fresh, pink_workbook=pink_workbook)
+    )
+    _echo_json(
+        {
+            "status": out.status,
+            "snapshot_id": out.snapshot_id,
+            "counts": out.manifest["counts"],
+            "revision": out.manifest["revision"],
+            "revision_diff": out.manifest["revision_diff"],
+        }
+    )
+
+
+@context_app.command("verify")
+def context_verify(snapshot_id: Annotated[str | None, typer.Argument()] = None, mode: ModeOpt = None) -> None:
+    """Check a snapshot's files, hashes and counts (the newest by default)."""
+    store = _context_store(_settings(mode))
+    sid = snapshot_id or store.latest_id()
+    if sid is None:
+        raise typer.BadParameter("no snapshot; run `market-almanac context refresh` or install the artefact")
+    problems = store.verify(sid)
+    _echo_json({"snapshot_id": sid, "ok": not problems, "problems": problems})
+    if problems:
+        raise typer.Exit(1)
+
+
+@context_app.command("coverage")
+def context_coverage(
+    countries: Annotated[str | None, typer.Option(help="comma-separated ISO3 codes to tabulate")] = None,
+    markdown: Annotated[bool, typer.Option(help="print Markdown instead of JSON")] = False,
+    mode: ModeOpt = None,
+) -> None:
+    """Which countries have which context series, as found in the newest snapshot with data."""
+    from market_almanac.context.coverage import coverage_matrix, coverage_summary, to_markdown
+    from market_almanac.context.store import ContextSnapshot
+
+    store = _context_store(_settings(mode))
+    sid = store.latest_id(with_data=True)
+    if sid is None:
+        raise typer.BadParameter("no snapshot with data")
+    m = coverage_matrix(ContextSnapshot(store.path(sid)))
+    codes = [c.strip().upper() for c in countries.split(",")] if countries else None
+    if markdown:
+        typer.echo(to_markdown(m, codes))
+    else:
+        _echo_json({"snapshot_id": sid, **coverage_summary(m)})
+
+
+@context_app.command("bundle")
+def context_bundle(
+    out: Annotated[Path, typer.Option(help="output directory")] = Path("dist"),
+    include_unconfirmed: Annotated[
+        bool, typer.Option(help="include observations whose redistribution is NOT confirmed (private use only)")
+    ] = False,
+    mode: ModeOpt = None,
+) -> None:
+    """Package the newest snapshot. By default observations of sources without confirmed redistribution rights are
+    withheld, leaving metadata, citations, retrieval instructions and hashes."""
+    from market_almanac.context.release import build_context_bundle
+
+    s = _settings(mode)
+    _echo_json(
+        build_context_bundle(s.data_dir, s.market_almanac_mode.value, out, include_unconfirmed=include_unconfirmed)
+    )
+
+
+@context_app.command("install")
+def context_install(
+    source: Annotated[str | None, typer.Argument(help="path or https:// URL; defaults to the pinned release")] = None,
+    sha256: Annotated[str | None, typer.Option(help="expected SHA-256 (defaults to the pinned release's)")] = None,
+    mode: ModeOpt = None,
+) -> None:
+    """Install the economic-context artefact into DATA_DIR and verify it."""
+    from market_almanac.context.release import install_context
+
+    _echo_json(install_context(_settings(mode), source, sha256))
+
+
+@context_app.command("check-against")
+def context_check_against(
+    hashes: Annotated[Path, typer.Argument(help="series_hashes.json from a published artefact")],
+    mode: ModeOpt = None,
+) -> None:
+    """Compare your own retrieval with the per-series hashes of a published artefact."""
+    from market_almanac.context.release import check_against
+    from market_almanac.context.store import ContextSnapshot
+
+    store = _context_store(_settings(mode))
+    sid = store.latest_id(with_data=True)
+    if sid is None:
+        raise typer.BadParameter("no snapshot with data; run `market-almanac context refresh`")
+    res = check_against(ContextSnapshot(store.path(sid)), json.loads(hashes.read_text()))
+    _echo_json({"snapshot_id": sid, **{k: len(v) for k, v in res.items()}, "examples_different": res["different"][:10]})
+
+
 @global_app.command("weather")
 def global_weather(
     spec_path: Annotated[Path, typer.Option("--spec", help="research specification whose markets need weather")],

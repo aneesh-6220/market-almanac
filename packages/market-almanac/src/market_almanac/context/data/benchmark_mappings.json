@@ -1,0 +1,360 @@
+{
+  "version": "benchmarks-1",
+  "last_reviewed": "2026-11-20",
+  "confidence_scale": {
+    "medium": "The benchmark is the same commodity, traded internationally, and a plausible reference for imported supplies of this product. It still differs from the local price in grade, place, stage of the supply chain and currency.",
+    "low": "The benchmark is a related but different product or grade, or the local product is mostly produced and traded regionally. A similar movement would be weak evidence and a different movement would not argue against anything.",
+    "none": "No credible international benchmark exists for this product among the integrated series."
+  },
+  "note": "No mapping is rated 'high': a world export quotation and a retail or wholesale price in a local market always differ in transport, tariffs, margins, quality and currency. Mappings are a research convenience, not a statement that the local price follows the benchmark.",
+  "benchmarks": {
+    "rice_thai_5": {
+      "pink_name": "Rice, Thai 5%",
+      "label": "Rice, Thailand 5% broken, white, milled",
+      "unit": "USD per metric ton",
+      "summary": "Weekly indicative export price, government standard, f.o.b. Bangkok.",
+      "description_prefix": "Rice (Thailand), 5% broken"
+    },
+    "rice_thai_25": {
+      "pink_name": "Rice, Thai 25%",
+      "label": "Rice, Thailand 25% broken, white, milled",
+      "unit": "USD per metric ton",
+      "summary": "Indicative survey price, f.o.b. Bangkok.",
+      "description_prefix": "Rice (Thailand), 25% broken"
+    },
+    "rice_viet_5": {
+      "pink_name": "Rice, Viet Namese 5%",
+      "label": "Rice, Viet Nam 5% broken, white, milled",
+      "unit": "USD per metric ton",
+      "summary": "Weekly indicative survey price, f.o.b. Hanoi.",
+      "description_prefix": "Rice (Vietnam), 5% broken"
+    },
+    "wheat_us_hrw": {
+      "pink_name": "Wheat, US HRW",
+      "label": "Wheat, US no. 2 hard red winter",
+      "unit": "USD per metric ton",
+      "summary": "Gulf export price.",
+      "description_prefix": "Wheat (U.S.), no. 2 hard red winter"
+    },
+    "wheat_us_srw": {
+      "pink_name": "Wheat, US SRW",
+      "label": "Wheat, US no. 2 soft red winter",
+      "unit": "USD per metric ton",
+      "summary": "Export price delivered at the US Gulf port.",
+      "description_prefix": "Wheat (U.S.), no. 2, soft red winter"
+    },
+    "maize": {
+      "pink_name": "Maize",
+      "label": "Maize, US no. 2 yellow",
+      "unit": "USD per metric ton",
+      "summary": "f.o.b. US Gulf ports (yellow maize).",
+      "description_prefix": "Maize (U.S.)"
+    },
+    "sorghum": {
+      "pink_name": "Sorghum",
+      "label": "Sorghum, US no. 2 milo yellow",
+      "unit": "USD per metric ton",
+      "summary": "Texas export bids, f.o.b. Gulf ports.",
+      "description_prefix": "Sorghum (US)"
+    },
+    "sugar_world": {
+      "pink_name": "Sugar, world",
+      "label": "Sugar, world (ISA daily price, raw)",
+      "unit": "USD per kilogram",
+      "summary": "Raw sugar f.o.b. and stowed at greater Caribbean ports.",
+      "description_prefix": "Sugar (World)"
+    },
+    "palm_oil": {
+      "pink_name": "Palm oil",
+      "label": "Palm oil (Malaysia)",
+      "unit": "USD per metric ton",
+      "summary": "Malaysian palm oil export price.",
+      "description_prefix": "Palm oil (Malaysia)"
+    },
+    "soybean_oil": {
+      "pink_name": "Soybean oil",
+      "label": "Soybean oil",
+      "unit": "USD per metric ton",
+      "summary": "Crude degummed soybean oil.",
+      "description_prefix": "Soybean oil,"
+    },
+    "sunflower_oil": {
+      "pink_name": "Sunflower oil",
+      "label": "Sunflower oil",
+      "unit": "USD per metric ton",
+      "summary": "EU sunflower oil, FOB Rotterdam.",
+      "description_prefix": "Sunflower oil,"
+    },
+    "groundnuts": {
+      "pink_name": "Groundnuts",
+      "label": "Groundnuts (peanuts), US runners",
+      "unit": "USD per metric ton",
+      "summary": "40/50 runners, CFR N.W. Europe.",
+      "description_prefix": "Peanut (Groundnut), U.S."
+    },
+    "chicken": {
+      "pink_name": "Chicken",
+      "label": "Chicken (Brazil)",
+      "unit": "USD per kilogram",
+      "summary": "Sao Paulo wholesale price of frozen chicken.",
+      "description_prefix": "Chicken (Brazil)"
+    },
+    "beef": {
+      "pink_name": "Beef",
+      "label": "Beef (New Zealand/Australia)",
+      "unit": "USD per kilogram",
+      "summary": "Chemical-lean beef, c.i.f. US imported.",
+      "description_prefix": "Beef (New Zealand)"
+    },
+    "crude_oil": {
+      "pink_name": "Crude oil, average",
+      "label": "Crude oil, average of Brent, Dubai and WTI",
+      "unit": "USD per barrel",
+      "summary": "Equally weighted average spot price.",
+      "description_prefix": "Crude oil, average"
+    }
+  },
+  "mappings": [
+    {
+      "commodities": [
+        "Rice (imported)"
+      ],
+      "benchmarks": [
+        "rice_thai_5",
+        "rice_viet_5",
+        "rice_thai_25"
+      ],
+      "confidence": "medium",
+      "role": "imported supply",
+      "limitations": [
+        "Imported rice in much of West and Central Africa is Thai, Indian, Pakistani or Vietnamese rice, often parboiled or in broken grades; the benchmarks are white-rice export quotations f.o.b. Bangkok or Hanoi, so freight, insurance, port charges, import duties, traders' margins and the grade differences are not captured.",
+        "India, the largest exporter, is not a Pink Sheet benchmark and its export policy has moved world rice trade."
+      ]
+    },
+    {
+      "commodities": [
+        "Rice",
+        "Rice (low quality)",
+        "Rice (medium quality)",
+        "Rice (high quality)"
+      ],
+      "benchmarks": [
+        "rice_thai_5",
+        "rice_viet_5",
+        "rice_thai_25"
+      ],
+      "confidence": "low",
+      "role": "origin not stated",
+      "limitations": [
+        "The series does not say whether the rice is imported or locally produced; a local product need not follow export quotations at all.",
+        "The benchmarks are white-rice export quotations, not retail or wholesale prices."
+      ]
+    },
+    {
+      "commodities": [
+        "Rice (local)"
+      ],
+      "benchmarks": [],
+      "confidence": "none",
+      "role": "locally produced",
+      "limitations": [
+        "Locally produced rice is priced in domestic markets; no international benchmark is mapped."
+      ]
+    },
+    {
+      "commodities": [
+        "Wheat",
+        "Wheat (imported)"
+      ],
+      "benchmarks": [
+        "wheat_us_hrw",
+        "wheat_us_srw"
+      ],
+      "confidence": "medium",
+      "role": "imported supply",
+      "limitations": [
+        "US wheat export prices are one of several international reference prices (Black Sea, EU, Canadian and Australian wheat also trade); the integrated series cover US classes only.",
+        "Local wheat is mostly imported grain that is then milled; freight, duties and subsidies are not captured."
+      ]
+    },
+    {
+      "commodities": [
+        "Wheat flour",
+        "Bread"
+      ],
+      "benchmarks": [
+        "wheat_us_hrw",
+        "wheat_us_srw"
+      ],
+      "confidence": "low",
+      "role": "processed product",
+      "limitations": [
+        "Flour and bread include milling, packaging, transport and retail margins and often local policy (flour subsidies, price controls); a wheat grain quotation is a small part of the price."
+      ]
+    },
+    {
+      "commodities": [
+        "Maize",
+        "Maize (white)",
+        "Maize (yellow)"
+      ],
+      "benchmarks": [
+        "maize"
+      ],
+      "confidence": "low",
+      "role": "mostly domestic or regional",
+      "limitations": [
+        "The benchmark is US yellow maize f.o.b. Gulf; much African maize is white maize, produced and traded regionally, with prices set by local harvests.",
+        "A grade, colour and market-structure mismatch means similar movements are weak evidence of transmission."
+      ]
+    },
+    {
+      "commodities": [
+        "Maize flour",
+        "Maize meal",
+        "Maize meal (white, breakfast)",
+        "Maize meal (white, roller)"
+      ],
+      "benchmarks": [
+        "maize"
+      ],
+      "confidence": "low",
+      "role": "processed product",
+      "limitations": [
+        "A milled product: milling margins and local supply dominate; the benchmark is yellow grain."
+      ]
+    },
+    {
+      "commodities": [
+        "Sorghum",
+        "Sorghum (red)",
+        "Sorghum (white)"
+      ],
+      "benchmarks": [
+        "sorghum"
+      ],
+      "confidence": "low",
+      "role": "mostly domestic or regional",
+      "limitations": [
+        "Sorghum in the Sahel and East Africa is mainly locally produced and consumed; the benchmark is US yellow milo for export."
+      ]
+    },
+    {
+      "commodities": [
+        "Sugar",
+        "Sugar (imported)"
+      ],
+      "benchmarks": [
+        "sugar_world"
+      ],
+      "confidence": "medium",
+      "role": "imported supply",
+      "limitations": [
+        "World raw sugar differs from refined sugar sold locally; many countries protect domestic sugar with tariffs and quotas."
+      ]
+    },
+    {
+      "commodities": [
+        "Sugar (local)"
+      ],
+      "benchmarks": [],
+      "confidence": "none",
+      "role": "locally produced",
+      "limitations": [
+        "Locally produced sugar is priced domestically; no benchmark is mapped."
+      ]
+    },
+    {
+      "commodities": [
+        "Oil (palm)"
+      ],
+      "benchmarks": [
+        "palm_oil"
+      ],
+      "confidence": "medium",
+      "role": "imported or regional supply",
+      "limitations": [
+        "Palm oil is widely traded; local palm oil in producing regions is often artisanal and priced locally.",
+        "The benchmark is Malaysian export price, not the product sold at retail."
+      ]
+    },
+    {
+      "commodities": [
+        "Oil (vegetable)",
+        "Oil (vegetable, packaged)",
+        "Oil (cooking, local)",
+        "Oil (sunflower)",
+        "Oil (soybean)",
+        "Oil (cooking)"
+      ],
+      "benchmarks": [
+        "palm_oil",
+        "soybean_oil",
+        "sunflower_oil"
+      ],
+      "confidence": "low",
+      "role": "oil of unstated type",
+      "limitations": [
+        "The oil's source (palm, soybean, sunflower, groundnut, blends) is not stated, so which benchmark applies is unknown; the three listed move together only partly."
+      ]
+    },
+    {
+      "commodities": [
+        "Groundnuts (shelled)",
+        "Groundnuts",
+        "Groundnuts (unshelled)"
+      ],
+      "benchmarks": [
+        "groundnuts"
+      ],
+      "confidence": "low",
+      "role": "mostly domestic or regional",
+      "limitations": [
+        "The benchmark is US runner groundnuts for the European market; groundnuts in Africa are mainly locally produced and consumed."
+      ]
+    },
+    {
+      "commodities": [
+        "Meat (chicken)"
+      ],
+      "benchmarks": [
+        "chicken"
+      ],
+      "confidence": "low",
+      "role": "partly imported",
+      "limitations": [
+        "Local fresh chicken is mostly domestic; the benchmark is Brazilian frozen chicken."
+      ]
+    },
+    {
+      "commodities": [
+        "Meat (beef)"
+      ],
+      "benchmarks": [
+        "beef"
+      ],
+      "confidence": "low",
+      "role": "mostly domestic",
+      "limitations": [
+        "Beef in most WFP countries is local cattle; the benchmark is imported lean beef in the US."
+      ]
+    },
+    {
+      "commodities": [
+        "Fuel (diesel)",
+        "Fuel (petrol-gasoline)",
+        "Fuel (diesel, parallel market)",
+        "Fuel (petrol-gasoline, parallel market)"
+      ],
+      "benchmarks": [
+        "crude_oil"
+      ],
+      "confidence": "low",
+      "role": "energy input",
+      "limitations": [
+        "Pump prices include refining, taxes, subsidies and transport and are often administratively set; crude oil is only one component."
+      ]
+    }
+  ],
+  "no_benchmark_note": "Millet, cassava, yams, plantains, pulses, vegetables, fruits, eggs, salt, fresh fish and most other items have no international benchmark among the integrated series; the engine states that no benchmark is mapped and shows nothing in its place."
+}
