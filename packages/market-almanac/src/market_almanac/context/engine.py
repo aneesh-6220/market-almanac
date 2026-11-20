@@ -379,7 +379,11 @@ class Engine:
         for e in peg:
             self._warn("peg", f"{e['currency_name']} ({e['currency']}): {e['interpretation']}", "info")
         for e in caution:
-            self._warn("official_rate_caution", e["interpretation"], "warn")
+            self._warn(
+                "official_rate_caution",
+                f"{self.iso3} is listed among the countries for which this applies. {e['interpretation']}",
+                "warn",
+            )
         if not regs:
             self._warn(
                 "regime_unclassified",

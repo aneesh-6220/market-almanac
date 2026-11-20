@@ -233,7 +233,7 @@ class LagRow:
     lag: int
     n: int
     spearman: float | None
-    status: str  # "ok" | "insufficient"
+    status: str  # "ok" | "insufficient" (too few paired months) | "no_variation" (too few distinct values)
 
 
 def log_monthly_changes(s: pd.Series, breaks: list[pd.Timestamp] | None = None) -> pd.Series:
@@ -267,8 +267,11 @@ def lagged_comparison(
             raise TransformError("lags must be >= 0 (the reference leads the local series)")
         pair = pd.concat([a, pd.Series(b.to_numpy(), index=b.index + lag)], axis=1, join="inner").dropna()
         n = len(pair)
-        if n < min_obs or pair.iloc[:, 0].nunique() < 3 or pair.iloc[:, 1].nunique() < 3:
+        if n < min_obs:
             rows.append(LagRow(lag, n, None, "insufficient"))
+            continue
+        if pair.iloc[:, 0].nunique() < 3 or pair.iloc[:, 1].nunique() < 3:
+            rows.append(LagRow(lag, n, None, "no_variation"))  # e.g. an administered exchange rate that never moved
             continue
         rho = float(pair.iloc[:, 0].rank().corr(pair.iloc[:, 1].rank()))
         rows.append(LagRow(lag, n, rho if np.isfinite(rho) else None, "ok" if np.isfinite(rho) else "insufficient"))

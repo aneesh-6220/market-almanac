@@ -186,6 +186,14 @@ def test_lagged_comparison_withholds_short_samples_instead_of_reporting_zero():
     assert all(r.status == "insufficient" and r.spearman is None for r in rows)
 
 
+def test_a_reference_that_never_moves_is_reported_as_having_no_variation_not_as_too_short():
+    rng = np.random.default_rng(1)
+    a = monthly(list(100 * np.exp(np.cumsum(rng.normal(0, 0.03, 60)))))
+    frozen = monthly([1507.5] * 60)  # an administered exchange rate
+    rows = T.lagged_comparison(a, frozen)
+    assert all(r.status == "no_variation" and r.spearman is None and r.n >= 24 for r in rows)
+
+
 def test_lagged_comparison_refuses_negative_lags():
     s = monthly(list(range(40)))
     with pytest.raises(T.TransformError):

@@ -167,6 +167,8 @@ test.describe("Global Market Explorer", () => {
   });
 });
 
+const EXAMPLE_PATH = "/investigate?series=ps_f0d5ea3ff6ef122d&event=2024-06&start=2022-06&end=2025-06";
+
 test.describe("Price Shock Investigator (real data)", () => {
   test("the worked example reproduces: unusual, persistent and widespread, with no causal claim", async ({ page, request }) => {
     const errors = trackPageErrors(page);
@@ -195,6 +197,14 @@ test.describe("Price Shock Investigator (real data)", () => {
       await expect(evidence).toContainText("Cannot be assessed with the data integrated here");
     }
     expect(errors).toEqual([]);
+  });
+
+  test("the economic context reads well on a phone @mobile", async ({ page }) => {
+    await page.goto(EXAMPLE_PATH);
+    await waitForContent(page);
+    await expect(page.getByRole("heading", { name: /^7\. Economic context/ })).toBeVisible();
+    await expect(page.getByRole("region", { name: "7. Economic context" })).toBeVisible();
+    await noHorizontalScroll(page);
   });
 
   test("discovery lists unusual rises across countries, food only by default @mobile", async ({ page, request }) => {

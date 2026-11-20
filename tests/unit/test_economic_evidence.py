@@ -220,3 +220,25 @@ def test_the_economic_section_conforms_to_the_published_schema(snap: ContextSnap
     bad["window"]["event"] = "2024-6"
     errs = validate(bad, schema)
     assert errs  # the checker is not vacuous
+
+
+def test_a_frozen_official_rate_is_described_as_not_moving_and_never_as_fewer_units(tmp_path: Path) -> None:
+    w = cs.world()
+    for conc in ("fx_period_avg", "fx_end_period"):
+        w[conc][0] = cs.series("KEN", cs.path(0.0, start=100.0), ref="")  # an administered rate that never moved
+    d = doc_for(cs.build_snapshot(tmp_path, w))
+    quant = [x["text"] for x in d["evidence"]["economic"]["quantitative"]]
+    text = " ".join(quant)
+    assert "fewer units per dollar" not in text and "the official rate did not move" in text
+    assert any("take too few distinct values" in t for t in quant)
+
+
+def test_the_dollar_price_of_a_country_with_divergent_official_rates_carries_the_caution(
+    snap: ContextSnapshot,
+) -> None:
+    d = doc_for(snap, meta=_meta(iso3="ZWE", currency="ZWG"))
+    eco = d["context"]["economic"]
+    warn = next(w for w in eco["warnings"] if w["code"] == "official_rate_caution")
+    assert warn["text"].startswith("ZWE is listed")
+    text = " ".join(x["text"] for x in d["evidence"]["economic"]["quantitative"])
+    assert "in US dollars changed" in text and "may be far from the dollar price households faced" in text

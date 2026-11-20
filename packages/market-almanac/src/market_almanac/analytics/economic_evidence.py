@@ -184,11 +184,17 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
     if _ok(pa):
         usd_v = pa.get("usd_value_change_yoy_pct")
         basis_name = "period average" if pa is fx["period_average"] else "end of period"
+        moved = round(pa["yoy_pct"] * 100, 1) != 0
+        direction = (
+            f" ({'more' if pa['yoy_pct'] > 0 else 'fewer'} units per dollar)"
+            if moved
+            else " (the official rate did not move)"
+        )
         quant.append(
             _st(
-                f"Domestic currency per US dollar changed {pct(pa['yoy_pct'])} over the 12 months "
-                f"({'more' if pa['yoy_pct'] > 0 else 'fewer'} units per dollar), a {pct(usd_v)} change in the dollar "
-                f"value of one unit of the local currency (official rate, {basis_name}).",
+                f"Domestic currency per US dollar changed {pct(pa['yoy_pct'])} over the 12 months{direction}, a "
+                f"{pct(usd_v)} change in the dollar value of one unit of the local currency (official rate, "
+                f"{basis_name}).",
                 keys=[pa["series_key"]],
             )
         )
@@ -201,10 +207,17 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
                 )
             )
     if eco.get("usd_price") and eco["usd_price"]["yoy_pct"] is not None:
+        diverged = any(w["code"] == "official_rate_caution" for w in eco["warnings"])
         quant.append(
             _st(
                 f"At the official period-average rate the price in US dollars changed "
-                f"{pct(eco['usd_price']['yoy_pct'])} (indicative; households may have faced a different rate).",
+                f"{pct(eco['usd_price']['yoy_pct'])}"
+                + (
+                    " (official rates in this country have diverged from market rates, so this may be far from the "
+                    "dollar price households faced)."
+                    if diverged
+                    else " (indicative; households may have faced a different rate)."
+                ),
                 keys=["context.economic.usd_price"],
             )
         )
@@ -260,6 +273,15 @@ def apply(doc: dict[str, Any], mechanisms: list[dict[str, Any]]) -> dict[str, An
                     f"from {lo:+.2f} to {hi:+.2f} (up to {max(r['n'] for r in rows)} paired months through "
                     f"{month_name(eco['lags']['through'])}). Descriptive; no lag is singled out.",
                     "associational",
+                    keys=["context.economic.lags"],
+                )
+            )
+        elif any(r["status"] == "no_variation" for r in pair["rows"]):
+            quant.append(
+                _st(
+                    f"Monthly changes of {pair['label']} take too few distinct values in the overlapping months "
+                    f"({pair['n_pairs_lag0']}) for a rank correlation to be defined (for example an administered rate "
+                    "that did not move).",
                     keys=["context.economic.lags"],
                 )
             )

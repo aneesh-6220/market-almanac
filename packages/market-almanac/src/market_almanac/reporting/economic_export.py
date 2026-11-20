@@ -161,8 +161,10 @@ def economic_table_rows(doc: dict[str, Any], table: str) -> list[dict[str, Any]]
     raise ValueError(f"unknown table {table!r}")
 
 
-def _cell(v: Any) -> str:
-    return "not available" if v is None else pct(v)
+def _cell(v: Any, applies: bool = True) -> str:
+    if v is None:
+        return "not available" if applies else "—"
+    return pct(v)
 
 
 def economic_markdown(doc: dict[str, Any], table: Any) -> list[str]:
@@ -206,7 +208,18 @@ def economic_markdown(doc: dict[str, Any], table: Any) -> list[str]:
         rows = economic_table_rows(doc, "economic_changes")
         L += table(
             ["Item", "12-month change", "Baseline to peak", "State"],
-            [[r["item"], _cell(r["yoy_pct"]), _cell(r["baseline_to_peak_pct"]), r["state"]] for r in rows],
+            [
+                [
+                    r["item"],
+                    _cell(r["yoy_pct"], not (r["item"].startswith("Price relative") and "12-month" not in r["item"])),
+                    _cell(
+                        r["baseline_to_peak_pct"],
+                        not (r["item"].startswith("Price relative") and "12-month" in r["item"]),
+                    ),
+                    r["state"],
+                ]
+                for r in rows
+            ],
         )
         if eco["warnings"]:
             L += ["", "### Cautions", ""] + [f"- {x['text']}" for x in eco["warnings"]]
