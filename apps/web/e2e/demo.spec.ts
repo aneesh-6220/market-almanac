@@ -226,10 +226,14 @@ test.describe("Market Almanac (synthetic demo)", () => {
     await open.click();
     await expect(page).toHaveURL(/\/investigate\?series=ps_[0-9a-f]{16}&event=\d{4}-\d{2}/);
     await waitForContent(page);
-    for (const n of ["1. At a glance", "2. Price history", "3. Compared with", "4. Comparable markets", "5. Other foods", "6. Context", "7. What the evidence", "8. Method"]) {
+    for (const n of ["1. At a glance", "2. Price history", "3. Compared with", "4. Comparable markets", "5. Other foods", "6. Context", "7. Economic context", "8. What the evidence", "9. Method"]) {
       await expect(page.getByRole("heading", { name: new RegExp(`^${n.replace(".", "\\.")}`) })).toBeVisible();
     }
     await expect(page.getByRole("img", { name: /Monthly .* price in/ })).toBeVisible();
+    // the economic context is not part of the synthetic demo and says so, concluding nothing
+    const eco = page.getByTestId("economic-unavailable");
+    await expect(eco).toHaveAttribute("data-state", "demo_mode");
+    await expect(eco).toContainText(/not evidence that they were unrelated/);
     // the brief carries the configuration that reproduces it
     const md = await page.getByRole("link", { name: /Research brief/ }).getAttribute("href");
     const brief = await (await request.get(md!)).text();

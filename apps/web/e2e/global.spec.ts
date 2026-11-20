@@ -168,7 +168,7 @@ test.describe("Global Market Explorer", () => {
 });
 
 test.describe("Price Shock Investigator (real data)", () => {
-  test("the worked example reproduces: unusual, persistent and widespread, with no causal claim", async ({ page }) => {
+  test("the worked example reproduces: unusual, persistent and widespread, with no causal claim", async ({ page, request }) => {
     const errors = trackPageErrors(page);
     await page.goto("/investigate");
     await page.getByRole("link", { name: /Worked example/ }).click();
@@ -179,9 +179,21 @@ test.describe("Price Shock Investigator (real data)", () => {
     await expect(glance).toContainText("Widespread");
     await expect(glance).toContainText("+53.3%");
     await expect(glance).toContainText("no causal claim");
-    await expect(page.getByRole("region", { name: "7. What the evidence supports" })).toContainText(
-      "Cannot be assessed with the data integrated here",
-    );
+    // What the evidence can say about inflation and exchange rates depends on whether the economic-context
+    // artefact is installed on the deployment under test; both states are asserted, never assumed.
+    const ctx = await get(request, "/api/v1/context");
+    const economic = page.getByRole("region", { name: "7. Economic context" });
+    const evidence = page.getByRole("region", { name: "8. What the evidence supports" });
+    if (ctx.available) {
+      await expect(economic.getByTestId("economic-available")).toBeVisible();
+      await expect(economic.getByTestId("economic-glance")).toContainText("+53.3%");
+      await expect(economic.getByTestId("economic-glance")).toContainText("Consumer prices, all items");
+      await expect(economic.getByTestId("economic-missing-food")).toContainText("published but empty"); // Niger: no food index
+      await expect(economic).toContainText("What this context does not establish");
+    } else {
+      await expect(economic.getByTestId("economic-unavailable")).toBeVisible();
+      await expect(evidence).toContainText("Cannot be assessed with the data integrated here");
+    }
     expect(errors).toEqual([]);
   });
 
